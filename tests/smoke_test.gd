@@ -326,6 +326,47 @@ func _ready() -> void:
 	GameManager.active_powerups.erase("zombie_blood")
 	bz.take_damage(99999.0, false, "nuke")
 
+	# Variété et animations des zombies
+	var runner = null
+	for i in 12:
+		var vz := _spawn_test_zombie(Vector3(0, 0, -44))
+		if i == 0:
+			runner = vz
+		else:
+			vz.queue_free()
+	runner.speed = 4.6
+	runner.state = runner.State.CHASE
+	await wait(1.0)
+	check(runner._model.run_amount > 0.5, "les sprinteurs passent en animation de course")
+	runner._start_crawl()
+	await wait(0.5)
+	check(runner._model.crawling, "la jambe arrachée déclenche l'animation de reptation")
+	runner.queue_free()
+	check(ResourceLoader.exists("res://assets/models/zombie_real/diffuse_v4.jpg"), "5 tenues de zombie disponibles")
+
+	# Bras du joueur
+	var arms = player.holder.arms
+	check(arms != null and arms.visible, "les bras du joueur sont affichés")
+	var wrist_ok := true
+	for wid in WeaponDBTest.WEAPONS:
+		player.holder.give_weapon(wid)
+		player.holder.switch_timer = 0.0
+		await wait(0.25)
+		var w_world: Vector3 = arms.sk.global_transform * arms.sk.get_bone_global_pose(arms._b["hand.R"]).origin
+		var grip_world: Vector3 = player.holder.view.to_global(WeaponDBTest.data(wid).get("grip_r", Vector3.ZERO))
+		wrist_ok = wrist_ok and w_world.distance_to(grip_world) < 0.2
+	check(wrist_ok, "la main droite reste près de la poignée pour chaque arme")
+	player.holder.give_weapon("k74")
+	player.holder.switch_timer = 0.0
+	await wait(0.2)
+	var left_rest: Vector3 = arms.sk.get_bone_global_pose(arms._b["hand.L"]).origin
+	player.holder.reload_timer = 1.0
+	player.holder.reload_total = 2.0
+	await wait(0.3)
+	var left_reload: Vector3 = arms.sk.get_bone_global_pose(arms._b["hand.L"]).origin
+	check(left_rest.distance_to(left_reload) > 0.3, "la main gauche quitte l'arme pendant le rechargement")
+	player.holder.reload_timer = 0.0
+
 	# Power-ups
 	for kind in GameManager.POWERUPS:
 		game.apply_powerup(kind)

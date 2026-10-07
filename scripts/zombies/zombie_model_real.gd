@@ -22,13 +22,22 @@ var _headless := false
 var _attack_t := 0.0
 var _dead := false
 var _severed: Array[int] = []
+## 0 = marche, 1 = course (penché en avant, bras qui pompent).
+var run_amount := 0.0
+var crawling := false
+var _bones := {}
+var _crawl_t := 0.0
+
+
+const VARIANTS := 5
 
 
 static func available() -> bool:
-	return ResourceLoader.exists(BASE) and ResourceLoader.exists(DIR + "diffuse.jpg")
+	return ResourceLoader.exists(BASE) and ResourceLoader.exists(DIR + "diffuse_v0.jpg")
 
 
-func setup(_skin: String, tint := Color.WHITE) -> void:
+## `variant` : "0".."4" (tenue). `tint` teinte la peau/le tout.
+func setup(variant: String, tint := Color.WHITE) -> void:
 	var pivot := Node3D.new()
 	pivot.scale = Vector3.ONE * SCALE
 	pivot.rotation.y = -PI * 0.5 # le modèle regarde -X, le jeu utilise -Z
@@ -38,7 +47,7 @@ func setup(_skin: String, tint := Color.WHITE) -> void:
 	pivot.add_child(model)
 	skeleton = model.find_children("*", "Skeleton3D", true, false)[0]
 	for mi in model.find_children("*", "MeshInstance3D", true, false):
-		(mi as MeshInstance3D).material_override = _material(tint)
+		(mi as MeshInstance3D).material_override = _material(tint, int(variant) if variant.is_valid_int() else 0)
 	for n in model.get_children():
 		if n is Node3D and not (n is Skeleton3D):
 			n.visible = false # caméras / plans d'export
@@ -80,6 +89,8 @@ func update_pose(delta: float, moving: bool, anim_speed: float) -> void:
 		anim.advance(delta)
 		_after_pose()
 		return
+	if crawling:
+		_crawl_t += delta * (2.4 if moving else 0.6)
 	if _attack_t > 0.0:
 		_attack_t -= delta
 		if anim.current_animation != "fury":
@@ -89,8 +100,9 @@ func update_pose(delta: float, moving: bool, anim_speed: float) -> void:
 	else:
 		if anim.current_animation != "walk":
 			anim.play("walk", 0.25)
-		anim.speed_scale = anim_speed if moving else 0.12
+		anim.speed_scale = (anim_speed * (0.45 if crawling else 1.0)) if moving else 0.12
 	anim.advance(delta)
+	_apply_style()
 	_after_pose()
 
 
@@ -134,6 +146,53 @@ func sever(bone_name: String) -> bool:
 	return true
 
 
+# --- Styles d'animation procéduraux (course, reptation) -------------------
+# Repère du squelette : avant = -X, haut = +Y ; une rotation de +θ autour de +Z
+# fait pencher le haut vers l'avant, -θ balance un bras pendant vers l'avant.
+
+func _bone(n: String) -> int:
+	if not _bones.has(n):
+		_bones[n] = skeleton.find_bone(n)
+	return _bones[n]
+
+
+## Ajoute une rotation globale (autour de l'axe Z du squelette) à un os.
+func _rot(n: String, angle: float) -> void:
+	var i := _bone(n)
+	if i < 0 or absf(angle) < 0.0001:
+		return
+	var parent := skeleton.get_bone_parent(i)
+	var pg := skeleton.get_bone_global_pose(parent).basis.orthonormalized() if parent >= 0 else Basis()
+	var local := Basis(skeleton.get_bone_pose_rotation(i))
+	var out := pg.inverse() * Basis(Vector3(0, 0, 1), angle) * pg * local
+	skeleton.set_bone_pose_rotation(i, out.get_rotation_quaternion())
+
+
+func _apply_style() -> void:
+	var ph := anim.current_animation_position / maxf(anim.current_animation_length, 0.01) * TAU if anim.current_animation == "walk" else 0.0
+	if crawling:
+		_rot("Bip01 Spine", -0.06)
+		_rot("Bip01 Spine1", -0.06)
+		_rot("Bip01 Spine2", -0.05)
+		_rot("Bip01 Head", -0.35)
+		if _attack_t <= 0.0:
+			for side in [["L", 0.0], ["R", PI]]:
+				var sw := sin(_crawl_t * 3.0 + side[1])
+				_rot("Bip01 %s UpperArm" % side[0], -(PI * 0.88) - 0.5 * sw)
+				_rot("Bip01 %s Forearm" % side[0], -0.5 + 0.5 * maxf(0.0, -sw))
+	elif run_amount > 0.01:
+		var r := run_amount
+		_rot("Bip01 Spine", 0.14 * r)
+		_rot("Bip01 Spine1", 0.14 * r)
+		_rot("Bip01 Spine2", 0.12 * r)
+		_rot("Bip01 Head", -0.3 * r)
+		if _attack_t <= 0.0:
+			for side in [["L", 0.0], ["R", PI]]:
+				var sw := sin(ph + side[1])
+				_rot("Bip01 %s UpperArm" % side[0], r * (-0.35 - 0.75 * sw))
+				_rot("Bip01 %s Forearm" % side[0], r * (-1.35 - 0.3 * sw))
+
+
 func _after_pose() -> void:
 	for i in _severed:
 		skeleton.set_bone_pose_scale(i, Vector3.ONE * 0.001)
@@ -166,12 +225,12 @@ static func _get_library() -> AnimationLibrary:
 	return _library
 
 
-static func _material(tint: Color) -> StandardMaterial3D:
-	var key := tint.to_html()
+static func _material(tint: Color, variant := 0) -> StandardMaterial3D:
+	var key := "%s|%d" % [tint.to_html(), variant]
 	if _mats.has(key):
 		return _mats[key]
 	var m := StandardMaterial3D.new()
-	m.albedo_texture = load(DIR + "diffuse.jpg")
+	m.albedo_texture = load(DIR + "diffuse_v%d.jpg" % clampi(variant, 0, VARIANTS - 1))
 	m.albedo_color = tint
 	m.normal_enabled = true
 	m.normal_texture = load(DIR + "normal.jpg")

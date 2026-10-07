@@ -6,6 +6,7 @@ const WeaponDB := preload("res://scripts/weapons/weapon_db.gd")
 const MeshUtil := preload("res://scripts/util/mesh_util.gd")
 const GrenadeScript := preload("res://scripts/weapons/grenade.gd")
 const MonkeyScript := preload("res://scripts/weapons/monkey.gd")
+const FpsArms := preload("res://scripts/player/fps_arms.gd")
 
 signal ammo_changed
 signal weapon_changed
@@ -40,12 +41,17 @@ var kick := 0.0
 var bob_t := 0.0
 
 var view: Node3D
+var arms: Node3D
+var _grip := {}
 var muzzle_light: OmniLight3D
 var flash_mesh: MeshInstance3D
 var flash_timer := 0.0
 
 
 func _ready() -> void:
+	if FpsArms.available():
+		arms = FpsArms.new()
+		add_child(arms)
 	muzzle_light = OmniLight3D.new()
 	muzzle_light.light_color = Color(1.0, 0.75, 0.4)
 	muzzle_light.omni_range = 6.0
@@ -223,6 +229,7 @@ func _process(delta: float) -> void:
 		rot.y += m * 0.8
 	view.position = view.position.lerp(pos, minf(delta * 20.0, 1.0))
 	view.rotation = view.rotation.lerp(rot, minf(delta * 20.0, 1.0))
+	_update_arms()
 
 	var w = cur()
 	var ads_fov := 55.0
@@ -433,6 +440,22 @@ func _on_switched() -> void:
 	ammo_changed.emit()
 
 
+## Les mains suivent l'arme ; la main gauche quitte la poignée pendant le rechargement.
+func _update_arms() -> void:
+	if arms == null:
+		return
+	arms.visible = view != null and not _grip.is_empty()
+	if not arms.visible:
+		return
+	var extra := Vector3.ZERO
+	var curl := 1.0
+	if reload_timer > 0.0 and reload_total > 0.0:
+		var p := sin((1.0 - reload_timer / reload_total) * PI)
+		extra = Vector3(-0.03 * p, -0.17 * p, 0.09 * p)
+		curl = lerpf(1.0, 0.25, p)
+	arms.update_for_gun(view, _grip, extra, curl)
+
+
 func _rebuild_view() -> void:
 	if view:
 		muzzle_light.reparent(self, false)
@@ -443,6 +466,7 @@ func _rebuild_view() -> void:
 	if w == null:
 		return
 	var d := WeaponDB.data(w.id)
+	_grip = FpsArms.grip_for(d) if arms else {}
 	view = MeshUtil.build_gun(self, w.id, w.upgraded, d.color, d.kind)
 	view.position = HIP_POS + Vector3(0, -0.3, 0)
 	var muzzle: Vector3 = view.get_meta("muzzle")

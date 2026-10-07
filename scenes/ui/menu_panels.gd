@@ -110,6 +110,7 @@ static func credits(parent: Node) -> Control:
 			"Moteur : Godot 4.7",
 			"Zombies : Pixelhouse (pixelhouse.com.ar) — CC-BY 3.0",
 			"Chiens : loup de umask007 (OpenGameArt) — CC-BY-SA 3.0",
+			"Bras : FPS Arms Rigged (OpenGameArt) — CC0",
 			"Modèles d'armes : Kenney (kenney.nl) — CC0",
 			"Sons d'impact : Kenney — CC0",
 			"Tirs : Vincent Sevedge — CC-BY 3.0 ; cris de zombies, rechargements : OpenGameArt — CC0",

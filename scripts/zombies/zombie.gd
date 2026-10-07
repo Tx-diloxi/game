@@ -43,6 +43,7 @@ var _anim_t := 0.0
 var _flinch := 0.0
 var _model: Node3D = null
 var _real := false
+var _anim_scale := 1.0
 ## Décor du menu : avance lentement sans IA.
 var menu_idle := false
 ## Rampe au sol après avoir perdu une jambe.
@@ -585,7 +586,10 @@ func _animate(delta: float, moving: bool) -> void:
 			_place_armor()
 		if _real:
 			var ref := 5.5 if kind == "dog" else 1.1
-			_model.update_pose(delta, moving and hspeed > 0.2, clampf(hspeed / ref, 0.45, 2.4))
+			_model.run_amount = move_toward(_model.run_amount, clampf((speed - 2.4) / 1.6, 0.0, 1.0) if kind == "zombie" and not crawling else 0.0, delta * 3.0)
+			if crawling and not _model.crawling:
+				_model.crawling = true
+			_model.update_pose(delta, moving and hspeed > 0.2, clampf(hspeed / ref, 0.45, 2.4) * _anim_scale)
 		else:
 			_model.update_pose(delta, moving and hspeed > 0.2, clampf(hspeed / 4.0, 0.35, 1.3))
 	for i in _legs.size():
@@ -601,8 +605,8 @@ func _animate(delta: float, moving: bool) -> void:
 			else:
 				_arms[i].rotation.x = base + sin(_anim_t * 0.5 + s) * 0.08
 	if crawling:
-		visual.rotation.x = lerpf(visual.rotation.x, -1.3, minf(delta * 6.0, 1.0))
-		visual.position.y = lerpf(visual.position.y, 0.32, minf(delta * 6.0, 1.0))
+		visual.rotation.x = lerpf(visual.rotation.x, -PI * 0.5 + 0.12, minf(delta * 6.0, 1.0))
+		visual.position.y = lerpf(visual.position.y, 0.14, minf(delta * 6.0, 1.0))
 	else:
 		visual.rotation.x = -_flinch * 0.25 + (-0.12 if kind != "dog" and not _real else 0.0)
 
@@ -671,9 +675,14 @@ func _build_real_model() -> void:
 		head_height = 2.3
 		_build_armor()
 	else:
-		var v := randf_range(0.72, 0.88)
-		m.setup("", Color(v, v * randf_range(0.98, 1.08), v * randf_range(0.92, 1.0)))
-		head_height = 1.5
+		var v := randf_range(0.7, 0.95)
+		m.setup(str(randi() % RealModel.VARIANTS), Color(v, v * randf_range(0.96, 1.1), v * randf_range(0.88, 1.02)))
+		# Silhouettes variées : plus ou moins grand, mince ou costaud
+		var h := randf_range(0.93, 1.07)
+		var w := randf_range(0.92, 1.1)
+		visual.scale = Vector3(w, h, w)
+		head_height = 1.5 * h
+		_anim_scale = randf_range(0.88, 1.15)
 	_model = m
 	_real = true
 

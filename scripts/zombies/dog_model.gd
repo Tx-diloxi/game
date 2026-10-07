@@ -14,6 +14,9 @@ var skeleton: Skeleton3D
 var anim: AnimationPlayer
 var arm_raise := 0.0 # compatibilité (non utilisé)
 var arm_swing := 0.0
+# Compatibilité avec zombie_model_real.gd (non utilisés par le chien)
+var run_amount := 0.0
+var crawling := false
 var _eyes: Array[MeshInstance3D] = []
 var _head := -1
 var _attack_t := 0.0

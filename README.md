@@ -23,6 +23,9 @@ manches de chiens et tanks. Godot 4.7, GDScript, rendu Compatibility.
 - **Records** (`user://records.cfg`) : manche, éliminations, tirs à la tête, points, plus longue survie, parties jouées ; menu RECORDS et message « Nouveau record » en fin de partie.
 - **Power-ups** : Feu de vente (armes murales et boîte à 10 points, 30 s, la boîte ne déménage pas), Bonus de points (500 + 100 par manche), Sang de zombie (30 s : les zombies à plus de 2,5 m vous ignorent, écran teinté de bleu).
 
+- **Bras du joueur** (`scripts/player/fps_arms.gd`) : modèle rigged avec manches ; IK à deux os qui place chaque main sur la poignée de l'arme (prises réglées par arme dans `weapon_db.gd`), doigts refermés, main gauche qui quitte l'arme pendant le rechargement.
+- **Zombies** : 5 tenues (textures dérivées sans logo), silhouettes aléatoires, animation de course (sprinteurs penchés, bras qui pompent) et de reptation (bras tendus qui tirent).
+
 ## Lancer
 Ouvrir le projet dans Godot 4.7 et appuyer sur F5 (scène principale : `scenes/main_menu.tscn`).
 `scenes/game.tscn` peut aussi être lancée directement (F6).
@@ -55,6 +58,7 @@ Joue une partie accélérée et vérifie navigation, manches, économie, atouts,
 - Menu principal sur fond 3D animé (`scenes/main_menu.gd`), menu pause et écran de fin superposés au jeu
 
 ## Crédits
+Bras du joueur : « FPS Arms (Rigged Only) » (CC0, maillage de base MakeHuman), OpenGameArt — voir `assets/models/arms/LICENSE.txt`.
 Zombies : modèle « Zombie » de [Pixelhouse](http://pixelhouse.com.ar) (CC-BY 3.0, [OpenGameArt](https://opengameart.org/content/zombie-0)) — voir `assets/models/zombie_real/LICENSE.txt`.
 Chiens : loup « Winter Wolf + Normal Wolf » de umask007 (CC-BY-SA 3.0, [OpenGameArt](https://opengameart.org/content/winter-wolf-normal-wolf)), converti en glTF — voir `assets/models/dog/LICENSE.txt`.
 Modèles d'armes, personnage de secours et sons d'impact : [Kenney](https://www.kenney.nl) (CC0) —

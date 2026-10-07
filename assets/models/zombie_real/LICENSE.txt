@@ -27,3 +27,4 @@ y IMPORTANTE *** Cualquier comentario, error del modelo o sujerencia, por favor 
 Muchas gracias, esperamos que les sea util
 
 el equipo de pixelhouse.
+Variantes de tenue (diffuse_v0..v4.jpg) : dérivées de diffuse.jpg (Pixelhouse, CC-BY 3.0) — logo retiré, vêtements recolorés.
