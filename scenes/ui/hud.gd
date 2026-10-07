@@ -41,6 +41,9 @@ var _flash := 0.0
 var _tint := 0.0
 var _boss: Node = null
 var _boss_bar: Control
+var _dmg_canvas: Control
+var _dmg_hits: Array = []
+var _life_label: Label
 var _score_panel: Control
 var _score_vals := {}
 var _score_t := 0.0
@@ -65,6 +68,7 @@ func _ready() -> void:
 
 	_crosshair = _canvas(_draw_crosshair)
 	_hitmarker = _canvas(_draw_hitmarker)
+	_dmg_canvas = _canvas(_draw_damage_dirs)
 
 	# Manche (bas gauche)
 	_round_draw = _canvas(_draw_round)
@@ -115,6 +119,7 @@ func _ready() -> void:
 	_anchor(_boss_bar, Vector2(0.5, 0), Rect2(-320, 26, 640, 44))
 
 	_build_scoreboard()
+	_life_label = _label("", 22, Color(1.0, 0.65, 0.75), UI.ui_font(), Vector2(0, 1), Rect2(40, -300, 300, 30))
 
 	_powerups = HBoxContainer.new()
 	_powerups.add_theme_constant_override("separation", 30)
@@ -188,6 +193,7 @@ func bind(p: Node) -> void:
 	p.holder.weapon_changed.connect(_on_ammo)
 	p.holder.hit_confirmed.connect(_on_hit)
 	p.damaged.connect(func(): _damage = maxf(_damage, 0.8))
+	p.hit_from.connect(func(src: Vector3): _dmg_hits.append({"pos": src, "age": 0.0}))
 	p.downed_changed.connect(func(d: bool): _downed.visible = d)
 	_on_ammo()
 
@@ -197,6 +203,11 @@ func track_boss(z: Node) -> void:
 
 
 func _process(delta: float) -> void:
+	for e in _dmg_hits:
+		e.age += delta
+	_dmg_hits = _dmg_hits.filter(func(e): return e.age < 2.6)
+	_dmg_canvas.queue_redraw()
+	_life_label.text = "VIE SUPPLÉMENTAIRE  ×%d" % GameManager.extra_lives if GameManager.extra_lives > 0 else ""
 	var show_score := Input.is_action_pressed("scoreboard")
 	if show_score != _score_panel.visible:
 		_score_panel.visible = show_score
@@ -506,6 +517,28 @@ func _draw_crosshair() -> void:
 		_crosshair.draw_line(c + d * gap, c + d * (gap + 11), sh, 4.0)
 		_crosshair.draw_line(c + d * gap, c + d * (gap + 11), col, 2.0)
 	_crosshair.draw_circle(c, 1.5, col)
+
+
+## Flèches rouges autour du réticule, orientées vers la source des dégâts.
+func _draw_damage_dirs() -> void:
+	if player == null:
+		return
+	var c := _dmg_canvas.size * 0.5
+	for e in _dmg_hits:
+		var d: Vector3 = e.pos - player.global_position
+		d.y = 0.0
+		if d.length() < 0.05:
+			continue
+		var local: Vector3 = player.global_basis.inverse() * d.normalized()
+		var theta := atan2(local.x, -local.z) - PI * 0.5 # 0 = devant (haut de l'écran)
+		var a := clampf(1.0 - e.age / 2.6, 0.0, 1.0)
+		var col := Color(0.9, 0.05, 0.03, a * 0.9)
+		var r := 170.0
+		_dmg_canvas.draw_arc(c, r, theta - 0.3, theta + 0.3, 14, col, 12.0, true)
+		var tip := c + Vector2(cos(theta), sin(theta)) * (r + 26.0)
+		var left := c + Vector2(cos(theta - 0.09), sin(theta - 0.09)) * (r + 4.0)
+		var right := c + Vector2(cos(theta + 0.09), sin(theta + 0.09)) * (r + 4.0)
+		_dmg_canvas.draw_colored_polygon(PackedVector2Array([tip, left, right]), col)
 
 
 func _draw_hitmarker() -> void:

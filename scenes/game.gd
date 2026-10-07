@@ -570,8 +570,10 @@ func apply_powerup(kind: String) -> void:
 	match kind:
 		"max_ammo":
 			player.holder.refill_all()
-		"insta_kill", "double_points", "fire_sale", "zombie_blood":
+		"insta_kill", "double_points", "fire_sale", "zombie_blood", "infinite_ammo":
 			GameManager.activate_timed_powerup(kind)
+		"last_stand":
+			GameManager.extra_lives += 1
 		"bonus_points":
 			GameManager.add_points(500 + 100 * GameManager.round_num, false)
 		"nuke":
@@ -613,7 +615,7 @@ func explode(pos: Vector3, radius: float, dmg: float, cause: String, hurt_player
 		var pd := (player.global_position + Vector3.UP).distance_to(pos)
 		_shake(clampf(1.0 - pd / (radius * 4.0), 0.0, 1.0) * 0.5)
 		if hurt_player and pd < radius * 0.6 and not GameManager.has_perk("bouclier"):
-			player.take_damage(45.0 * (1.0 - pd / (radius * 0.6)))
+			player.take_damage(45.0 * (1.0 - pd / (radius * 0.6)), pos)
 
 
 func _shake(amount: float) -> void:

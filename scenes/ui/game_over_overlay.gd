@@ -11,7 +11,7 @@ func _ready() -> void:
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	Audio.stop_music(2.0)
-	Audio.play("round_end", 4.0, 0.6)
+	Audio.play("game_over_jingle", 2.0)
 
 	var root := Control.new()
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

@@ -67,6 +67,12 @@ static func options(parent: Node) -> Control:
 	for f in GameManager.FPS_LIMITS:
 		fps_names.append("Illimité" if f == 0 else "%d" % f)
 	_option_row(box, "Limite d'images/s", fps_names, GameManager.max_fps_index, GameManager.set_max_fps)
+	_option_row(box, "Anticrénelage (MSAA)", ["Désactivé", "2x", "4x", "8x"], GameManager.msaa_index, GameManager.set_msaa)
+	var res_names := []
+	for r in GameManager.RESOLUTIONS:
+		res_names.append("%d × %d" % [r.x, r.y])
+	_option_row(box, "Résolution (fenêtré)", res_names, GameManager.res_index, GameManager.set_resolution)
+	UI.slider(box, "Échelle de rendu 3D", 0.5, 1.0, 0.05, GameManager.render_scale, GameManager.set_render_scale, "%.2f×")
 	_check(box, "Synchronisation verticale", GameManager.vsync, GameManager.set_vsync)
 	_check(box, "Plein écran", GameManager.fullscreen, GameManager.set_fullscreen)
 	UI.label(box, "CONTRÔLES", 26, UI.RED, UI.title_font())
@@ -115,7 +121,7 @@ static func credits(parent: Node) -> Control:
 			"Sons d'impact : Kenney — CC0",
 			"Tirs : Vincent Sevedge — CC-BY 3.0 ; cris de zombies, rechargements : OpenGameArt — CC0",
 			"Textures : ambientCG.com — CC0",
-			"Musique : Ambient Horror Track 01 (CC0) ; Dark Ambience Loop, Iwan Gabovitch (CC-BY 3.0)",
+			"Musique : Ambient Horror Track 01 (CC0) ; Dark Ambience Loop, Iwan Gabovitch (CC-BY 3.0) ; stings d'horreur et jingle de mort (CC0)",
 			"Annonceur : voix de synthèse ; autres sons synthétisés en jeu"]:
 		var l := UI.label(col, line, 20, UI.GREY)
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD

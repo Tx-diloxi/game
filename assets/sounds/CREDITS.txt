@@ -7,3 +7,5 @@ Sons réels :
 - Musique du menu : « Ambient Horror Track 01 », CC0 — https://opengameart.org/content/ambient-horror-track-01
 - Ambiance en jeu : « Dark Ambience Loop », Iwan Gabovitch (qubodup), CC-BY 3.0 — https://opengameart.org/content/dark-ambience-loop
 - Annonceur : voix de synthèse Microsoft Hortense (Windows), générée localement
+- Fin de manche : « String and piano horror stings » (abyss.ogg), CC0 — https://opengameart.org/content/string-and-piano-horror-stings
+- Jingle de mort : « Game over short jingle », CC0 — https://opengameart.org/content/game-over-short-jingle

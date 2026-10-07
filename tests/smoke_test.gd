@@ -344,6 +344,51 @@ func _ready() -> void:
 	runner.queue_free()
 	check(ResourceLoader.exists("res://assets/models/zombie_real/diffuse_v4.jpg"), "5 tenues de zombie disponibles")
 
+	# Indicateurs de dégâts directionnels
+	var got := []
+	var cb := func(p: Vector3): got.append(p)
+	player.hit_from.connect(cb)
+	player.invuln = 0.0
+	var src: Vector3 = player.global_position + Vector3(5, 0, 0)
+	player.take_damage(1.0, src)
+	player.take_damage(1.0)
+	player.invuln = 1e9
+	player.hit_from.disconnect(cb)
+	check(got.size() == 1 and got[0].is_equal_approx(src), "la source du coup est signalée (et seulement si connue)")
+
+	# Munitions illimitées et Dernier survivant
+	player.holder.give_weapon("k74")
+	player.holder.switch_timer = 0.0
+	player.holder.fire_timer = 0.0
+	player.holder.reload_timer = 0.0
+	game.apply_powerup("infinite_ammo")
+	var mag0: int = player.holder.cur().mag
+	player.holder._try_fire(player.holder.cur(), true)
+	check(player.holder.cur().mag == mag0, "munitions illimitées : le chargeur ne baisse pas")
+	GameManager.active_powerups.erase("infinite_ammo")
+	player.holder.fire_timer = 0.0
+	player.holder._try_fire(player.holder.cur(), true)
+	check(player.holder.cur().mag == mag0 - 1, "le chargeur baisse de nouveau après l'effet")
+	var lives0 := GameManager.extra_lives
+	game.apply_powerup("last_stand")
+	check(GameManager.extra_lives == lives0 + 1, "Dernier survivant donne une vie")
+	player.invuln = 0.0
+	player.health = 5.0
+	player.take_damage(999.0)
+	check(not player.dead and not player.downed and GameManager.extra_lives == lives0 and player.health == player.max_health, "la vie supplémentaire annule le coup fatal")
+	player.invuln = 1e9
+
+	# Résolution et anticrénelage
+	GameManager.set_msaa(2)
+	check(get_tree().root.msaa_3d == Viewport.MSAA_4X, "anticrénelage 4x appliqué")
+	GameManager.set_msaa(1)
+	GameManager.set_render_scale(0.75)
+	check(is_equal_approx(get_tree().root.scaling_3d_scale, 0.75), "échelle de rendu 3D appliquée")
+	GameManager.set_render_scale(1.0)
+
+	# Musique de mort
+	check(Audio._streams.has("game_over_jingle") and Audio._streams.has("round_end"), "jingle de mort et musique de fin de manche chargés")
+
 	# Zombies spéciaux
 	game.rounds.round_num = 12
 	var seen := {}

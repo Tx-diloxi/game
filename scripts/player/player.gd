@@ -6,6 +6,8 @@ const WeaponHolderScript := preload("res://scripts/player/weapon_holder.gd")
 signal health_changed(health: float, max_health: float)
 signal downed_changed(downed: bool)
 signal damaged
+## Position monde de la source d'un coup (pour l'indicateur directionnel).
+signal hit_from(source: Vector3)
 
 const WALK_SPEED := 4.5
 const SPRINT_SPEED := 7.0
@@ -207,7 +209,7 @@ func add_recoil(amount: float) -> void:
 	rotate_y(deg_to_rad(randf_range(-amount, amount) * 0.15))
 
 
-func take_damage(amount: float) -> void:
+func take_damage(amount: float, from := Vector3.INF) -> void:
 	if dead or downed or invuln > 0.0:
 		return
 	health -= amount
@@ -215,6 +217,8 @@ func take_damage(amount: float) -> void:
 	Audio.play("player_hurt", -2.0, randf_range(0.9, 1.1))
 	GameManager.vibrate(0.4, 0.9, 0.3)
 	damaged.emit()
+	if from != Vector3.INF:
+		hit_from.emit(from)
 	health_changed.emit(maxf(health, 0.0), max_health)
 	if health <= 0.0:
 		_go_down()
@@ -238,6 +242,15 @@ func apply_perks() -> void:
 
 func _go_down() -> void:
 	health = 0.0
+	if GameManager.extra_lives > 0:
+		# Dernier survivant : le coup fatal est annulé
+		GameManager.extra_lives -= 1
+		invuln = 3.0
+		health = max_health
+		health_changed.emit(health, max_health)
+		GameManager.show_message("DERNIER SURVIVANT", Color(1.0, 0.6, 0.7), "Vie supplémentaire utilisée")
+		Audio.play("powerup", 2.0)
+		return
 	Audio.play("down")
 	if GameManager.has_perk("second_souffle"):
 		downed = true

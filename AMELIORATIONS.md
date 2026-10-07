@@ -70,7 +70,7 @@ Effort : S par atout. Ajouter l'**icône HUD réaliste** et un **jingle propre �
 | Bouclier d'émeute (construit à partir de pièces) | ❌ | M |
 
 ### 3.4 Power-ups
-✅ Fait : Feu de vente, Bonus de points, Zombie Blood. Restent : **Munitions « Max » par arme**, **Dernier survivant** (réanimer tous). Effort : S chacun.
+✅ Fait : Feu de vente, Bonus de points, Zombie Blood, Munitions illimitées, Dernier survivant (en solo : une vie supplémentaire ; en coop il réanimera tous les joueurs).
 
 ---
 
@@ -122,7 +122,7 @@ Effort : S par atout. Ajouter l'**icône HUD réaliste** et un **jingle propre �
 | 6.6 | **Animation de la caméra** : balancement, sprint, atterrissage, mort | 🟡 | S |
 | 6.7 | **Effets d'atouts à la boisson** (animation de bouteille) | ❌ | M |
 | 6.8 | **Étourdissement / flou de mouvement** après une explosion | ❌ | S |
-| 6.9 | **Réglages graphiques** (qualité des ombres, résolution, VSync, FPS max) | 🟡 ombres, VSync, FPS max faits ; résolution/MSAA à ajouter | S |
+| 6.9 | **Réglages graphiques** (qualité des ombres, résolution, VSync, FPS max) | ✅ ombres, VSync, FPS max, MSAA, résolution, échelle de rendu | S |
 | 6.10 | **Écran de chargement** et transitions | 🟡 | S |
 
 ---
@@ -131,7 +131,7 @@ Effort : S par atout. Ajouter l'**icône HUD réaliste** et un **jingle propre �
 
 | # | Fonctionnalité | État | Effort |
 |---|---|---|---|
-| 7.1 | **Musique de fond** réelle (ambiance, manche, mort) | 🟡 menu + ambiance en jeu réels ; manche/mort à ajouter | S |
+| 7.1 | **Musique de fond** réelle (ambiance, manche, mort) | ✅ | S |
 | 7.2 | **Annonceur** qui parle (« Munitions max », « Mort instantanée »…) | ✅ voix de synthèse (à remplacer par de vrais enregistrements) | S |
 | 7.3 | **Voix des personnages** (réactions, réanimation) | ❌ | M |
 | 7.4 | **Son 3D spatialisé** avec réverbération par pièce (bus audio + `AudioEffectReverb`) | 🟡 | M |
@@ -155,7 +155,7 @@ Effort : S par atout. Ajouter l'**icône HUD réaliste** et un **jingle propre �
 | 8.7 | **Minimap / boussole** | ❌ | M |
 | 8.8 | **Accessibilité** : taille du texte, daltonisme, sous-titres, arachnophobie/sang réduit | ❌ | S |
 | 8.9 | **Localisation** (FR/EN) avec `TranslationServer` | ❌ | M |
-| 8.10 | **Indicateurs de dégâts directionnels** | ❌ | S |
+| 8.10 | **Indicateurs de dégâts directionnels** | ✅ | S |
 | 8.11 | **Pause automatique** à la perte de focus | ❌ | S |
 
 ---

@@ -286,7 +286,8 @@ func _try_fire(w: Dictionary, just_pressed: bool) -> void:
 			start_reload()
 		return
 	var d := WeaponDB.data(w.id)
-	w.mag -= 1
+	if not GameManager.is_powerup_active("infinite_ammo"):
+		w.mag -= 1
 	GameManager.shots_fired += 1
 	GameManager.vibrate(0.3, 0.0, 0.08)
 	var rate: float = d.rpm * (1.33 if GameManager.has_perk("tonique_eclair") else 1.0)

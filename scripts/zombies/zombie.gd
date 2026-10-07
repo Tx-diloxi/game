@@ -301,7 +301,7 @@ func _explode_bomber(on_player: bool) -> void:
 	if p and not p.dead and not GameManager.has_perk("bouclier"):
 		var d: float = (p.global_position + Vector3.UP).distance_to(pos)
 		if d < 4.2:
-			p.take_damage(75.0 * (1.0 - d / 4.2) + (15.0 if on_player else 0.0))
+			p.take_damage(75.0 * (1.0 - d / 4.2) + (15.0 if on_player else 0.0), global_position)
 			p.velocity += (p.global_position - global_position).normalized() * 5.0 + Vector3.UP * 3.0
 
 
@@ -377,7 +377,7 @@ func _scream(player: Node3D) -> void:
 	GameManager.start_rage(7.0)
 	var d := _flat_dist(player.global_position)
 	if d < 18.0:
-		player.take_damage(12.0)
+		player.take_damage(12.0, global_position)
 		player.shake(0.6)
 		Audio.deafen(3.0)
 		if GameManager.game and GameManager.game.hud:
@@ -408,7 +408,7 @@ func _boss_logic(delta: float, player: Node3D) -> bool:
 		_face(_charge_dir, delta)
 		if not _charge_hit and d < 2.0:
 			_charge_hit = true
-			player.take_damage(70.0)
+			player.take_damage(70.0, global_position)
 			player.velocity += _charge_dir * 12.0 + Vector3.UP * 4.0
 			if GameManager.game:
 				GameManager.game._shake(0.5)
@@ -454,7 +454,7 @@ func _slam() -> void:
 	for p in get_tree().get_nodes_in_group("player"):
 		var pd := _flat_dist(p.global_position)
 		if pd < 4.5:
-			p.take_damage(55.0 * (1.0 - pd / 6.0))
+			p.take_damage(55.0 * (1.0 - pd / 6.0), global_position)
 			var away: Vector3 = (p.global_position - global_position)
 			away.y = 0.0
 			p.velocity += away.normalized() * 8.0 + Vector3.UP * 5.0
@@ -537,7 +537,7 @@ func _update_attack(delta: float, player: Node3D) -> void:
 		_attack_cd = 1.0
 		if player and _flat_dist(player.global_position) < attack_range + 0.8 \
 				and absf(player.global_position.y - global_position.y) < 1.6:
-			player.take_damage(damage)
+			player.take_damage(damage, global_position)
 
 
 # --- Dégâts ---------------------------------------------------------------

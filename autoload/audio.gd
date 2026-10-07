@@ -13,7 +13,7 @@ var _music: AudioStreamPlayer
 var _music_name := ""
 var _voice: AudioStreamPlayer
 var _voice_queue: Array[String] = []
-const VOICES := ["fire_sale", "bonus_points", "zombie_blood", "max_ammo", "insta_kill", "nuke", "double_points", "carpenter", "boss", "boss_down", "helmet", "dogs",
+const VOICES := ["infinite_ammo", "last_stand", "fire_sale", "bonus_points", "zombie_blood", "max_ammo", "insta_kill", "nuke", "double_points", "carpenter", "boss", "boss_down", "helmet", "dogs",
 	"power_on", "box_moved", "trap_on", "game_over", "round_5", "round_10", "round_15", "round_20", "round_25", "round_30"]
 
 
@@ -180,6 +180,7 @@ func _build_library() -> void:
 	defs["acid_hit"] = [0.25, func(t, st): return (_noise(st, 0.5) * 0.6 + sin(TAU * 180.0 * t) * 0.2) * exp(-t * 18.0)]
 	defs["scream"] = [1.4, func(t, st): return (_saw(t, 880.0 + 260.0 * sin(TAU * 7.0 * t)) * 0.45 + _saw(t, 1330.0) * 0.2 + _noise(st, 0.5) * 0.25) * sin(PI * t / 1.4)]
 	defs["beep"] = [0.09, func(t, _st): return sin(TAU * 1700.0 * t) * exp(-t * 25.0) * 0.5]
+	defs["game_over_jingle"] = [3.0, func(t, _st): return (sin(TAU * [392.0, 349.0, 330.0, 294.0][mini(int(t / 0.7), 3)] * t) + 0.5 * sin(TAU * [196.0, 175.0, 165.0, 147.0][mini(int(t / 0.7), 3)] * t)) * 0.3 * exp(-fmod(t, 0.7) * 2.0)]
 	defs["ui_hover"] = [0.05, func(t, _st): return sin(TAU * 1200.0 * t) * exp(-t * 80.0) * 0.25]
 	defs["ui_click"] = [0.25, func(t, st): return (sin(TAU * 90.0 * t) * 0.7 + _noise(st, 0.5) * 0.3) * exp(-t * 18.0)]
 	# Boucles (périodes entières sur la durée pour un bouclage sans clic)

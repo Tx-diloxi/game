@@ -56,6 +56,6 @@ func _impact(hit: Dictionary) -> void:
 		(decal.material_override as ShaderMaterial).set_shader_parameter("blood_color", Color(0.25, 0.55, 0.05, 0.9))
 	var col: Object = hit.collider
 	if col != null and col.is_in_group("player"):
-		col.take_damage(DAMAGE)
+		col.take_damage(DAMAGE, global_position - velocity * 0.15)
 		GameManager.vibrate(0.3, 0.6, 0.2)
 	queue_free()

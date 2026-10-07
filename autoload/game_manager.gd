@@ -15,6 +15,8 @@ const GAME_OVER_SCENE := "res://scenes/game_over.tscn"
 const SETTINGS_PATH := "user://settings.cfg"
 var records_path := "user://records.cfg"
 const FPS_LIMITS := [0, 30, 60, 90, 120, 144, 240]
+const RESOLUTIONS := [Vector2i(1024, 576), Vector2i(1280, 720), Vector2i(1600, 900), Vector2i(1920, 1080), Vector2i(2560, 1440)]
+const MSAA_MODES := [Viewport.MSAA_DISABLED, Viewport.MSAA_2X, Viewport.MSAA_4X, Viewport.MSAA_8X]
 
 # Couches physiques (valeurs de bits)
 const L_WORLD := 1
@@ -54,6 +56,8 @@ const POWERUPS := {
 	"fire_sale": {"name": "FEU DE VENTE", "color": Color(1.0, 0.45, 0.1), "letter": "10"},
 	"bonus_points": {"name": "BONUS DE POINTS", "color": Color(1.0, 0.95, 0.4), "letter": "+"},
 	"zombie_blood": {"name": "SANG DE ZOMBIE", "color": Color(0.3, 0.55, 1.0), "letter": "Z"},
+	"infinite_ammo": {"name": "MUNITIONS ILLIMITÉES", "color": Color(0.2, 0.9, 0.95), "letter": "A"},
+	"last_stand": {"name": "DERNIER SURVIVANT", "color": Color(1.0, 0.55, 0.7), "letter": "+1"},
 	"carpenter": {"name": "CHARPENTIER", "color": Color(0.9, 0.55, 0.2), "letter": "C"},
 }
 const POWERUP_DURATION := 30.0
@@ -68,6 +72,7 @@ var play_time := 0.0
 var perks_bought := 0
 var gamepad := false
 var seen_kinds := {}
+var extra_lives := 0
 var _rage_until := 0.0
 var headshots := 0
 var total_points := 0
@@ -89,6 +94,9 @@ var voice_volume := 1.0
 var vsync := true
 var max_fps_index := 0
 var shadow_quality := 3
+var msaa_index := 1 # 0 = aucun, 1 = 2x, 2 = 4x, 3 = 8x
+var res_index := 1
+var render_scale := 1.0
 ## Touches personnalisées : {action: {"key": [type, valeur…], "pad": [type, valeur…]}}
 var custom_bindings := {}
 var last_beaten := {}
@@ -124,6 +132,7 @@ func new_game() -> void:
 	total_points = 0
 	last_beaten = {}
 	seen_kinds = {}
+	extra_lives = 0
 	_rage_until = 0.0
 	shots_fired = 0
 	shots_hit = 0
@@ -312,6 +321,24 @@ func set_shadow_quality(q: int) -> void:
 	save_settings()
 
 
+func set_msaa(i: int) -> void:
+	msaa_index = clampi(i, 0, MSAA_MODES.size() - 1)
+	apply_video()
+	save_settings()
+
+
+func set_resolution(i: int) -> void:
+	res_index = clampi(i, 0, RESOLUTIONS.size() - 1)
+	apply_video()
+	save_settings()
+
+
+func set_render_scale(v: float) -> void:
+	render_scale = clampf(v, 0.5, 1.0)
+	apply_video()
+	save_settings()
+
+
 func apply_video() -> void:
 	if DisplayServer.get_name() != "headless":
 		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if vsync else DisplayServer.VSYNC_DISABLED)
@@ -320,6 +347,14 @@ func apply_video() -> void:
 	var root := get_tree().root if is_inside_tree() else null
 	if root:
 		root.positional_shadow_atlas_size = size
+		root.msaa_3d = MSAA_MODES[msaa_index]
+		root.scaling_3d_scale = render_scale
+		if not fullscreen and DisplayServer.get_name() != "headless":
+			var res: Vector2i = RESOLUTIONS[res_index]
+			if DisplayServer.window_get_size() != res:
+				DisplayServer.window_set_size(res)
+				var screen := DisplayServer.screen_get_size()
+				DisplayServer.window_set_position((screen - res) / 2)
 	RenderingServer.directional_shadow_atlas_set_size(maxi(size, 256), shadow_quality >= 2)
 	RenderingServer.directional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_HARD if shadow_quality <= 1 else (RenderingServer.SHADOW_QUALITY_SOFT_LOW if shadow_quality == 2 else RenderingServer.SHADOW_QUALITY_SOFT_HIGH))
 	RenderingServer.positional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_HARD if shadow_quality <= 1 else (RenderingServer.SHADOW_QUALITY_SOFT_LOW if shadow_quality == 2 else RenderingServer.SHADOW_QUALITY_SOFT_HIGH))
@@ -341,6 +376,9 @@ func save_settings() -> void:
 	cfg.set_value("video", "vsync", vsync)
 	cfg.set_value("video", "max_fps", max_fps_index)
 	cfg.set_value("video", "shadows", shadow_quality)
+	cfg.set_value("video", "msaa", msaa_index)
+	cfg.set_value("video", "resolution", res_index)
+	cfg.set_value("video", "render_scale", render_scale)
 	cfg.set_value("bindings", "custom", custom_bindings)
 	cfg.save(SETTINGS_PATH)
 
@@ -358,6 +396,9 @@ func _load_settings() -> void:
 		vsync = cfg.get_value("video", "vsync", vsync)
 		max_fps_index = cfg.get_value("video", "max_fps", max_fps_index)
 		shadow_quality = cfg.get_value("video", "shadows", shadow_quality)
+		msaa_index = cfg.get_value("video", "msaa", msaa_index)
+		res_index = cfg.get_value("video", "resolution", res_index)
+		render_scale = cfg.get_value("video", "render_scale", render_scale)
 		custom_bindings = cfg.get_value("bindings", "custom", {})
 	if fullscreen and DisplayServer.get_name() != "headless":
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
