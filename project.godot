@@ -17,9 +17,9 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-MCPRuntimeServer="*res://addons/godot_mcp_toolkit/runtime/mcp_runtime_server.gd"
 GameManager="*res://autoload/game_manager.gd"
 Audio="*res://autoload/audio.gd"
+MCPRuntimeServer="*res://addons/godot_mcp_toolkit/runtime/mcp_runtime_server.gd"
 
 [display]
 
@@ -42,7 +42,6 @@ enabled=PackedStringArray("res://addons/godot_mcp_toolkit/plugin.cfg")
 [physics]
 
 3d/physics_engine="Jolt Physics"
-common/physics_ticks_per_second=60
 
 [rendering]
 

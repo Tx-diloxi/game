@@ -6,6 +6,7 @@ const Panels := preload("res://scenes/ui/menu_panels.gd")
 
 var _panel: Control
 var _content: Control
+var _resume_btn: Button
 
 
 func _ready() -> void:
@@ -33,7 +34,7 @@ func _ready() -> void:
 	var spacer := Control.new()
 	spacer.custom_minimum_size = Vector2(0, 30)
 	left.add_child(spacer)
-	UI.button(left, "REPRENDRE", _resume, 42)
+	_resume_btn = UI.button(left, "REPRENDRE", _resume, 42)
 	UI.button(left, "OPTIONS", func(): _show(Panels.options))
 	UI.button(left, "COMMANDES", func(): _show(Panels.controls))
 	UI.button(left, "MENU PRINCIPAL", GameManager.to_menu)
@@ -69,6 +70,7 @@ func _pause() -> void:
 		GameManager.round_num, GameManager.kills, GameManager.points]
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	_resume_btn.grab_focus()
 
 
 func _resume() -> void:

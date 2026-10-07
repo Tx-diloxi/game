@@ -43,9 +43,20 @@ static func controls(parent: Node) -> Control:
 	for row in [["Z Q S D", "Se déplacer"], ["Souris", "Regarder"], ["Clic gauche", "Tirer"], ["Clic droit", "Viser"],
 			["R", "Recharger"], ["F", "Acheter / interagir (maintenir pour réparer)"], ["Maj", "Sprint"],
 			["Ctrl", "S'accroupir"], ["Espace", "Sauter"], ["V", "Couteau"], ["G", "Grenade"], ["T", "Singe-leurre"],
-			["1 / 2 / 3, molette", "Changer d'arme"], ["Échap", "Pause"]]:
+			["1 / 2 / 3, molette", "Changer d'arme"], ["Tab", "Tableau des scores"], ["Échap", "Pause"]]:
 		UI.label(grid, row[0], 22, UI.BONE, UI.title_font())
 		UI.label(grid, row[1], 20, UI.GREY)
+	UI.label(col, "MANETTE", 30, UI.RED, UI.title_font())
+	var pad := GridContainer.new()
+	pad.columns = 2
+	pad.add_theme_constant_override("h_separation", 40)
+	pad.add_theme_constant_override("v_separation", 4)
+	col.add_child(pad)
+	for row in [["Stick gauche / droit", "Déplacement / caméra"], ["Gâchettes", "Viser (LT) / Tirer (RT)"], ["A / B", "Sauter / S'accroupir"],
+			["X / Y", "Recharger / Interagir"], ["LB / RB", "Grenade / Singe-leurre"], ["Clic stick G / D", "Sprint / Couteau"],
+			["Croix gauche-droite", "Changer d'arme"], ["Retour / Start", "Scores / Pause"]]:
+		UI.label(pad, row[0], 18, UI.BONE, UI.title_font())
+		UI.label(pad, row[1], 18, UI.GREY)
 	return col.get_parent()
 
 
@@ -59,7 +70,8 @@ static func credits(parent: Node) -> Control:
 			"Sons d'impact : Kenney — CC0",
 			"Tirs : Vincent Sevedge — CC-BY 3.0 ; cris de zombies, rechargements : OpenGameArt — CC0",
 			"Textures : ambientCG.com — CC0",
-			"Musique et autres sons : synthétisés en jeu"]:
+			"Musique : Ambient Horror Track 01 (CC0) ; Dark Ambience Loop, Iwan Gabovitch (CC-BY 3.0)",
+			"Annonceur : voix de synthèse ; autres sons synthétisés en jeu"]:
 		var l := UI.label(col, line, 20, UI.GREY)
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD
 	return col.get_parent()

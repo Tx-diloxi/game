@@ -48,9 +48,10 @@ func _ready() -> void:
 	gc.add_child(grid)
 	col.add_child(gc)
 	var counters := []
-	for row in [["Éliminations", GameManager.kills], ["Tirs à la tête", GameManager.headshots], ["Points gagnés", GameManager.total_points]]:
+	for row in [["Éliminations", GameManager.kills], ["Tirs à la tête", GameManager.headshots], ["Points gagnés", GameManager.total_points],
+			["Précision", int(100.0 * GameManager.shots_hit / maxf(GameManager.shots_fired, 1.0))]]:
 		UI.label(grid, row[0], 26, UI.GREY)
-		var v := UI.label(grid, "0", 30, Color.WHITE, UI.title_font())
+		var v := UI.label(grid, "0 %" if row[0] == "Précision" else "0", 30, Color.WHITE, UI.title_font())
 		v.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		counters.append([v, row[1]])
 
@@ -62,6 +63,7 @@ func _ready() -> void:
 	buttons.add_theme_constant_override("separation", 20)
 	col.add_child(buttons)
 	var again := UI.button(buttons, "REJOUER", GameManager.new_game, 36)
+	again.grab_focus.call_deferred()
 	again.custom_minimum_size = Vector2(260, 0)
 	again.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var menu := UI.button(buttons, "MENU PRINCIPAL", GameManager.to_menu, 36)
@@ -74,4 +76,5 @@ func _ready() -> void:
 	for c in counters:
 		var lbl: Label = c[0]
 		var target: int = c[1]
-		tw.tween_method(func(v: float): lbl.text = str(int(v)), 0.0, float(target), 0.6)
+		var suffix := " %" if lbl.text.ends_with("%") else ""
+		tw.tween_method(func(v: float): lbl.text = str(int(v)) + suffix, 0.0, float(target), 0.6)

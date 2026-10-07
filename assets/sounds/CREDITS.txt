@@ -4,3 +4,6 @@ Sons réels :
 - Zombies : artisticdude, « Zombies Sound Pack », CC0 — https://opengameart.org/content/zombies-sound-pack
 - Rugissement du boss : Darsycho, « Hungry Ghoul », CC0 — https://opengameart.org/content/hungry-ghoul
 - Impacts, pas, planches : Kenney, « Impact Sounds », CC0
+- Musique du menu : « Ambient Horror Track 01 », CC0 — https://opengameart.org/content/ambient-horror-track-01
+- Ambiance en jeu : « Dark Ambience Loop », Iwan Gabovitch (qubodup), CC-BY 3.0 — https://opengameart.org/content/dark-ambience-loop
+- Annonceur : voix de synthèse Microsoft Hortense (Windows), générée localement

@@ -157,6 +157,7 @@ func interact(_player: Node) -> void:
 	if not GameManager.spend(cost):
 		return
 	_active_t = ACTIVE_TIME
+	Audio.say("trap_on")
 	_lamp.material_override = MeshUtil.mat(Color(1.0, 0.15, 0.05), 3.0)
 	Audio.play_at("power_on", zone_center, 2.0, 1.4 if kind == "electric" else 0.7)
 	for f in _flames:

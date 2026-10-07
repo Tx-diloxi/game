@@ -53,7 +53,7 @@ démembrement + zombies rampants · menus 3D · HUD à la craie · sons réels d
 | 3.1.9 | **Wonder Weapons uniques**, à construire à partir de pièces cachées | ❌ | L |
 
 ### 3.2 Atouts
-Ajouter : **double gain de points**, **gilet pare-balles** (réduit les dégâts), **sprint illimité**, **visée automatique tête**,
+✅ Fait : Œil de Lynx, Pied Léger, Mains d'Or, Bouclier, Ravitailleur (10 atouts au total). Restent à ajouter : **double gain de points**, **gilet pare-balles** (réduit les dégâts), **sprint illimité**, **visée automatique tête**,
 **explosions amies sans dégâts + explosion à l'atterrissage**, **rechargement rapide**, **recharge de grenades**,
 **vision des zombies à travers les murs**, **Mule Kick** (3ᵉ arme — équivalent de Triple Étui, déjà présent).
 Effort : S par atout. Ajouter l'**icône HUD réaliste** et un **jingle propre à chaque atout**.
@@ -132,8 +132,8 @@ Ajouter : **Feu de vente** (tout à 10 points), **Munitions « Max » par arme**
 
 | # | Fonctionnalité | État | Effort |
 |---|---|---|---|
-| 7.1 | **Musique de fond** réelle (ambiance, manche, mort) | ❌ synthétisée | S (assets CC0) |
-| 7.2 | **Annonceur** qui parle (« Munitions max », « Mort instantanée »…) | ❌ | S |
+| 7.1 | **Musique de fond** réelle (ambiance, manche, mort) | 🟡 menu + ambiance en jeu réels ; manche/mort à ajouter | S |
+| 7.2 | **Annonceur** qui parle (« Munitions max », « Mort instantanée »…) | ✅ voix de synthèse (à remplacer par de vrais enregistrements) | S |
 | 7.3 | **Voix des personnages** (réactions, réanimation) | ❌ | M |
 | 7.4 | **Son 3D spatialisé** avec réverbération par pièce (bus audio + `AudioEffectReverb`) | 🟡 | M |
 | 7.5 | **Sons d'armes uniques** par arme (aujourd'hui partagés entre plusieurs) | 🟡 | S |
@@ -147,9 +147,9 @@ Ajouter : **Feu de vente** (tout à 10 points), **Munitions « Max » par arme**
 
 | # | Fonctionnalité | État | Effort |
 |---|---|---|---|
-| 8.1 | **Prise en charge manette** (axes, gâchettes, vibrations, remappage) | ❌ | M |
+| 8.1 | **Prise en charge manette** (axes, gâchettes, vibrations, remappage) | 🟡 jouable ; remappage à ajouter | M |
 | 8.2 | **Remappage des touches** | ❌ | M |
-| 8.3 | **Tableau des scores** (Tab) avec éliminations, tirs à la tête, réanimations, points | ❌ | S |
+| 8.3 | **Tableau des scores** (Tab) avec éliminations, tirs à la tête, réanimations, points | ✅ (réanimations à ajouter avec la coop) | S |
 | 8.4 | **Écran de fin détaillé** (manches, portes ouvertes, achats, précision) | 🟡 | S |
 | 8.5 | **Succès / défis** (ex. « manche 10 sans atout ») | ❌ | M |
 | 8.6 | **Statistiques à vie** | ❌ | S |

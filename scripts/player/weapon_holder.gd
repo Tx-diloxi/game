@@ -280,6 +280,8 @@ func _try_fire(w: Dictionary, just_pressed: bool) -> void:
 		return
 	var d := WeaponDB.data(w.id)
 	w.mag -= 1
+	GameManager.shots_fired += 1
+	GameManager.vibrate(0.3, 0.0, 0.08)
 	var rate: float = d.rpm * (1.33 if GameManager.has_perk("tonique_eclair") else 1.0)
 	fire_timer = 60.0 / rate
 	Audio.play(d.sound, -7.0, randf_range(0.95, 1.05) * (0.85 if w.upgraded else 1.0))
@@ -315,7 +317,9 @@ func _fire_ray(w: Dictionary, d: Dictionary, spread: float) -> void:
 	var effect: String = d.get("upgrade_effect", "") if w.upgraded else ""
 	if col != null and col.has_method("take_damage"):
 		var head: bool = pos.y > col.global_position.y + col.head_height
-		var dmg: float = WeaponDB.damage(w) * (d.head_mult if head else 1.0)
+		var hm: float = d.head_mult * (1.5 if GameManager.has_perk("oeil_de_lynx") else 1.0)
+		var dmg: float = WeaponDB.damage(w) * (hm if head else 1.0)
+		GameManager.shots_hit += 1
 		if col.has_method("on_limb_hit") and not head:
 			col.on_limb_hit(pos, dmg)
 		_apply_upgrade_effect(effect, col, pos, dir, dmg)

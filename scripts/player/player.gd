@@ -110,6 +110,8 @@ func _physics_process(delta: float) -> void:
 		speed = ADS_SPEED
 	if busy_timer > 0.0:
 		speed *= 0.6
+	if GameManager.has_perk("pied_leger"):
+		speed *= 1.2
 
 	var accel := 12.0 if is_on_floor() else 3.0
 	var t := minf(accel * delta, 1.0)
@@ -132,8 +134,9 @@ func _physics_process(delta: float) -> void:
 	head.position.y = move_toward(head.position.y, target_h, delta * 4.0)
 
 	since_hit += delta
-	if since_hit > REGEN_DELAY and health < max_health and not downed:
-		health = minf(max_health, health + REGEN_RATE * delta)
+	var fast_heal := GameManager.has_perk("bouclier")
+	if since_hit > (REGEN_DELAY * 0.5 if fast_heal else REGEN_DELAY) and health < max_health and not downed:
+		health = minf(max_health, health + REGEN_RATE * (2.0 if fast_heal else 1.0) * delta)
 		health_changed.emit(health, max_health)
 
 	_update_interact(delta)
@@ -186,6 +189,14 @@ func shake(amount: float) -> void:
 
 
 func _process(delta: float) -> void:
+	# Caméra à la manette (stick droit)
+	if not dead and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		var look := Input.get_vector("look_left", "look_right", "look_up", "look_down")
+		if look.length() > 0.0:
+			var sens := (GameManager.mouse_sensitivity / 0.12) * 170.0 * (0.5 if holder.aiming else 1.0)
+			var curved := look * look.length()
+			rotate_y(deg_to_rad(-curved.x * sens * delta))
+			head.rotation.x = clampf(head.rotation.x - deg_to_rad(curved.y * sens * 0.75 * delta), -1.5, 1.5)
 	_shake = move_toward(_shake, 0.0, delta * 1.5)
 	camera.h_offset = randf_range(-1.0, 1.0) * _shake * 0.08
 	camera.v_offset = randf_range(-1.0, 1.0) * _shake * 0.08
@@ -202,6 +213,7 @@ func take_damage(amount: float) -> void:
 	health -= amount
 	since_hit = 0.0
 	Audio.play("player_hurt", -2.0, randf_range(0.9, 1.1))
+	GameManager.vibrate(0.4, 0.9, 0.3)
 	damaged.emit()
 	health_changed.emit(maxf(health, 0.0), max_health)
 	if health <= 0.0:

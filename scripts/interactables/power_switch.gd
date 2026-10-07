@@ -34,3 +34,4 @@ func interact(_player: Node) -> void:
 	Audio.play("power_on", 2.0)
 	GameManager.set_power(true)
 	GameManager.show_message("COURANT RÉTABLI", Color(1.0, 0.9, 0.3))
+	Audio.say("power_on")

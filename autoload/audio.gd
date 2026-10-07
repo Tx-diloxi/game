@@ -11,6 +11,10 @@ var _pool: Array[AudioStreamPlayer] = []
 var _next := 0
 var _music: AudioStreamPlayer
 var _music_name := ""
+var _voice: AudioStreamPlayer
+var _voice_queue: Array[String] = []
+const VOICES := ["max_ammo", "insta_kill", "nuke", "double_points", "carpenter", "boss", "boss_down", "helmet", "dogs",
+	"power_on", "box_moved", "trap_on", "game_over", "round_5", "round_10", "round_15", "round_20", "round_25", "round_30"]
 
 
 func _ready() -> void:
@@ -21,6 +25,10 @@ func _ready() -> void:
 		_pool.append(p)
 	_music = AudioStreamPlayer.new()
 	add_child(_music)
+	_voice = AudioStreamPlayer.new()
+	_voice.volume_db = 2.0
+	_voice.finished.connect(_next_voice)
+	add_child(_voice)
 	_build_library()
 
 
@@ -57,6 +65,24 @@ func play_at(sound: String, pos: Vector3, volume_db := 0.0, pitch := 1.0) -> voi
 	p.global_position = pos
 	p.finished.connect(p.queue_free)
 	p.play()
+
+
+## Annonceur : une seule voix à la fois, les suivantes attendent leur tour.
+func say(id: String) -> void:
+	if not _streams.has("voice_" + id):
+		return
+	if _voice.playing:
+		if _voice_queue.size() < 3 and not _voice_queue.has(id):
+			_voice_queue.append(id)
+		return
+	_voice.stream = _pick("voice_" + id)
+	_voice.play()
+
+
+func _next_voice() -> void:
+	if _voice_queue.is_empty():
+		return
+	say(_voice_queue.pop_front())
 
 
 ## Boucle musicale/ambiance (une seule à la fois, fondu enchaîné).
@@ -145,6 +171,16 @@ func _build_library() -> void:
 				w.loop_end = w.data.size() / 2
 			loaded.append(w)
 		_streams[sound] = loaded
+	# Voix de l'annonceur (fichiers uniquement, pas de version synthétisée)
+	for v in VOICES:
+		var vl := _load_files("voice_" + v)
+		if not vl.is_empty():
+			_streams["voice_" + v] = vl
+	# Les vraies musiques en .ogg doivent boucler
+	for m in ["menu_music", "ambience"]:
+		for s in _streams[m]:
+			if s is AudioStreamOggVorbis:
+				s.loop = true
 
 
 func _load_files(sound: String) -> Array:

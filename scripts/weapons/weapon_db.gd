@@ -104,7 +104,8 @@ static func max_mag(w: Dictionary) -> int:
 
 static func max_reserve(w: Dictionary) -> int:
 	var d := data(w.id)
-	return int(ceil(d.reserve * (UPGRADE_AMMO if w.upgraded else 1.0)))
+	var m := 1.5 if GameManager.has_perk("ravitailleur") else 1.0
+	return int(ceil(d.reserve * (UPGRADE_AMMO if w.upgraded else 1.0) * m))
 
 
 static func is_full(w: Dictionary) -> bool:

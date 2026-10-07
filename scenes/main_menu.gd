@@ -77,7 +77,8 @@ func _ready() -> void:
 	spacer.custom_minimum_size = Vector2(0, 50)
 	left.add_child(spacer)
 
-	UI.button(left, "JOUER", _play, 46)
+	var play_btn := UI.button(left, "JOUER", _play, 46)
+	play_btn.grab_focus.call_deferred()
 	UI.button(left, "OPTIONS", func(): _show(Panels.options))
 	UI.button(left, "COMMANDES", func(): _show(Panels.controls))
 	UI.button(left, "CRÉDITS", func(): _show(Panels.credits))

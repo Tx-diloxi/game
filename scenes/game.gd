@@ -257,6 +257,11 @@ func _build_map() -> void:
 	_perk(Vector3(-14.35, 0, -34), Vector3.RIGHT, "main_leste")
 	_perk(Vector3(-14.35, 0, -46), Vector3.RIGHT, "triple_etui")
 	_perk(Vector3(14.35, 0, -46), Vector3.LEFT, "tonique_eclair")
+	_perk(Vector3(-9.35, 0, -7.0), Vector3.RIGHT, "oeil_de_lynx")
+	_perk(Vector3(-9.35, 0, 7.5), Vector3.RIGHT, "pied_leger")
+	_perk(Vector3(2.35, 0, -14.0), Vector3.LEFT, "mains_d_or")
+	_perk(Vector3(14.35, 0, -34.0), Vector3.LEFT, "bouclier")
+	_perk(Vector3(9.0, 0, -30.65), Vector3.FORWARD, "ravitailleur")
 
 	# Courant et amélioration
 	_place(PowerScript.new(), nav, Vector3(0, 0, -49.79), Vector3.BACK)
@@ -403,6 +408,7 @@ func relocate_box(b: Node3D) -> void:
 	_box_index = choices.pick_random()
 	b.global_transform = box_locations[_box_index]
 	GameManager.show_message("La boîte est réapparue ailleurs", Color(0.4, 0.8, 1.0))
+	Audio.say("box_moved")
 
 
 func _on_power(on: bool) -> void:
@@ -451,6 +457,7 @@ func spawn_enemy(info: Dictionary) -> bool:
 		_shake(0.6)
 		Audio.play("boss_roar", 6.0, 0.7)
 		GameManager.show_message("LE COLOSSE", Color(1.0, 0.25, 0.1), "Un monstre blindé approche — brisez son casque")
+		Audio.say("boss")
 		hud.track_boss(z)
 	else:
 		Effects.dirt_puff(self, pos)
@@ -484,6 +491,12 @@ func _lightning(pos: Vector3) -> void:
 
 func on_round_started(r: int, dog: bool) -> void:
 	hud.show_round(r, dog)
+	if dog:
+		Audio.say("dogs")
+	elif r % 5 == 0 and r <= 30 and r % 10 != 0:
+		Audio.say("round_%d" % r)
+	elif r % 10 == 0 and r <= 30:
+		Audio.say("round_%d" % r)
 	if r > 1:
 		player.holder.add_grenades(2)
 	var tw := create_tween()
@@ -507,6 +520,7 @@ func on_zombie_killed(z: Node3D, cause: String) -> void:
 	if z.kind == "boss":
 		spawn_powerup(pos, "max_ammo")
 		GameManager.show_message("COLOSSE ABATTU", Color(1.0, 0.85, 0.3), "+500 points")
+		Audio.say("boss_down")
 		return
 	if cause == "nuke" or GameManager.drops_this_round >= MAX_DROPS or z.kind == "dog":
 		return
@@ -534,6 +548,7 @@ func spawn_powerup(pos: Vector3, kind: String) -> void:
 func apply_powerup(kind: String) -> void:
 	var p: Dictionary = GameManager.POWERUPS[kind]
 	Audio.play("powerup", 2.0)
+	Audio.say(kind)
 	GameManager.show_message(p.name, p.color)
 	match kind:
 		"max_ammo":
@@ -578,7 +593,7 @@ func explode(pos: Vector3, radius: float, dmg: float, cause: String, hurt_player
 	if player:
 		var pd := (player.global_position + Vector3.UP).distance_to(pos)
 		_shake(clampf(1.0 - pd / (radius * 4.0), 0.0, 1.0) * 0.5)
-		if hurt_player and pd < radius * 0.6:
+		if hurt_player and pd < radius * 0.6 and not GameManager.has_perk("bouclier"):
 			player.take_damage(45.0 * (1.0 - pd / (radius * 0.6)))
 
 

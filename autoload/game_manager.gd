@@ -20,7 +20,7 @@ const L_PLAYER := 2
 const L_ZOMBIE := 4
 const L_PLAYER_BLOCK := 8
 
-const MAX_PERKS := 4
+const MAX_PERKS := 6
 const PERKS := {
 	"cuirasse": {"name": "Cuirasse", "price": 2500, "color": Color(0.85, 0.1, 0.1), "letter": "C", "power": true,
 		"desc": "Santé x2,5"},
@@ -32,6 +32,16 @@ const PERKS := {
 		"desc": "Réanimation automatique"},
 	"triple_etui": {"name": "Triple Étui", "price": 4000, "color": Color(0.6, 0.2, 0.9), "letter": "3", "power": true,
 		"desc": "Une troisième arme"},
+	"oeil_de_lynx": {"name": "Œil de Lynx", "price": 2000, "color": Color(1.0, 0.55, 0.1), "letter": "L", "power": true,
+		"desc": "Dégâts à la tête +50 %"},
+	"pied_leger": {"name": "Pied Léger", "price": 2000, "color": Color(0.1, 0.8, 0.85), "letter": "P", "power": true,
+		"desc": "Déplacement +20 %"},
+	"mains_d_or": {"name": "Mains d'Or", "price": 3000, "color": Color(0.95, 0.85, 0.3), "letter": "$", "power": true,
+		"desc": "Points gagnés +50 %"},
+	"bouclier": {"name": "Bouclier", "price": 2500, "color": Color(0.55, 0.6, 0.7), "letter": "B", "power": true,
+		"desc": "Immunité aux explosions, soin rapide"},
+	"ravitailleur": {"name": "Ravitailleur", "price": 2000, "color": Color(0.5, 0.75, 0.3), "letter": "R", "power": true,
+		"desc": "Réserves de munitions +50 %"},
 }
 
 const POWERUPS := {
@@ -46,6 +56,12 @@ const POWERUP_DURATION := 30.0
 var points := 500
 var round_num := 0
 var kills := 0
+## Statistiques de la partie (tableau des scores).
+var shots_fired := 0
+var shots_hit := 0
+var play_time := 0.0
+var perks_bought := 0
+var gamepad := false
 var headshots := 0
 var total_points := 0
 var power_on := false
@@ -71,6 +87,8 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	if in_game and not menu_mode:
+		play_time += delta
 	if active_powerups.is_empty():
 		return
 	for k in active_powerups.keys():
@@ -88,6 +106,10 @@ func new_game() -> void:
 	kills = 0
 	headshots = 0
 	total_points = 0
+	shots_fired = 0
+	shots_hit = 0
+	play_time = 0.0
+	perks_bought = 0
 	power_on = false
 	perks.clear()
 	active_powerups.clear()
@@ -104,6 +126,7 @@ func game_over() -> void:
 	in_game = false
 	active_powerups.clear()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	Audio.say("game_over")
 	if game:
 		game.show_game_over()
 	else:
@@ -130,6 +153,8 @@ func set_round(r: int) -> void:
 func add_points(amount: int, allow_double := true) -> void:
 	if allow_double and is_powerup_active("double_points"):
 		amount *= 2
+	if allow_double and amount > 0 and has_perk("mains_d_or"):
+		amount = int(amount * 1.5)
 	points += amount
 	total_points += amount
 	points_changed.emit(points)
@@ -160,6 +185,7 @@ func has_perk(id: String) -> bool:
 func add_perk(id: String) -> void:
 	if not perks.has(id):
 		perks.append(id)
+		perks_bought += 1
 		perks_changed.emit()
 
 
@@ -236,6 +262,21 @@ func _load_settings() -> void:
 # --- Contrôles ------------------------------------------------------------
 # Touches physiques : ZQSD sur AZERTY = WASD sur QWERTY.
 
+## Détecte le dernier périphérique utilisé (pour afficher [F] ou [Y]…).
+func _input(event: InputEvent) -> void:
+	if event is InputEventJoypadButton or (event is InputEventJoypadMotion and absf(event.axis_value) > 0.6):
+		gamepad = true
+	elif event is InputEventKey or event is InputEventMouseButton or (event is InputEventMouseMotion and event.relative.length() > 2.0):
+		gamepad = false
+
+
+## Remplace les noms de touches clavier d'un texte par ceux de la manette si besoin.
+func hint(text: String) -> String:
+	if not gamepad:
+		return text
+	return text.replace("[F]", "[Y]").replace("[G]", "[LB]").replace("[T]", "[RB]")
+
+
 func _setup_input() -> void:
 	_key("move_forward", [KEY_W, KEY_UP])
 	_key("move_back", [KEY_S, KEY_DOWN])
@@ -253,10 +294,63 @@ func _setup_input() -> void:
 	_key("weapon_2", [KEY_2])
 	_key("weapon_3", [KEY_3])
 	_key("pause", [KEY_ESCAPE, KEY_P])
+	_key("scoreboard", [KEY_TAB])
+	_key("look_left", [])
+	_key("look_right", [])
+	_key("look_up", [])
+	_key("look_down", [])
+
 	_mouse("fire", MOUSE_BUTTON_LEFT)
 	_mouse("aim", MOUSE_BUTTON_RIGHT)
 	_mouse("weapon_next", MOUSE_BUTTON_WHEEL_DOWN)
 	_mouse("weapon_prev", MOUSE_BUTTON_WHEEL_UP)
+	_setup_gamepad()
+
+
+func _setup_gamepad() -> void:
+	# Manette (Xbox) : stick gauche = déplacement, stick droit = caméra, gâchettes = viser/tirer
+	_pad_axis("move_left", JOY_AXIS_LEFT_X, -1.0)
+	_pad_axis("move_right", JOY_AXIS_LEFT_X, 1.0)
+	_pad_axis("move_forward", JOY_AXIS_LEFT_Y, -1.0)
+	_pad_axis("move_back", JOY_AXIS_LEFT_Y, 1.0)
+	_pad_axis("look_left", JOY_AXIS_RIGHT_X, -1.0)
+	_pad_axis("look_right", JOY_AXIS_RIGHT_X, 1.0)
+	_pad_axis("look_up", JOY_AXIS_RIGHT_Y, -1.0)
+	_pad_axis("look_down", JOY_AXIS_RIGHT_Y, 1.0)
+	_pad_axis("fire", JOY_AXIS_TRIGGER_RIGHT, 1.0)
+	_pad_axis("aim", JOY_AXIS_TRIGGER_LEFT, 1.0)
+	_pad_button("jump", JOY_BUTTON_A)
+	_pad_button("crouch", JOY_BUTTON_B)
+	_pad_button("reload", JOY_BUTTON_X)
+	_pad_button("interact", JOY_BUTTON_Y)
+	_pad_button("sprint", JOY_BUTTON_LEFT_STICK)
+	_pad_button("melee", JOY_BUTTON_RIGHT_STICK)
+	_pad_button("grenade", JOY_BUTTON_LEFT_SHOULDER)
+	_pad_button("special", JOY_BUTTON_RIGHT_SHOULDER)
+	_pad_button("weapon_next", JOY_BUTTON_DPAD_RIGHT)
+	_pad_button("weapon_prev", JOY_BUTTON_DPAD_LEFT)
+	_pad_button("pause", JOY_BUTTON_START)
+	_pad_button("scoreboard", JOY_BUTTON_BACK)
+	for a in ["move_left", "move_right", "move_forward", "move_back", "look_left", "look_right", "look_up", "look_down", "fire", "aim"]:
+		InputMap.action_set_deadzone(a, 0.2)
+
+
+func _pad_axis(action: String, axis: JoyAxis, value: float) -> void:
+	var ev := InputEventJoypadMotion.new()
+	ev.axis = axis
+	ev.axis_value = value
+	InputMap.action_add_event(action, ev)
+
+
+func _pad_button(action: String, button: JoyButton) -> void:
+	var ev := InputEventJoypadButton.new()
+	ev.button_index = button
+	InputMap.action_add_event(action, ev)
+
+
+func vibrate(weak: float, strong: float, duration: float) -> void:
+	if gamepad and Input.get_connected_joypads().size() > 0:
+		Input.start_joy_vibration(Input.get_connected_joypads()[0], weak, strong, duration)
 
 
 func _key(action: String, keys: Array) -> void:

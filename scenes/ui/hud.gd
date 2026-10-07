@@ -40,6 +40,9 @@ var _damage := 0.0
 var _flash := 0.0
 var _boss: Node = null
 var _boss_bar: Control
+var _score_panel: Control
+var _score_vals := {}
+var _score_t := 0.0
 
 
 func _ready() -> void:
@@ -109,6 +112,8 @@ func _ready() -> void:
 
 	_boss_bar = _canvas(_draw_boss_bar)
 	_anchor(_boss_bar, Vector2(0.5, 0), Rect2(-320, 26, 640, 44))
+
+	_build_scoreboard()
 
 	_powerups = HBoxContainer.new()
 	_powerups.add_theme_constant_override("separation", 30)
@@ -191,6 +196,16 @@ func track_boss(z: Node) -> void:
 
 
 func _process(delta: float) -> void:
+	var show_score := Input.is_action_pressed("scoreboard")
+	if show_score != _score_panel.visible:
+		_score_panel.visible = show_score
+		if show_score:
+			_refresh_scoreboard()
+	if show_score:
+		_score_t -= delta
+		if _score_t <= 0.0:
+			_score_t = 0.25
+			_refresh_scoreboard()
 	_crosshair.queue_redraw()
 	_boss_bar.queue_redraw()
 	_hit_alpha = move_toward(_hit_alpha, 0.0, delta * 4.0)
@@ -207,7 +222,61 @@ func _process(delta: float) -> void:
 
 # --- API ------------------------------------------------------------------
 
-func set_prompt(text: String) -> void:
+func _build_scoreboard() -> void:
+	_score_panel = CenterContainer.new()
+	_score_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_score_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_score_panel.visible = false
+	_root.add_child(_score_panel)
+	var pc := PanelContainer.new()
+	pc.custom_minimum_size = Vector2(520, 0)
+	_score_panel.add_child(pc)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 8)
+	pc.add_child(col)
+	var title := Label.new()
+	title.text = "TABLEAU DES SCORES"
+	title.add_theme_font_override("font", UI.title_font())
+	title.add_theme_font_size_override("font_size", 42)
+	title.add_theme_color_override("font_color", RED)
+	col.add_child(title)
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 60)
+	grid.add_theme_constant_override("v_separation", 6)
+	col.add_child(grid)
+	for row in [["round", "Manche"], ["kills", "Éliminations"], ["heads", "Tirs à la tête"], ["acc", "Précision"],
+			["points", "Points"], ["total", "Points gagnés"], ["perks", "Atouts achetés"], ["time", "Temps de jeu"]]:
+		var l := Label.new()
+		l.text = row[1]
+		l.add_theme_font_size_override("font_size", 24)
+		l.add_theme_color_override("font_color", UI.GREY)
+		grid.add_child(l)
+		var v := Label.new()
+		v.add_theme_font_override("font", UI.title_font())
+		v.add_theme_font_size_override("font_size", 28)
+		v.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		grid.add_child(v)
+		_score_vals[row[0]] = v
+
+
+func _refresh_scoreboard() -> void:
+	var gm := GameManager
+	var acc := 0.0 if gm.shots_fired == 0 else 100.0 * float(gm.shots_hit) / float(gm.shots_fired)
+	var t := int(gm.play_time)
+	_score_vals.round.text = str(gm.round_num)
+	_score_vals.kills.text = str(gm.kills)
+	_score_vals.heads.text = str(gm.headshots)
+	_score_vals.acc.text = "%d %%" % int(minf(acc, 100.0))
+	_score_vals.points.text = str(gm.points)
+	_score_vals.total.text = str(gm.total_points)
+	_score_vals.perks.text = "%d" % gm.perks_bought
+	_score_vals.time.text = "%d:%02d" % [t / 60, t % 60]
+
+
+func set_prompt(raw: String) -> void:
+	var text := GameManager.hint(raw)
 	if _prompt.text != text:
 		_prompt.text = text
 		_prompt_bg.visible = text != ""
@@ -410,9 +479,9 @@ func _draw_grenades() -> void:
 	var mk: int = player.holder.monkeys
 	if mk > 0:
 		var f := UI.ui_font()
-		var txt := "SINGE x%d  [T]" % mk
-		_grenades.draw_string_outline(f, Vector2(-150, 19), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, 4, Color(0, 0, 0, 0.8))
-		_grenades.draw_string(f, Vector2(-150, 19), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(0.95, 0.75, 0.35))
+		var txt := GameManager.hint("SINGE x%d  [T]" % mk)
+		_grenades.draw_string_outline(f, Vector2(-170, 19), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, 4, Color(0, 0, 0, 0.8))
+		_grenades.draw_string(f, Vector2(-170, 19), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(0.95, 0.75, 0.35))
 	var n: int = player.holder.grenades
 	for i in 4:
 		var p := Vector2(190 - i * 22, 13)

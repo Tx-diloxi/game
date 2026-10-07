@@ -643,6 +643,7 @@ func _place_armor() -> void:
 func _break_helmet() -> void:
 	if _helmet == null:
 		return
+	Audio.say("helmet")
 	Audio.play_at("door_open", global_position + Vector3.UP * 2.4, 4.0, 1.6)
 	if GameManager.game:
 		Effects.spark_hit(GameManager.game, global_position + Vector3.UP * 2.4, Vector3.UP)

@@ -12,6 +12,12 @@ manches de chiens et tanks. Godot 4.7, GDScript, rendu Compatibility.
 - **Singe-leurre** (touche T) : obtenu par 3 dans la boîte mystère. Posé au sol, il joue des cymbales 7 s, attire tous les zombies (pas les chiens ni le boss) puis explose.
 - **Le Colosse** (manches 10, 20, 30…) : boss blindé qui apparaît dans un éclair au milieu de la manche. Son casque absorbe 75 % des dégâts à la tête jusqu'à se briser. Il charge à travers la salle et frappe le sol (dégâts de zone + projection). Barre de vie en haut de l'écran, 500 points et munitions max à sa mort. Les pièges le blessent sans le tuer net.
 
+- **10 atouts, 6 cumulables** : Cuirasse, Main Leste, Tonique Éclair, Second Souffle, Triple Étui, et Œil de Lynx (tête +50 %), Pied Léger (vitesse +20 %), Mains d'Or (points +50 %), Bouclier (immunité aux explosions, soin 2× plus rapide), Ravitailleur (réserves +50 %).
+- **Tableau des scores** (Tab / bouton Retour) : manche, éliminations, tirs à la tête, précision, points, atouts achetés, temps de jeu.
+- **Manette** (Xbox) : sticks, gâchettes, boutons, vibrations ; les indications `[F]` deviennent `[Y]` quand la manette est utilisée. Navigation dans les menus à la manette.
+- **Annonceur** : voix française synthétique (Microsoft Hortense) filtrée « radio » pour les power-ups, le courant, le boss, les chiens et les manches 5, 10, 15…
+- **Musique** : vraies boucles ambiance (menu et jeu), voir crédits.
+
 ## Lancer
 Ouvrir le projet dans Godot 4.7 et appuyer sur F5 (scène principale : `scenes/main_menu.tscn`).
 `scenes/game.tscn` peut aussi être lancée directement (F6).
@@ -50,4 +56,4 @@ Modèles d'armes, personnage de secours et sons d'impact : [Kenney](https://www.
 Blaster Kit, Animated Characters Survivors, Impact Sounds. Voir `assets/LICENSE_kenney.txt`.
 Textures : [ambientCG](https://ambientcg.com) (CC0) — voir `assets/textures/CREDITS.txt`.
 Sons réels : tirs de Vincent Sevedge (CC-BY 3.0), rechargements, cris de zombies et rugissement du boss (CC0) — voir `assets/sounds/CREDITS.txt`.
-Musique, ambiance et sons restants : synthétisés au lancement (`autoload/audio.gd`).
+Musique : « Ambient Horror Track 01 » (CC0) et « Dark Ambience Loop » d'Iwan Gabovitch (CC-BY 3.0), OpenGameArt. Annonceur : voix de synthèse générée localement. Sons restants : synthétisés au lancement (`autoload/audio.gd`).

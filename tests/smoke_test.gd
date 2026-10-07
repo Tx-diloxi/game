@@ -9,6 +9,7 @@ const PowerScript := preload("res://scripts/interactables/power_switch.gd")
 const UpgradeScript := preload("res://scripts/interactables/upgrade_machine.gd")
 const TrapScript := preload("res://scripts/interactables/trap.gd")
 const ZombieScript := preload("res://scripts/zombies/zombie.gd")
+const WeaponDBTest := preload("res://scripts/weapons/weapon_db.gd")
 
 var game: Node
 var player: Node
@@ -212,6 +213,54 @@ func _ready() -> void:
 	boss.take_damage(99999.0, true, "bullet")
 	check(GameManager.points >= pts + 500, "le Colosse rapporte 500 points")
 	await wait(0.5)
+
+	# Nouveaux atouts
+	check(find_interactables(PerkScript).size() == GameManager.PERKS.size(), "un distributeur par atout (%d)" % GameManager.PERKS.size())
+	GameManager.perks.clear()
+	GameManager.add_perk("mains_d_or")
+	var pts0 := GameManager.points
+	GameManager.add_points(100)
+	check(GameManager.points - pts0 == 150, "Mains d'Or : +50 % de points")
+	GameManager.perks.clear()
+	var wr := WeaponDBTest.make("k74")
+	var res0: int = WeaponDBTest.max_reserve(wr)
+	GameManager.add_perk("ravitailleur")
+	check(WeaponDBTest.max_reserve(wr) == int(ceil(res0 * 1.5)), "Ravitailleur : réserves +50 %")
+	GameManager.perks.clear()
+	GameManager.add_perk("pied_leger")
+	GameManager.add_perk("oeil_de_lynx")
+	GameManager.add_perk("bouclier")
+	check(GameManager.perks.size() == 3, "atouts cumulables")
+	GameManager.perks.clear()
+
+	# Statistiques et manette
+	check(GameManager.shots_fired > 0 and GameManager.play_time > 5.0, "statistiques de partie enregistrées")
+	check(InputMap.has_action("scoreboard") and InputMap.has_action("look_left"), "actions tableau des scores et caméra manette")
+	var pad_ok := true
+	for a in ["fire", "aim", "jump", "reload", "interact", "pause", "move_forward", "special"]:
+		var has_pad := false
+		for ev in InputMap.action_get_events(a):
+			if ev is InputEventJoypadButton or ev is InputEventJoypadMotion:
+				has_pad = true
+		pad_ok = pad_ok and has_pad
+	check(pad_ok, "chaque action principale a une touche de manette")
+	GameManager.gamepad = true
+	check(GameManager.hint("[F] Acheter").begins_with("[Y]"), "les indications passent en touches de manette")
+	GameManager.gamepad = false
+
+	# Sons : annonceur et musique
+	var voices_ok := true
+	for v in Audio.VOICES:
+		voices_ok = voices_ok and Audio._streams.has("voice_" + v)
+	check(voices_ok, "toutes les voix de l'annonceur sont chargées")
+	var loop_ok := true
+	for m in ["menu_music", "ambience"]:
+		for st in Audio._streams[m]:
+			if st is AudioStreamOggVorbis and not st.loop:
+				loop_ok = false
+	check(loop_ok, "les musiques bouclent")
+	Audio.say("max_ammo")
+	check(Audio._voice.playing, "l'annonceur parle")
 
 	# Power-ups
 	for kind in GameManager.POWERUPS:
