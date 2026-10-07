@@ -1,0 +1,6 @@
+Sons réels :
+- Tirs (cz, mosin, sks, shotty) : Vincent Sevedge, « Gunshot Sounds », CC-BY 3.0 — https://opengameart.org/content/gunshot-sounds (découpés coup par coup)
+- Rechargements : SpringySpringo, « Gun Reload Sounds », CC0 — https://opengameart.org/content/gun-reload-sounds
+- Zombies : artisticdude, « Zombies Sound Pack », CC0 — https://opengameart.org/content/zombies-sound-pack
+- Rugissement du boss : Darsycho, « Hungry Ghoul », CC0 — https://opengameart.org/content/hungry-ghoul
+- Impacts, pas, planches : Kenney, « Impact Sounds », CC0

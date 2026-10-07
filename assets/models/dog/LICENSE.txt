@@ -1,0 +1,3 @@
+Wolf by umask007 (based on BlendSwap / OpenGameArt wolf) — CC-BY-SA 3.0
+https://opengameart.org/content/winter-wolf-normal-wolf
+Converted from wolf.blend to glTF (wolf.glb); fur textures extracted.
