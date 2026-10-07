@@ -90,6 +90,21 @@ func say(id: String) -> void:
 	_voice.play()
 
 
+## Surdité passagère après un hurlement : filtre passe-bas sur la sortie principale.
+func deafen(sec: float) -> void:
+	var fx := AudioEffectLowPassFilter.new()
+	fx.cutoff_hz = 700.0
+	AudioServer.add_bus_effect(0, fx)
+	var tw := create_tween().set_ignore_time_scale(true)
+	tw.tween_interval(maxf(sec - 1.0, 0.1))
+	tw.tween_property(fx, "cutoff_hz", 20000.0, 1.0)
+	tw.tween_callback(func():
+		for i in AudioServer.get_bus_effect_count(0):
+			if AudioServer.get_bus_effect(0, i) == fx:
+				AudioServer.remove_bus_effect(0, i)
+				break)
+
+
 func _next_voice() -> void:
 	if _voice_queue.is_empty():
 		return
@@ -161,6 +176,10 @@ func _build_library() -> void:
 	defs["monkey_cymbal"] = [0.25, func(t, st): return (sin(TAU * 2900.0 * t) * 0.4 + sin(TAU * 4370.0 * t) * 0.3 + _noise(st, 0.9) * 0.5) * exp(-t * 14.0)]
 	defs["boss_roar"] = [1.5, func(t, st): return (_saw(t, 60.0 + 20.0 * sin(TAU * 6.0 * t)) * 0.6 + _noise(st, 0.15) * 0.4) * sin(PI * t / 1.5)]
 	defs["shotgun_pump"] = [0.3, func(t, st): return _noise(st, 0.8) * (exp(-t * 60.0) + exp(-maxf(t - 0.15, 0.0) * 60.0) * float(t > 0.15)) * 0.6]
+	defs["spit"] = [0.4, func(t, st): return (_noise(st, 0.35) * sin(PI * t / 0.4) * 0.5 + sin(TAU * (260.0 - 300.0 * t) * t) * 0.25 * exp(-t * 8.0))]
+	defs["acid_hit"] = [0.25, func(t, st): return (_noise(st, 0.5) * 0.6 + sin(TAU * 180.0 * t) * 0.2) * exp(-t * 18.0)]
+	defs["scream"] = [1.4, func(t, st): return (_saw(t, 880.0 + 260.0 * sin(TAU * 7.0 * t)) * 0.45 + _saw(t, 1330.0) * 0.2 + _noise(st, 0.5) * 0.25) * sin(PI * t / 1.4)]
+	defs["beep"] = [0.09, func(t, _st): return sin(TAU * 1700.0 * t) * exp(-t * 25.0) * 0.5]
 	defs["ui_hover"] = [0.05, func(t, _st): return sin(TAU * 1200.0 * t) * exp(-t * 80.0) * 0.25]
 	defs["ui_click"] = [0.25, func(t, st): return (sin(TAU * 90.0 * t) * 0.7 + _noise(st, 0.5) * 0.3) * exp(-t * 18.0)]
 	# Boucles (périodes entières sur la durée pour un bouclage sans clic)

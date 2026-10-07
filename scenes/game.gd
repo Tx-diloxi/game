@@ -453,6 +453,9 @@ func spawn_enemy(info: Dictionary) -> bool:
 	z.rotation.y = randf() * TAU
 	if info.kind == "dog":
 		_lightning(pos)
+	elif info.kind in ["bomber", "spitter", "screamer"]:
+		Effects.dirt_puff(self, pos)
+		_announce_special(info.kind)
 	elif info.kind == "boss":
 		_lightning(pos)
 		_shake(0.6)
@@ -463,6 +466,19 @@ func spawn_enemy(info: Dictionary) -> bool:
 	else:
 		Effects.dirt_puff(self, pos)
 	return true
+
+
+func _announce_special(kind: String) -> void:
+	if GameManager.seen_kinds.has(kind):
+		return
+	GameManager.seen_kinds[kind] = true
+	var texts := {
+		"bomber": ["KAMIKAZE", "Il explose à votre approche — éliminez-le de loin", Color(1.0, 0.5, 0.15)],
+		"spitter": ["CRACHEUR", "Il vous bombarde d'acide — esquivez ou approchez", Color(0.5, 0.95, 0.2)],
+		"screamer": ["HURLEUR", "Son cri étourdit et enrage les zombies — abattez-le vite", Color(0.6, 0.75, 1.0)],
+	}
+	var t: Array = texts[kind]
+	GameManager.show_message(t[0], t[2], t[1])
 
 
 func _dog_points() -> Array:

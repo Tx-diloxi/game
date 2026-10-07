@@ -344,6 +344,53 @@ func _ready() -> void:
 	runner.queue_free()
 	check(ResourceLoader.exists("res://assets/models/zombie_real/diffuse_v4.jpg"), "5 tenues de zombie disponibles")
 
+	# Zombies spéciaux
+	game.rounds.round_num = 12
+	var seen := {}
+	for i in 500:
+		seen[game.rounds._pick_enemy().kind] = true
+	check(seen.has("bomber") and seen.has("spitter") and seen.has("screamer"), "les 3 zombies spéciaux apparaissent à la manche 12")
+	game.rounds.round_num = 3
+	var early := true
+	for i in 300:
+		early = early and not (game.rounds._pick_enemy().kind in ["bomber", "spitter", "screamer"])
+	check(early, "aucun zombie spécial avant la manche 6")
+	game.rounds.round_num = GameManager.round_num
+	player.global_position = Vector3(0, 0.1, -34)
+	var bz2 = ZombieScript.new()
+	bz2.setup("bomber", 400.0, 1.9, null)
+	game.add_child(bz2)
+	bz2.global_position = player.global_position + Vector3(0, 0, -1.4)
+	bz2.state = bz2.State.CHASE
+	game.rounds.alive += 1
+	check(await wait_until(func(): return not is_instance_valid(bz2) or bz2.state == bz2.State.DEAD, 4.0), "le kamikaze explose au contact")
+	var sp = ZombieScript.new()
+	sp.setup("spitter", 300.0, 2.2, null)
+	game.add_child(sp)
+	sp.global_position = player.global_position + Vector3(0, 0, -3.0)
+	sp.state = sp.State.CHASE
+	var sp_d0: float = sp.global_position.distance_to(player.global_position)
+	await wait(1.0)
+	check(sp.global_position.distance_to(player.global_position) > sp_d0 + 0.5, "le cracheur recule pour garder ses distances")
+	sp._spit(player)
+	var acid := 0
+	for n in game.get_children():
+		if n.get_script() != null and str(n.get_script().resource_path).ends_with("acid_ball.gd"):
+			acid += 1
+	check(acid >= 1, "le cracheur crache une boule d'acide")
+	sp.take_damage(99999.0, false, "nuke")
+	var sc = ZombieScript.new()
+	sc.setup("screamer", 300.0, 2.4, null)
+	game.add_child(sc)
+	sc.global_position = player.global_position + Vector3(0, 0, -8.0)
+	sc._scream(player)
+	check(GameManager.rage_active(), "le hurlement enrage les zombies")
+	sc.take_damage(99999.0, false, "nuke")
+	GameManager._rage_until = 0.0
+	for z in get_tree().get_nodes_in_group("zombies"):
+		z.take_damage(99999.0, false, "nuke")
+	await wait(0.4)
+
 	# Bras du joueur
 	var arms = player.holder.arms
 	check(arms != null and arms.visible, "les bras du joueur sont affichés")

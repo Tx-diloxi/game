@@ -26,6 +26,8 @@ manches de chiens et tanks. Godot 4.7, GDScript, rendu Compatibility.
 - **Bras du joueur** (`scripts/player/fps_arms.gd`) : modèle rigged avec manches ; IK à deux os qui place chaque main sur la poignée de l'arme (prises réglées par arme dans `weapon_db.gd`), doigts refermés, main gauche qui quitte l'arme pendant le rechargement.
 - **Zombies** : 5 tenues (textures dérivées sans logo), silhouettes aléatoires, animation de course (sprinteurs penchés, bras qui pompent) et de reptation (bras tendus qui tirent).
 
+- **Zombies spéciaux** (apparition progressive) : **Kamikaze** (dès la manche 6) rouge et lumineux, il s'arrête à 2 m, clignote 0,7 s puis explose (dégâts de zone, pas de points s'il se fait sauter) ; abattu à distance il explose aussi. **Cracheur** (manche 8) vert, garde 6-14 m de distance et crache des boules d'acide (25 dégâts, flaque verte). **Hurleur** (manche 10) pâle, hurle : étourdit le joueur (son étouffé, secousse, 12 dégâts) et enrage tous les zombies pendant 7 s (+45 % de vitesse). Une bannière explique chaque type à sa première apparition.
+
 ## Lancer
 Ouvrir le projet dans Godot 4.7 et appuyer sur F5 (scène principale : `scenes/main_menu.tscn`).
 `scenes/game.tscn` peut aussi être lancée directement (F6).

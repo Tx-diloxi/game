@@ -80,8 +80,8 @@ Effort : S par atout. Ajouter l'**icône HUD réaliste** et un **jingle propre �
 |---|---|---|---|---|
 | 4.1 | **Plusieurs modèles de zombies** (hommes, femmes, soldats, scientifiques, ouvriers) | 🟡 1 modèle, 5 tenues et silhouettes variées (femmes/soldats à ajouter) | M | Aujourd'hui tous partagent le t-shirt « PIXELHOUSE ». Recolorer/retexturer ou ajouter 3–4 modèles. |
 | 4.2 | **Zombies sortant du sol** | ❌ | M | Spawn avec animation et particules de terre. |
-| 4.3 | **Zombies explosifs** (exploser au contact) | ❌ | S | Variante de `zombie.gd`. |
-| 4.4 | **Zombies spéciaux** (cracheur, hurleur, brute, infecté) | ❌ | M par type | Attaques à distance, aura, grand PV. |
+| 4.3 | **Zombies explosifs** (exploser au contact) | ✅ Kamikaze | S | Variante de `zombie.gd`. |
+| 4.4 | **Zombies spéciaux** (cracheur, hurleur, brute, infecté) | 🟡 cracheur et hurleur faits ; brute et infecté à ajouter | M par type | Attaques à distance, aura, grand PV. |
 | 4.5 | **Animation de course** dédiée et animation de reptation | ✅ procédurales (à remplacer par de vraies animations si disponibles) | M | Retargeting d'animations Mixamo (licence à vérifier) ou Quaternius. |
 | 4.6 | **Zombies qui grimpent aux murs / échelles** | ❌ | L | Points de navigation spéciaux. |
 | 4.7 | **Boss supplémentaires** (un par 10 manches, avec phases) | 🟡 1 boss | M par boss | Réutiliser le patron du Colosse. |

@@ -67,6 +67,8 @@ var shots_hit := 0
 var play_time := 0.0
 var perks_bought := 0
 var gamepad := false
+var seen_kinds := {}
+var _rage_until := 0.0
 var headshots := 0
 var total_points := 0
 var power_on := false
@@ -121,6 +123,8 @@ func new_game() -> void:
 	headshots = 0
 	total_points = 0
 	last_beaten = {}
+	seen_kinds = {}
+	_rage_until = 0.0
 	shots_fired = 0
 	shots_hit = 0
 	play_time = 0.0
@@ -165,6 +169,15 @@ func set_round(r: int) -> void:
 
 
 # --- Points ---------------------------------------------------------------
+
+## Hurlement : tous les zombies courent plus vite pendant `sec` secondes.
+func start_rage(sec: float) -> void:
+	_rage_until = Time.get_ticks_msec() / 1000.0 + sec
+
+
+func rage_active() -> bool:
+	return Time.get_ticks_msec() / 1000.0 < _rage_until
+
 
 func add_points(amount: int, allow_double := true) -> void:
 	if allow_double and is_powerup_active("double_points"):

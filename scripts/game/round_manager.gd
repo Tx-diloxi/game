@@ -94,6 +94,17 @@ func _pick_enemy() -> Dictionary:
 	if _tank_pending:
 		_tank_pending = false
 		return {"kind": "tank", "hp": zombie_hp(r) * 8.0, "speed": 1.7}
+	# Zombies spéciaux (apparition progressive)
+	var roll := randf()
+	var p_bomber := clampf(0.04 + (r - 6) * 0.01, 0.0, 0.14) if r >= 6 else 0.0
+	var p_spit := clampf(0.04 + (r - 8) * 0.008, 0.0, 0.11) if r >= 8 else 0.0
+	var p_scream := clampf(0.03 + (r - 10) * 0.006, 0.0, 0.08) if r >= 10 else 0.0
+	if roll < p_bomber:
+		return {"kind": "bomber", "hp": zombie_hp(r) * 0.8, "speed": 1.9 + randf() * 0.4}
+	elif roll < p_bomber + p_spit:
+		return {"kind": "spitter", "hp": zombie_hp(r) * 0.7, "speed": 2.2}
+	elif roll < p_bomber + p_spit + p_scream:
+		return {"kind": "screamer", "hp": zombie_hp(r) * 0.9, "speed": 2.4}
 	var run_chance := clampf((r - 2) * 0.15, 0.0, 0.85)
 	var sprint_chance := clampf((r - 6) * 0.12, 0.0, 0.7)
 	var v := randf()

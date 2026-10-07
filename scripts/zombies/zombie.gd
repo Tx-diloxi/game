@@ -7,6 +7,9 @@ const ZombieModel := preload("res://scripts/zombies/zombie_model.gd")
 const RealModel := preload("res://scripts/zombies/zombie_model_real.gd")
 const DogModel := preload("res://scripts/zombies/dog_model.gd")
 const Effects := preload("res://scripts/util/effects.gd")
+const AcidBall := preload("res://scripts/zombies/acid_ball.gd")
+
+const SPECIALS := ["bomber", "spitter", "screamer"]
 
 ## Membres que l'on peut arracher : os -> zone de touche (rayon en m).
 const LIMBS := {
@@ -63,6 +66,13 @@ var _charge_hit := false
 var _slam_cd := 4.0
 var _slam_wind := -1.0
 var _helmet: Node3D
+# Types spéciaux
+var _fuse := -1.0
+var _spit_cd := 2.0
+var _spit_wind := -1.0
+var _scream_cd := 4.0
+var _scream_wind := -1.0
+var _glow: OmniLight3D
 
 
 func setup(p_kind: String, p_hp: float, p_speed: float, p_barricade: Node3D) -> void:
@@ -85,6 +95,14 @@ func setup(p_kind: String, p_hp: float, p_speed: float, p_barricade: Node3D) -> 
 			attack_range = 2.4
 			head_height = 2.3
 			armor = p_hp * 0.25
+		"bomber":
+			damage = 0.0
+			attack_range = 1.9
+		"spitter":
+			damage = 0.0
+			attack_range = 0.0
+		"screamer":
+			damage = 15.0
 
 
 func _ready() -> void:
@@ -208,6 +226,10 @@ func _physics_process(delta: float) -> void:
 			var decoy: Node3D = _decoy()
 			if kind == "boss" and _boss_logic(delta, player):
 				pass
+			elif kind == "spitter" and player and not player.dead and _spitter_logic(delta, player):
+				moving = _flat_dist(player.global_position) < 6.0 and _spit_wind < 0.0
+			elif kind == "screamer" and player and not player.dead and _screamer_logic(delta, player):
+				moving = false
 			elif decoy:
 				var dd := _flat_dist(decoy.global_position)
 				if dd < 1.4:
@@ -227,7 +249,21 @@ func _physics_process(delta: float) -> void:
 				_stop()
 			else:
 				var d := _flat_dist(player.global_position)
-				if d < attack_range and absf(player.global_position.y - global_position.y) < 1.5:
+				if kind == "bomber" and d < attack_range + 0.4 and absf(player.global_position.y - global_position.y) < 1.5:
+					# Mèche : il s'arrête, clignote puis explose.
+					moving = false
+					_stop()
+					_face(player.global_position - global_position, delta)
+					if _fuse < 0.0:
+						_fuse = 0.7
+					_fuse -= delta
+					if _glow:
+						_glow.light_energy = 6.0 if fmod(_fuse, 0.2) < 0.1 else 1.0
+					if int(_fuse * 10.0) != int((_fuse + delta) * 10.0):
+						Audio.play_at("beep", global_position + Vector3.UP * 1.5, -4.0, 1.0 + (0.7 - _fuse))
+					if _fuse <= 0.0:
+						take_damage(max_hp * 10.0, false, "bomber_self")
+				elif d < attack_range and absf(player.global_position.y - global_position.y) < 1.5:
 					moving = false
 					_stop()
 					_face(player.global_position - global_position, delta)
@@ -252,6 +288,100 @@ func _physics_process(delta: float) -> void:
 			Audio.play_at("dog_bark", global_position, -2.0, randf_range(0.8, 1.2))
 		else:
 			Audio.play_at("groan", global_position + Vector3.UP * 1.5, -4.0, randf_range(0.7, 1.2) * (0.7 if kind == "tank" else 1.0))
+
+
+## Explosion du kamikaze : blesse le joueur, les zombies voisins et le décor.
+func _explode_bomber(on_player: bool) -> void:
+	var game := GameManager.game
+	if game == null:
+		return
+	var pos := global_position + Vector3.UP * 0.9
+	game.explode(pos, 3.8, 160.0 + 20.0 * GameManager.round_num, "explosion", false)
+	var p = _get_player()
+	if p and not p.dead and not GameManager.has_perk("bouclier"):
+		var d: float = (p.global_position + Vector3.UP).distance_to(pos)
+		if d < 4.2:
+			p.take_damage(75.0 * (1.0 - d / 4.2) + (15.0 if on_player else 0.0))
+			p.velocity += (p.global_position - global_position).normalized() * 5.0 + Vector3.UP * 3.0
+
+
+## Cracheur : garde ses distances (6-14 m) et crache de l'acide. Retourne true s'il gère le tour.
+func _spitter_logic(delta: float, player: Node3D) -> bool:
+	var d := _flat_dist(player.global_position)
+	_spit_cd -= delta
+	if _spit_wind >= 0.0:
+		_spit_wind -= delta
+		_stop()
+		_face(player.global_position - global_position, delta)
+		if _spit_wind < 0.0:
+			_spit_wind = -1.0
+			_spit_cd = randf_range(2.6, 3.6)
+			_spit(player)
+		return true
+	if d > 14.0:
+		return false # s'approche normalement
+	var away := global_position - player.global_position
+	away.y = 0.0
+	if d < 6.0:
+		var dir := away.normalized()
+		velocity.x = dir.x * speed * 0.9
+		velocity.z = dir.z * speed * 0.9
+		_face(-dir, delta)
+	else:
+		_stop()
+		_face(player.global_position - global_position, delta)
+		if _spit_cd <= 0.0:
+			_spit_wind = 0.55
+			if _real:
+				_model.attack()
+	return true
+
+
+func _spit(player: Node3D) -> void:
+	var game := GameManager.game
+	if game == null:
+		return
+	Audio.play_at("spit", global_position + Vector3.UP * 1.5, 0.0, randf_range(0.9, 1.1))
+	var ball: Node3D = AcidBall.new()
+	game.add_child(ball)
+	var from := global_position + Vector3.UP * 1.5 - global_basis.z * 0.5
+	ball.global_position = from
+	var target: Vector3 = player.global_position + Vector3.UP * 1.0 + Vector3(player.velocity.x, 0, player.velocity.z) * 0.35
+	var flight := maxf(from.distance_to(target) / 12.0, 0.2)
+	ball.velocity = (target - from) / flight + Vector3.UP * 0.5 * AcidBall.GRAVITY * flight
+
+
+## Hurleur : s'approche puis hurle (étourdit le joueur et enrage les zombies alentour). Vrai s'il hurle.
+func _screamer_logic(delta: float, player: Node3D) -> bool:
+	var d := _flat_dist(player.global_position)
+	_scream_cd -= delta
+	if _scream_wind >= 0.0:
+		_scream_wind -= delta
+		_stop()
+		_face(player.global_position - global_position, delta)
+		if _scream_wind < 0.0:
+			_scream_wind = -1.0
+			_scream_cd = randf_range(9.0, 12.0)
+			_scream(player)
+		return true
+	if _scream_cd <= 0.0 and d < 16.0 and d > 2.5:
+		_scream_wind = 0.9
+		Audio.play_at("scream", global_position + Vector3.UP * 1.6, 3.0, randf_range(0.95, 1.05))
+		if _real:
+			_model.attack()
+		return true
+	return false
+
+
+func _scream(player: Node3D) -> void:
+	GameManager.start_rage(7.0)
+	var d := _flat_dist(player.global_position)
+	if d < 18.0:
+		player.take_damage(12.0)
+		player.shake(0.6)
+		Audio.deafen(3.0)
+		if GameManager.game and GameManager.game.hud:
+			GameManager.game.hud.flash(Color(0.55, 0.65, 1.0), 0.4)
 
 
 ## Singe-leurre actif qui attire ce zombie (les chiens et le boss l'ignorent).
@@ -357,8 +487,9 @@ func _move_to(target: Vector3, delta: float) -> void:
 		dir = target - global_position
 		dir.y = 0.0
 	dir = dir.normalized()
-	velocity.x = dir.x * speed
-	velocity.z = dir.z * speed
+	var sp := speed * (1.45 if GameManager.rage_active() and kind != "boss" and kind != "dog" else 1.0)
+	velocity.x = dir.x * sp
+	velocity.z = dir.z * sp
 	_face(dir, delta)
 
 
@@ -550,6 +681,8 @@ func _die(head: bool, cause: String) -> void:
 		elif _head:
 			_head.visible = false
 		Audio.play("headshot", -4.0)
+	if kind == "bomber" and cause != "nuke":
+		_explode_bomber(cause == "bomber_self")
 	if kind == "boss":
 		GameManager.add_points(500)
 		if _helmet:
@@ -584,6 +717,8 @@ func _animate(delta: float, moving: bool) -> void:
 		_model.arm_raise = 0.35 if speed > 3.0 and moving and not attacking else 1.0
 		if kind == "boss":
 			_place_armor()
+		if kind == "bomber" and _glow and _fuse < 0.0:
+			_glow.light_energy = 1.6 + 0.8 * sin(Time.get_ticks_msec() * 0.006)
 		if _real:
 			var ref := 5.5 if kind == "dog" else 1.1
 			_model.run_amount = move_toward(_model.run_amount, clampf((speed - 2.4) / 1.6, 0.0, 1.0) if kind == "zombie" and not crawling else 0.0, delta * 3.0)
@@ -624,6 +759,16 @@ func _build_real_dog() -> void:
 	light.omni_range = 2.5
 	light.position = Vector3(0, 0.8, -0.5)
 	visual.add_child(light)
+
+
+func _add_glow(color: Color, energy: float) -> void:
+	_glow = OmniLight3D.new()
+	_glow.light_color = color
+	_glow.light_energy = energy
+	_glow.omni_range = 3.5
+	_glow.position = Vector3(0, 1.1, 0)
+	_glow.shadow_enabled = false
+	add_child(_glow)
 
 
 ## Casque et épaulières métalliques du boss (suivent les os à chaque frame).
@@ -669,6 +814,22 @@ func _build_real_model() -> void:
 		visual.scale = Vector3.ONE * 1.3
 		m.setup("", Color(0.92, 0.6, 0.55))
 		head_height = 1.95
+	elif kind == "bomber":
+		visual.scale = Vector3(1.32, 1.0, 1.32)
+		m.setup("4", Color(1.0, 0.55, 0.4))
+		head_height = 1.5
+		_add_glow(Color(1.0, 0.45, 0.1), 2.0)
+	elif kind == "spitter":
+		visual.scale = Vector3(0.92, 1.05, 0.92)
+		m.setup("1", Color(0.62, 1.0, 0.5))
+		head_height = 1.55
+		_add_glow(Color(0.4, 0.9, 0.1), 0.9)
+	elif kind == "screamer":
+		visual.scale = Vector3(0.9, 1.12, 0.9)
+		m.setup("3", Color(0.95, 0.98, 1.2))
+		head_height = 1.65
+		_anim_scale = 1.15
+		_add_glow(Color(0.55, 0.7, 1.0), 0.8)
 	elif kind == "boss":
 		visual.scale = Vector3.ONE * 1.6
 		m.setup("", Color(0.95, 0.45, 0.4))
