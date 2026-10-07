@@ -166,7 +166,8 @@ func _build_environment() -> void:
 	moon.light_color = Color(0.55, 0.65, 0.95)
 	moon.light_energy = 0.45
 	moon.rotation = Vector3(deg_to_rad(-38), deg_to_rad(35), 0)
-	moon.shadow_enabled = true
+	moon.shadow_enabled = GameManager.shadow_quality > 0
+	moon.add_to_group("shadow_lights")
 	moon.directional_shadow_max_distance = 70.0
 	add_child(moon)
 
@@ -553,8 +554,10 @@ func apply_powerup(kind: String) -> void:
 	match kind:
 		"max_ammo":
 			player.holder.refill_all()
-		"insta_kill", "double_points":
+		"insta_kill", "double_points", "fire_sale", "zombie_blood":
 			GameManager.activate_timed_powerup(kind)
+		"bonus_points":
+			GameManager.add_points(500 + 100 * GameManager.round_num, false)
 		"nuke":
 			Audio.play("explosion", 4.0, 0.7)
 			hud.flash(Color(1.0, 0.95, 0.8), 1.2)

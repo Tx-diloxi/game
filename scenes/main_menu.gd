@@ -63,24 +63,25 @@ func _ready() -> void:
 	left.anchor_top = 0.0
 	left.anchor_bottom = 1.0
 	left.offset_left = 80
-	left.offset_top = 70
+	left.offset_top = 36
 	left.offset_right = 600
 	left.offset_bottom = -40
 	root.add_child(left)
 
-	_title = UI.label(left, "BUNKER Z", 150, UI.RED, UI.title_font())
+	_title = UI.label(left, "BUNKER Z", 130, UI.RED, UI.title_font())
 	_title.add_theme_constant_override("outline_size", 12)
 	_title.add_theme_color_override("font_outline_color", Color(0.08, 0, 0, 0.9))
 	var sub := UI.label(left, "SURVIVEZ.  COMBIEN DE MANCHES ?", 24, Color(0.75, 0.7, 0.62), UI.ui_font())
 	sub.add_theme_constant_override("outline_size", 4)
 	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0, 50)
+	spacer.custom_minimum_size = Vector2(0, 22)
 	left.add_child(spacer)
 
-	var play_btn := UI.button(left, "JOUER", _play, 46)
+	var play_btn := UI.button(left, "JOUER", _play, 40)
 	play_btn.grab_focus.call_deferred()
 	UI.button(left, "OPTIONS", func(): _show(Panels.options))
 	UI.button(left, "COMMANDES", func(): _show(Panels.controls))
+	UI.button(left, "RECORDS", func(): _show(Panels.records))
 	UI.button(left, "CRÉDITS", func(): _show(Panels.credits))
 	UI.button(left, "QUITTER", func(): get_tree().quit())
 

@@ -220,6 +220,10 @@ func _physics_process(delta: float) -> void:
 			elif player == null or player.dead:
 				moving = false
 				_stop()
+			elif GameManager.is_powerup_active("zombie_blood") and kind != "boss" and _flat_dist(player.global_position) > 2.5:
+				# Invisible pour les zombies : ils errent sur place tant qu'on reste à distance.
+				moving = false
+				_stop()
 			else:
 				var d := _flat_dist(player.global_position)
 				if d < attack_range and absf(player.global_position.y - global_position.y) < 1.5:

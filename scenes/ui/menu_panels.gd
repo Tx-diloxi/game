@@ -6,7 +6,7 @@ const UI := preload("res://scenes/ui/ui_theme.gd")
 
 static func _panel(parent: Node, title: String) -> VBoxContainer:
 	var pc := PanelContainer.new()
-	pc.custom_minimum_size = Vector2(560, 0)
+	pc.custom_minimum_size = Vector2(540, 0)
 	parent.add_child(pc)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 16)
@@ -19,44 +19,88 @@ static func _panel(parent: Node, title: String) -> VBoxContainer:
 	return col
 
 
+static func _option_row(col: Node, title: String, items: Array, selected: int, cb: Callable) -> OptionButton:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 16)
+	col.add_child(row)
+	var l := UI.label(row, title, 22, UI.GREY)
+	l.custom_minimum_size = Vector2(210, 0)
+	var ob := OptionButton.new()
+	ob.custom_minimum_size = Vector2(200, 0)
+	ob.add_theme_font_size_override("font_size", 20)
+	for it in items:
+		ob.add_item(it)
+	ob.select(selected)
+	ob.item_selected.connect(cb)
+	row.add_child(ob)
+	return ob
+
+
+static func _check(col: Node, title: String, value: bool, cb: Callable) -> void:
+	var c := CheckButton.new()
+	c.text = title
+	c.button_pressed = value
+	c.add_theme_font_size_override("font_size", 22)
+	c.toggled.connect(cb)
+	col.add_child(c)
+
+
 static func options(parent: Node) -> Control:
 	var col := _panel(parent, "OPTIONS")
-	UI.slider(col, "Sensibilité souris", 0.03, 0.4, 0.01, GameManager.mouse_sensitivity, GameManager.set_sensitivity)
-	UI.slider(col, "Champ de vision", 60.0, 100.0, 1.0, GameManager.fov, GameManager.set_fov, "%d°")
-	UI.slider(col, "Volume", 0.0, 1.0, 0.05, GameManager.master_volume, GameManager.set_volume)
-	var fs := CheckButton.new()
-	fs.text = "Plein écran"
-	fs.button_pressed = GameManager.fullscreen
-	fs.add_theme_font_size_override("font_size", 22)
-	fs.toggled.connect(GameManager.set_fullscreen)
-	col.add_child(fs)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(0, 360)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	col.add_child(scroll)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 12)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(box)
+	UI.label(box, "AUDIO", 26, UI.RED, UI.title_font())
+	UI.slider(box, "Volume général", 0.0, 1.0, 0.05, GameManager.master_volume, GameManager.set_volume)
+	UI.slider(box, "Musique", 0.0, 1.0, 0.05, GameManager.music_volume, GameManager.set_music_volume)
+	UI.slider(box, "Effets sonores", 0.0, 1.0, 0.05, GameManager.sfx_volume, GameManager.set_sfx_volume)
+	UI.slider(box, "Voix (annonceur)", 0.0, 1.0, 0.05, GameManager.voice_volume, GameManager.set_voice_volume)
+	UI.label(box, "IMAGE", 26, UI.RED, UI.title_font())
+	UI.slider(box, "Champ de vision", 60.0, 100.0, 1.0, GameManager.fov, GameManager.set_fov, "%d°")
+	_option_row(box, "Qualité des ombres", ["Désactivées", "Basse", "Moyenne", "Élevée"], GameManager.shadow_quality, GameManager.set_shadow_quality)
+	var fps_names := []
+	for f in GameManager.FPS_LIMITS:
+		fps_names.append("Illimité" if f == 0 else "%d" % f)
+	_option_row(box, "Limite d'images/s", fps_names, GameManager.max_fps_index, GameManager.set_max_fps)
+	_check(box, "Synchronisation verticale", GameManager.vsync, GameManager.set_vsync)
+	_check(box, "Plein écran", GameManager.fullscreen, GameManager.set_fullscreen)
+	UI.label(box, "CONTRÔLES", 26, UI.RED, UI.title_font())
+	UI.slider(box, "Sensibilité souris", 0.03, 0.4, 0.01, GameManager.mouse_sensitivity, GameManager.set_sensitivity)
 	return col.get_parent()
 
 
 static func controls(parent: Node) -> Control:
 	var col := _panel(parent, "COMMANDES")
+	col.add_child(preload("res://scenes/ui/remap_panel.gd").new())
+	return col.get_parent()
+
+
+static func _fmt_time(sec: int) -> String:
+	return "%d:%02d" % [sec / 60, sec % 60]
+
+
+static func records(parent: Node) -> Control:
+	var col := _panel(parent, "MEILLEURS SCORES")
+	var r := GameManager.get_records()
+	if r.games == 0:
+		UI.label(col, "Aucune partie jouée pour l'instant.", 22, UI.GREY)
+		return col.get_parent()
 	var grid := GridContainer.new()
 	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 40)
-	grid.add_theme_constant_override("v_separation", 6)
+	grid.add_theme_constant_override("h_separation", 60)
+	grid.add_theme_constant_override("v_separation", 8)
 	col.add_child(grid)
-	for row in [["Z Q S D", "Se déplacer"], ["Souris", "Regarder"], ["Clic gauche", "Tirer"], ["Clic droit", "Viser"],
-			["R", "Recharger"], ["F", "Acheter / interagir (maintenir pour réparer)"], ["Maj", "Sprint"],
-			["Ctrl", "S'accroupir"], ["Espace", "Sauter"], ["V", "Couteau"], ["G", "Grenade"], ["T", "Singe-leurre"],
-			["1 / 2 / 3, molette", "Changer d'arme"], ["Tab", "Tableau des scores"], ["Échap", "Pause"]]:
-		UI.label(grid, row[0], 22, UI.BONE, UI.title_font())
-		UI.label(grid, row[1], 20, UI.GREY)
-	UI.label(col, "MANETTE", 30, UI.RED, UI.title_font())
-	var pad := GridContainer.new()
-	pad.columns = 2
-	pad.add_theme_constant_override("h_separation", 40)
-	pad.add_theme_constant_override("v_separation", 4)
-	col.add_child(pad)
-	for row in [["Stick gauche / droit", "Déplacement / caméra"], ["Gâchettes", "Viser (LT) / Tirer (RT)"], ["A / B", "Sauter / S'accroupir"],
-			["X / Y", "Recharger / Interagir"], ["LB / RB", "Grenade / Singe-leurre"], ["Clic stick G / D", "Sprint / Couteau"],
-			["Croix gauche-droite", "Changer d'arme"], ["Retour / Start", "Scores / Pause"]]:
-		UI.label(pad, row[0], 18, UI.BONE, UI.title_font())
-		UI.label(pad, row[1], 18, UI.GREY)
+	for row in [["Manche record", str(r.best_round)], ["Éliminations", str(r.best_kills)], ["Tirs à la tête", str(r.best_headshots)],
+			["Points gagnés", str(r.best_points)], ["Plus longue survie", _fmt_time(r.best_time)], ["Parties jouées", str(r.games)]]:
+		UI.label(grid, row[0], 24, UI.GREY)
+		var v := UI.label(grid, row[1], 30, UI.BONE, UI.title_font())
+		v.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return col.get_parent()
 
 

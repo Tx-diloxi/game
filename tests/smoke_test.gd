@@ -117,7 +117,10 @@ func _ready() -> void:
 	if box.state == box.State.OFFER:
 		var offered: String = box.offered_id
 		box.interact(player)
-		check(player.holder.has_weapon(offered), "arme de la boîte récupérée (%s)" % offered)
+		if offered == "leurre":
+			check(player.holder.monkeys == 3, "singe-leurre récupéré dans la boîte")
+		else:
+			check(player.holder.has_weapon(offered), "arme de la boîte récupérée (%s)" % offered)
 
 	await wait(0.6)
 	var up: Node = find_interactables(UpgradeScript)[0]
@@ -261,6 +264,67 @@ func _ready() -> void:
 	check(loop_ok, "les musiques bouclent")
 	Audio.say("max_ammo")
 	check(Audio._voice.playing, "l'annonceur parle")
+
+	# Options, records, remappage
+	check(AudioServer.get_bus_index("Music") >= 0 and AudioServer.get_bus_index("SFX") >= 0 and AudioServer.get_bus_index("Voice") >= 0, "bus audio musique/effets/voix")
+	GameManager.set_music_volume(0.25)
+	check(is_equal_approx(db_to_linear(AudioServer.get_bus_volume_db(AudioServer.get_bus_index("Music"))), 0.25), "le curseur musique règle son bus")
+	GameManager.set_music_volume(0.8)
+	GameManager.set_max_fps(2)
+	check(Engine.max_fps == 60, "limite d'images par seconde")
+	GameManager.set_max_fps(0)
+	GameManager.set_shadow_quality(0)
+	check(get_tree().root.positional_shadow_atlas_size == 0, "ombres désactivables")
+	GameManager.set_shadow_quality(3)
+	check(get_tree().root.positional_shadow_atlas_size == 4096, "ombres hautes")
+	GameManager.records_path = "user://records_test.cfg"
+	DirAccess.remove_absolute("user://records_test.cfg")
+	GameManager.round_num = 7
+	GameManager.kills = 50
+	GameManager.record_game()
+	GameManager.round_num = 9
+	GameManager.kills = 40
+	var beaten := GameManager.record_game()
+	var rec := GameManager.get_records()
+	check(rec.best_round == 9 and rec.best_kills == 50 and rec.games == 2, "records sauvegardés (meilleur de chaque)")
+	check(beaten.has("best_round") and not beaten.has("best_kills"), "seuls les records battus sont signalés")
+	DirAccess.remove_absolute("user://records_test.cfg")
+	GameManager.records_path = "user://records.cfg"
+	var ev := InputEventKey.new()
+	ev.physical_keycode = KEY_X
+	GameManager.rebind("reload", ev, false)
+	var has_x := false
+	var has_pad := false
+	for e in InputMap.action_get_events("reload"):
+		has_x = has_x or (e is InputEventKey and e.physical_keycode == KEY_X)
+		has_pad = has_pad or e is InputEventJoypadButton
+	check(has_x and has_pad, "remappage clavier conserve la manette")
+	var pev := InputEventJoypadButton.new()
+	pev.button_index = JOY_BUTTON_LEFT_SHOULDER
+	GameManager.rebind("reload", pev, true)
+	check(GameManager.action_label("reload", true) == "LB", "remappage manette")
+	GameManager.reset_bindings()
+	check(GameManager.action_label("reload", true) == "X" and GameManager.custom_bindings.is_empty(), "réinitialisation des commandes")
+
+	# Nouveaux power-ups
+	var wbuy: Node = find_interactables(WallBuyScript).front()
+	var normal_price: int = wbuy.buy_price()
+	game.apply_powerup("fire_sale")
+	check(wbuy.buy_price() == 10 and game.box.cost() == 10, "Feu de vente : tout à 10 points")
+	GameManager.active_powerups.erase("fire_sale")
+	check(wbuy.buy_price() == normal_price, "le prix normal revient")
+	var pts_b := GameManager.points
+	game.apply_powerup("bonus_points")
+	check(GameManager.points > pts_b + 400, "Bonus de points")
+	game.apply_powerup("zombie_blood")
+	var bz := _spawn_test_zombie(player.global_position + Vector3(8, 0, 0))
+	bz.speed = 3.0
+	bz.state = bz.State.CHASE
+	var bz0: Vector3 = bz.global_position
+	await wait(1.0)
+	check(bz.global_position.distance_to(bz0) < 0.6, "Sang de zombie : les zombies lointains ne bougent pas")
+	GameManager.active_powerups.erase("zombie_blood")
+	bz.take_damage(99999.0, false, "nuke")
 
 	# Power-ups
 	for kind in GameManager.POWERUPS:

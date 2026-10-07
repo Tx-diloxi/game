@@ -62,6 +62,10 @@ func _process(delta: float) -> void:
 		_gun.rotation.y += delta * 1.5
 
 
+func cost() -> int:
+	return 10 if GameManager.is_powerup_active("fire_sale") else COST
+
+
 func is_available(_player: Node) -> bool:
 	return state == State.IDLE or state == State.OFFER
 
@@ -69,7 +73,7 @@ func is_available(_player: Node) -> bool:
 func get_prompt(_player: Node) -> String:
 	if state == State.OFFER:
 		return "[F] Prendre %s" % _name(offered_id)
-	return "[F] Boîte mystère  [%d]" % COST
+	return "[F] Boîte mystère  [%d]" % cost()
 
 
 func interact(player: Node) -> void:
@@ -79,7 +83,7 @@ func interact(player: Node) -> void:
 		else:
 			player.holder.give_weapon(offered_id)
 		_close()
-	elif state == State.IDLE and GameManager.spend(COST):
+	elif state == State.IDLE and GameManager.spend(cost()):
 		_roll(player)
 
 
@@ -95,7 +99,7 @@ func _roll(player: Node) -> void:
 	if pool.is_empty():
 		pool = WeaponDB.BOX_POOL.duplicate()
 	var can_move: bool = GameManager.game != null and GameManager.game.box_locations.size() > 1
-	var leave := can_move and uses >= 4 and (randf() < 0.25 or uses >= 12)
+	var leave := can_move and not GameManager.is_powerup_active("fire_sale") and uses >= 4 and (randf() < 0.25 or uses >= 12)
 
 	for i in 22:
 		_show_weapon((WeaponDB.BOX_POOL + ["leurre"]).pick_random())

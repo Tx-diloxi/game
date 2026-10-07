@@ -30,7 +30,14 @@ func _ready() -> void:
 	l.outline_size = 0
 
 
+## Feu de vente : tout se vend à 10 points.
+func buy_price() -> int:
+	return 10 if GameManager.is_powerup_active("fire_sale") else price
+
+
 func ammo_price(player: Node) -> int:
+	if GameManager.is_powerup_active("fire_sale"):
+		return 10
 	var idx: int = player.holder.find_weapon(weapon_id)
 	if idx >= 0 and player.holder.weapons[idx].upgraded:
 		return 4500
@@ -41,7 +48,7 @@ func get_prompt(player: Node) -> String:
 	var d := WeaponDB.data(weapon_id)
 	if player.holder.has_weapon(weapon_id):
 		return "[F] Acheter des munitions  [%d]" % ammo_price(player)
-	return "[F] Acheter %s  [%d]" % [d.name, price]
+	return "[F] Acheter %s  [%d]" % [d.name, buy_price()]
 
 
 func interact(player: Node) -> void:
@@ -53,5 +60,5 @@ func interact(player: Node) -> void:
 			return
 		if GameManager.spend(ammo_price(player)):
 			holder.refill(weapon_id)
-	elif GameManager.spend(price):
+	elif GameManager.spend(buy_price()):
 		holder.give_weapon(weapon_id)

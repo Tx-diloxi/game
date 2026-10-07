@@ -13,19 +13,29 @@ var _music: AudioStreamPlayer
 var _music_name := ""
 var _voice: AudioStreamPlayer
 var _voice_queue: Array[String] = []
-const VOICES := ["max_ammo", "insta_kill", "nuke", "double_points", "carpenter", "boss", "boss_down", "helmet", "dogs",
+const VOICES := ["fire_sale", "bonus_points", "zombie_blood", "max_ammo", "insta_kill", "nuke", "double_points", "carpenter", "boss", "boss_down", "helmet", "dogs",
 	"power_on", "box_moved", "trap_on", "game_over", "round_5", "round_10", "round_15", "round_20", "round_25", "round_30"]
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	for bus in ["Music", "SFX", "Voice"]:
+		if AudioServer.get_bus_index(bus) == -1:
+			AudioServer.add_bus()
+			var idx := AudioServer.bus_count - 1
+			AudioServer.set_bus_name(idx, bus)
+			AudioServer.set_bus_send(idx, "Master")
+	GameManager.apply_audio()
 	for i in 16:
 		var p := AudioStreamPlayer.new()
+		p.bus = "SFX"
 		add_child(p)
 		_pool.append(p)
 	_music = AudioStreamPlayer.new()
+	_music.bus = "Music"
 	add_child(_music)
 	_voice = AudioStreamPlayer.new()
+	_voice.bus = "Voice"
 	_voice.volume_db = 2.0
 	_voice.finished.connect(_next_voice)
 	add_child(_voice)
@@ -56,6 +66,7 @@ func play_at(sound: String, pos: Vector3, volume_db := 0.0, pitch := 1.0) -> voi
 	if s == null or scene == null:
 		return
 	var p := AudioStreamPlayer3D.new()
+	p.bus = "SFX"
 	p.stream = s
 	p.volume_db = volume_db
 	p.pitch_scale = pitch

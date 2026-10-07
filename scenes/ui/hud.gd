@@ -38,6 +38,7 @@ var _msg_tween: Tween
 var _round_tween: Tween
 var _damage := 0.0
 var _flash := 0.0
+var _tint := 0.0
 var _boss: Node = null
 var _boss_bar: Control
 var _score_panel: Control
@@ -218,6 +219,9 @@ func _process(delta: float) -> void:
 		_damage = move_toward(_damage, target, delta * 1.5)
 	_fx_mat.set_shader_parameter("damage", _damage)
 	_fx_mat.set_shader_parameter("flash", _flash)
+	var blood := 1.0 if GameManager.is_powerup_active("zombie_blood") else 0.0
+	_tint = move_toward(_tint, blood * 0.2, delta * 0.6)
+	_fx_mat.set_shader_parameter("tint_amt", _tint)
 
 
 # --- API ------------------------------------------------------------------

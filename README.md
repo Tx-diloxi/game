@@ -18,6 +18,11 @@ manches de chiens et tanks. Godot 4.7, GDScript, rendu Compatibility.
 - **Annonceur** : voix française synthétique (Microsoft Hortense) filtrée « radio » pour les power-ups, le courant, le boss, les chiens et les manches 5, 10, 15…
 - **Musique** : vraies boucles ambiance (menu et jeu), voir crédits.
 
+- **Options** : volume général, musique, effets et voix séparés (bus audio), qualité des ombres (4 niveaux), limite d'images/s, VSync, plein écran, champ de vision, sensibilité. Sauvegardées dans `user://settings.cfg`.
+- **Remappage** : menu Commandes, clavier/souris et manette séparément, réinitialisation en un clic ; les indications à l'écran suivent vos touches.
+- **Records** (`user://records.cfg`) : manche, éliminations, tirs à la tête, points, plus longue survie, parties jouées ; menu RECORDS et message « Nouveau record » en fin de partie.
+- **Power-ups** : Feu de vente (armes murales et boîte à 10 points, 30 s, la boîte ne déménage pas), Bonus de points (500 + 100 par manche), Sang de zombie (30 s : les zombies à plus de 2,5 m vous ignorent, écran teinté de bleu).
+
 ## Lancer
 Ouvrir le projet dans Godot 4.7 et appuyer sur F5 (scène principale : `scenes/main_menu.tscn`).
 `scenes/game.tscn` peut aussi être lancée directement (F6).

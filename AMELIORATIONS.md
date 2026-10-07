@@ -32,7 +32,7 @@ démembrement + zombies rampants · menus 3D · HUD à la craie · sons réels d
 | 2.9 | **Sauter par-dessus les fenêtres** pour le joueur (après réparation) | ❌ | M | Zone interactive à la fenêtre, animation de saut, collision temporaire. |
 | 2.10 | **Glisser / plonger** (slide, dive-to-prone) | ❌ | M | Pré-requis des atouts de plongeon (3.3). |
 | 2.11 | **Arme de poing secondaire dédiée + couteau amélioré** (bowie, machette) | 🟡 | S | Le couteau est unique. Ajouter variantes achetables. |
-| 2.12 | **Chargement de la partie, sauvegarde du meilleur score par carte** | ❌ | S | `ConfigFile` dans `user://`. |
+| 2.12 | **Chargement de la partie, sauvegarde du meilleur score par carte** | 🟡 records globaux faits (pas encore par carte) | S | `ConfigFile` dans `user://`. |
 | 2.13 | **Mode de difficulté** (Facile / Normal / Réaliste) : vitesse, dégâts reçus, régénération | ❌ | S | Multiplicateurs dans `GameManager`. |
 
 ---
@@ -70,8 +70,7 @@ Effort : S par atout. Ajouter l'**icône HUD réaliste** et un **jingle propre �
 | Bouclier d'émeute (construit à partir de pièces) | ❌ | M |
 
 ### 3.4 Power-ups
-Ajouter : **Feu de vente** (tout à 10 points), **Munitions « Max » par arme**, **Bonus de points au sol**, **Dernier survivant** (réanimer tous),
-**Zombie Blood** (invisible 30 s). Effort : S chacun.
+✅ Fait : Feu de vente, Bonus de points, Zombie Blood. Restent : **Munitions « Max » par arme**, **Dernier survivant** (réanimer tous). Effort : S chacun.
 
 ---
 
@@ -123,7 +122,7 @@ Ajouter : **Feu de vente** (tout à 10 points), **Munitions « Max » par arme**
 | 6.6 | **Animation de la caméra** : balancement, sprint, atterrissage, mort | 🟡 | S |
 | 6.7 | **Effets d'atouts à la boisson** (animation de bouteille) | ❌ | M |
 | 6.8 | **Étourdissement / flou de mouvement** après une explosion | ❌ | S |
-| 6.9 | **Réglages graphiques** (qualité des ombres, résolution, VSync, FPS max) | ❌ | S |
+| 6.9 | **Réglages graphiques** (qualité des ombres, résolution, VSync, FPS max) | 🟡 ombres, VSync, FPS max faits ; résolution/MSAA à ajouter | S |
 | 6.10 | **Écran de chargement** et transitions | 🟡 | S |
 
 ---
@@ -138,7 +137,7 @@ Ajouter : **Feu de vente** (tout à 10 points), **Munitions « Max » par arme**
 | 7.4 | **Son 3D spatialisé** avec réverbération par pièce (bus audio + `AudioEffectReverb`) | 🟡 | M |
 | 7.5 | **Sons d'armes uniques** par arme (aujourd'hui partagés entre plusieurs) | 🟡 | S |
 | 7.6 | **Sons de pas variés** par matériau | 🟡 | S |
-| 7.7 | **Mixage** : musique/effets/voix avec 3 curseurs dans les options | ❌ | S |
+| 7.7 | **Mixage** : musique/effets/voix avec 3 curseurs dans les options | ✅ | S |
 | 7.8 | **Ambiance sonore dynamique** : grésillement des lumières, gouttes, vent | ❌ | S |
 
 ---
@@ -148,7 +147,7 @@ Ajouter : **Feu de vente** (tout à 10 points), **Munitions « Max » par arme**
 | # | Fonctionnalité | État | Effort |
 |---|---|---|---|
 | 8.1 | **Prise en charge manette** (axes, gâchettes, vibrations, remappage) | 🟡 jouable ; remappage à ajouter | M |
-| 8.2 | **Remappage des touches** | ❌ | M |
+| 8.2 | **Remappage des touches** | ✅ | M |
 | 8.3 | **Tableau des scores** (Tab) avec éliminations, tirs à la tête, réanimations, points | ✅ (réanimations à ajouter avec la coop) | S |
 | 8.4 | **Écran de fin détaillé** (manches, portes ouvertes, achats, précision) | 🟡 | S |
 | 8.5 | **Succès / défis** (ex. « manche 10 sans atout ») | ❌ | M |

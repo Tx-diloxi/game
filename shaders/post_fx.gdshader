@@ -6,6 +6,9 @@ uniform float grain : hint_range(0.0, 0.3) = 0.06;
 uniform float damage : hint_range(0.0, 1.0) = 0.0;
 uniform float flash : hint_range(0.0, 1.0) = 0.0;
 uniform vec3 flash_color : source_color = vec3(1.0);
+// Voile de couleur (Sang de zombie)
+uniform vec3 tint : source_color = vec3(0.2, 0.45, 1.0);
+uniform float tint_amt : hint_range(0.0, 1.0) = 0.0;
 
 float rand(vec2 co) {
 	return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
@@ -26,5 +29,9 @@ void fragment() {
 	a = max(a, grain * 0.6);
 	col = mix(col, flash_color, flash);
 	a = mix(a, 1.0, flash);
+	if (tint_amt > 0.001) {
+		col = mix(col, tint, 0.85);
+		a = max(a, tint_amt);
+	}
 	COLOR = vec4(col, a);
 }

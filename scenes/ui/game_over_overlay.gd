@@ -55,6 +55,15 @@ func _ready() -> void:
 		v.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		counters.append([v, row[1]])
 
+	if not GameManager.last_beaten.is_empty():
+		var rec := UI.label(col, "★ NOUVEAU RECORD ★", 34, Color(1.0, 0.8, 0.2), UI.title_font())
+		rec.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		var names := {"best_round": "manche", "best_kills": "éliminations", "best_points": "points", "best_headshots": "tirs à la tête", "best_time": "survie"}
+		var parts := []
+		for k in GameManager.last_beaten:
+			parts.append(names.get(k, k))
+		var sub_l := UI.label(col, "Battu : " + ", ".join(parts), 20, UI.GREY)
+		sub_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var sp2 := Control.new()
 	sp2.custom_minimum_size = Vector2(0, 30)
 	col.add_child(sp2)
