@@ -13,7 +13,7 @@ signal weapon_changed
 signal hit_confirmed(killed: bool, head: bool)
 
 const HIP_POS := Vector3(0.21, -0.2, -0.56)
-const ADS_POS := Vector3(0.0, -0.115, -0.4)
+const ADS_POS := Vector3(0.0, -0.115, -0.5)
 const HIP_FOV := 75.0
 const MAX_GRENADES := 4
 const MELEE_DAMAGE := 150.0
@@ -154,6 +154,20 @@ func set_max_slots(n: int) -> void:
 	_on_switched()
 
 
+## Arme à lunette (sniper, tireur d'élite) : la visée affiche un viseur plein écran.
+func has_scope() -> bool:
+	var w = cur()
+	if w == null:
+		return false
+	var d := WeaponDB.data(w.id)
+	return d.kind == "sniper" or d.get("ads_fov", 55.0) < 45.0
+
+
+## Vrai quand l'œil est collé à la lunette : l'arme et les bras disparaissent.
+func is_scoped() -> bool:
+	return aim_blend > 0.85 and has_scope()
+
+
 func is_reloading() -> bool:
 	return reload_timer > 0.0
 
@@ -257,6 +271,9 @@ func _process(delta: float) -> void:
 	view.position = view.position.lerp(pos, minf(delta * 20.0, 1.0))
 	view.rotation = view.rotation.lerp(rot, minf(delta * 20.0, 1.0))
 	_update_arms()
+	view.visible = not is_scoped()
+	if is_scoped():
+		arms.visible = false
 
 	var w = cur()
 	var ads_fov := 55.0
@@ -587,7 +604,7 @@ func _update_arms() -> void:
 func _ads_pos() -> Vector3:
 	var ads := ADS_POS
 	if view and view.has_meta("sight_y"):
-		ads.y = -0.03 - float(view.get_meta("sight_y"))
+		ads.y = -0.06 - float(view.get_meta("sight_y"))
 		ads.z -= maxf(0.0, WeaponDB.data(cur().id).length * 0.5 - 0.2)
 	return ads
 

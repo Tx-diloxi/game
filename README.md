@@ -19,6 +19,7 @@ manches de chiens et tanks. Godot 4.7, GDScript, rendu Compatibility.
 - **Manette** : A valide et B annule dans les menus.
 - **Musique** : vraies boucles ambiance (menu et jeu), voir crédits.
 
+- **Mode test** (Options > Test) : en jeu, F1 arme suivante (les 13 armes), F2 améliorer/retirer l'amélioration, F3 munitions pleines et +50000 points, F4 tous les atouts, F5 terminer la manche.
 - **Options** : volume général, musique, effets et voix séparés (bus audio), qualité des ombres (4 niveaux), limite d'images/s, VSync, plein écran, champ de vision, sensibilité. Sauvegardées dans `user://settings.cfg`.
 - **Remappage** : menu Commandes, clavier/souris et manette séparément, réinitialisation en un clic ; les indications à l'écran suivent vos touches.
 - **Records** (`user://records.cfg`) : manche, éliminations, tirs à la tête, points, plus longue survie, parties jouées ; menu RECORDS et message « Nouveau record » en fin de partie.

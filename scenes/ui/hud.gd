@@ -507,7 +507,10 @@ func _draw_grenades() -> void:
 
 
 func _draw_crosshair() -> void:
-	if player == null or player.holder.aiming or player.is_sprinting() or player.dead or player.downed:
+	if player == null or player.is_sprinting() or player.dead or player.downed:
+		return
+	if player.holder.aiming:
+		_draw_aim_reticle()
 		return
 	var c := _crosshair.size * 0.5
 	var gap: float = 7.0 + player.holder.current_spread() * 900.0
@@ -517,6 +520,41 @@ func _draw_crosshair() -> void:
 		_crosshair.draw_line(c + d * gap, c + d * (gap + 11), sh, 4.0)
 		_crosshair.draw_line(c + d * gap, c + d * (gap + 11), col, 2.0)
 	_crosshair.draw_circle(c, 1.5, col)
+
+
+## Visée : lunette plein écran pour les snipers, petit réticule fin pour les autres armes.
+func _draw_aim_reticle() -> void:
+	var h = player.holder
+	var c := _crosshair.size * 0.5
+	var a: float = clampf((h.aim_blend - 0.5) * 2.0, 0.0, 1.0)
+	if a <= 0.0:
+		return
+	if h.has_scope():
+		var r: float = minf(_crosshair.size.x, _crosshair.size.y) * 0.46
+		var black := Color(0, 0, 0, a)
+		# tout ce qui dépasse du cercle est noir
+		_crosshair.draw_arc(c, r + 1500.0, 0.0, TAU, 128, black, 3000.0)
+		_crosshair.draw_arc(c, r, 0.0, TAU, 128, Color(0, 0, 0, a), 5.0)
+		var line := Color(0, 0, 0, 0.9 * a)
+		_crosshair.draw_line(c + Vector2(-r, 0), c + Vector2(r, 0), line, 1.5)
+		_crosshair.draw_line(c + Vector2(0, -r), c + Vector2(0, r), line, 1.5)
+		# gros fils en bordure + graduations
+		for d in [Vector2.RIGHT, Vector2.LEFT, Vector2.DOWN, Vector2.UP]:
+			_crosshair.draw_line(c + d * r * 0.62, c + d * r, line, 6.0)
+		for i in range(1, 6):
+			var t: float = r * 0.1 * i
+			for d in [Vector2.RIGHT, Vector2.LEFT]:
+				_crosshair.draw_line(c + d * t + Vector2(0, -5), c + d * t + Vector2(0, 5), line, 1.5)
+			for d in [Vector2.DOWN, Vector2.UP]:
+				_crosshair.draw_line(c + d * t + Vector2(-5, 0), c + d * t + Vector2(5, 0), line, 1.5)
+		_crosshair.draw_circle(c, 2.0, Color(1, 0.1, 0.1, a))
+	else:
+		var col := Color(1, 1, 1, 0.9 * a)
+		var sh := Color(0, 0, 0, 0.5 * a)
+		for d in [Vector2.RIGHT, Vector2.LEFT, Vector2.DOWN, Vector2.UP]:
+			_crosshair.draw_line(c + d * 5.0, c + d * 11.0, sh, 3.5)
+			_crosshair.draw_line(c + d * 5.0, c + d * 11.0, col, 1.5)
+		_crosshair.draw_circle(c, 1.5, col)
 
 
 ## Flèches rouges autour du réticule, orientées vers la source des dégâts.

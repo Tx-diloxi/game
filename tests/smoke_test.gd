@@ -285,7 +285,11 @@ func _ready() -> void:
 	check(Engine.max_fps == 60, "limite d'images par seconde")
 	GameManager.set_max_fps(0)
 	GameManager.set_shadow_quality(0)
-	check(get_tree().root.positional_shadow_atlas_size == 0, "ombres désactivables")
+	var shadowed := get_tree().root.find_children("*", "Light3D", true, false).filter(func(l): return l.shadow_enabled)
+	check(shadowed.is_empty() and get_tree().root.positional_shadow_atlas_size > 0, "ombres désactivables sans lumières noires")
+	GameManager.set_shadow_quality(3)
+	check(get_tree().root.find_children("*", "Light3D", true, false).any(func(l): return l.shadow_enabled), "les ombres reviennent en qualité élevée")
+	GameManager.set_shadow_quality(0)
 	GameManager.set_shadow_quality(3)
 	check(get_tree().root.positional_shadow_atlas_size == 4096, "ombres hautes")
 	GameManager.records_path = "user://records_test.cfg"

@@ -22,6 +22,7 @@ const BoxScript := preload("res://scripts/interactables/mystery_box.gd")
 const UpgradeScript := preload("res://scripts/interactables/upgrade_machine.gd")
 const PowerScript := preload("res://scripts/interactables/power_switch.gd")
 const MapLab := preload("res://scripts/game/map_lab.gd")
+const WeaponDBDebug := preload("res://scripts/weapons/weapon_db.gd")
 const TrapScript := preload("res://scripts/interactables/trap.gd")
 
 const H := 4.0 # hauteur des murs
@@ -112,8 +113,43 @@ func _ready() -> void:
 	add_child(rounds)
 
 	GameManager.power_changed.connect(_on_power)
+	GameManager.apply_video() # applique les réglages d'ombres aux lumières de la carte
 	await get_tree().physics_frame
 	_bake()
+
+
+## Mode test (Options) : F1 arme suivante, F2 améliorer, F3 munitions + points, F4 tous les atouts, F5 manche suivante.
+func _unhandled_input(event: InputEvent) -> void:
+	if not GameManager.debug_mode or menu_mode or player == null or not (event is InputEventKey) or not event.pressed or event.echo:
+		return
+	var h = player.holder
+	match event.keycode:
+		KEY_F1:
+			var ids: Array = WeaponDBDebug.WEAPONS.keys()
+			var cur = h.cur()
+			var i: int = (ids.find(cur.id) + 1) % ids.size() if cur else 0
+			h.give_weapon(ids[i], false)
+			GameManager.show_message(WeaponDBDebug.data(ids[i]).name.to_upper(), Color(0.7, 0.9, 1.0), "Mode test : arme %d/%d" % [i + 1, ids.size()])
+		KEY_F2:
+			var cur = h.cur()
+			if cur:
+				h.give_weapon(cur.id, not cur.upgraded)
+				GameManager.show_message("AMÉLIORATION " + ("ACTIVE" if h.cur().upgraded else "RETIRÉE"), Color(0.8, 0.5, 1.0))
+		KEY_F3:
+			h.refill_all()
+			GameManager.add_points(50000)
+			GameManager.show_message("MODE TEST", Color(0.7, 0.9, 1.0), "Munitions pleines, +50000 points")
+		KEY_F4:
+			for id in GameManager.PERKS:
+				GameManager.add_perk(id)
+			GameManager.show_message("MODE TEST", Color(0.7, 0.9, 1.0), "Tous les atouts")
+		KEY_F5:
+			for z in get_tree().get_nodes_in_group("zombies"):
+				z.take_damage(1e9, false, "nuke")
+			rounds.to_spawn = 0
+			if rounds.in_round and rounds.alive <= 0:
+				rounds._end_round(player.global_position)
+			GameManager.show_message("MODE TEST", Color(0.7, 0.9, 1.0), "Manche terminée")
 
 
 func _exit_tree() -> void:
@@ -177,6 +213,7 @@ func _build_environment() -> void:
 	moon.rotation = Vector3(deg_to_rad(-38), deg_to_rad(35), 0)
 	moon.shadow_enabled = GameManager.shadow_quality > 0
 	moon.add_to_group("shadow_lights")
+	moon.set_meta("wants_shadow", true)
 	moon.directional_shadow_max_distance = 70.0
 	add_child(moon)
 
@@ -433,7 +470,8 @@ func _on_power(on: bool) -> void:
 		var bulb = l.get_meta("bulb", null)
 		if bulb:
 			bulb.material_override = MeshUtil.mat(col, 6.0)
-		l.shadow_enabled = l.omni_range > 12.0
+		l.set_meta("wants_shadow", l.omni_range > 12.0)
+		l.shadow_enabled = GameManager.shadow_quality > 0 and l.omni_range > 12.0
 		create_tween().tween_property(l, "light_energy", 2.6, 1.2)
 		l.set_meta("base", 2.6)
 	for e in _emergency:

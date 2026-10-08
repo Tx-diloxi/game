@@ -6,7 +6,7 @@ const WEAPONS := {
 	"p9": {
 		"name": "P9", "upgraded_name": "P9 Infernal", "model": "Pistol_2", "fbx": true, "length": 0.26,
 		"upgrade_effect": "explosive", "upgrade_label": "Balles explosives",
-		"grip_r": Vector3(0.0, -0.05, 0.06), "grip_l": Vector3(0.0, -0.05, 0.06), "grip_l_mode": "side",
+		"grip_r": Vector3(0.0, -0.026, 0.094), "grip_l": Vector3(0.0, -0.026, 0.094), "grip_l_mode": "side",
 		"kind": "pistol",
 		"damage": 40, "rpm": 420, "auto": false, "pellets": 1, "spread": 0.012,
 		"mag": 8, "reserve": 80, "reload": 1.6, "head_mult": 3.0,
@@ -15,7 +15,7 @@ const WEAPONS := {
 	"revolver": {
 		"name": "Justicier", "upgraded_name": "Justicier Ardent", "model": "Revolver_2", "fbx": true, "length": 0.28,
 		"upgrade_effect": "fire", "upgrade_label": "Balles incendiaires",
-		"grip_r": Vector3(0.0, -0.045, 0.07), "grip_l": Vector3(0.0, -0.045, 0.07), "grip_l_mode": "side",
+		"grip_r": Vector3(0.0, -0.028, 0.104), "grip_l": Vector3(0.0, -0.028, 0.104), "grip_l_mode": "side",
 		"kind": "pistol",
 		"damage": 160, "rpm": 150, "auto": false, "pellets": 1, "spread": 0.008,
 		"mag": 6, "reserve": 48, "reload": 2.6, "head_mult": 3.5,
@@ -24,7 +24,7 @@ const WEAPONS := {
 	"carabine": {
 		"name": "Carabine M2", "upgraded_name": "Carabine du Jugement", "model": "AssaultRifle2_4", "fbx": true, "length": 0.62,
 		"upgrade_effect": "chain", "upgrade_label": "Arc électrique",
-		"grip_r": Vector3(0.0, -0.09, 0.06), "grip_l": Vector3(0.0, -0.06, -0.136), "grip_l_mode": "under",
+		"grip_r": Vector3(0.0, -0.05, 0.098), "grip_l": Vector3(0.0, 0.07, -0.106), "grip_l_mode": "side",
 		"kind": "rifle",
 		"damage": 110, "rpm": 360, "auto": false, "pellets": 1, "spread": 0.006,
 		"mag": 10, "reserve": 120, "reload": 2.0, "head_mult": 3.0,
@@ -33,7 +33,7 @@ const WEAPONS := {
 	"vipere": {
 		"name": "Vipère", "upgraded_name": "Vipère Sanglante", "model": "SubmachineGun_2", "fbx": true, "length": 0.45,
 		"upgrade_effect": "fire", "upgrade_label": "Balles incendiaires",
-		"grip_r": Vector3(0.0, -0.07, 0.09), "grip_l": Vector3(0.0, -0.07, -0.02), "grip_l_mode": "side",
+		"grip_r": Vector3(0.0, -0.014, 0.027), "grip_l": Vector3(0.0, -0.052, -0.067), "grip_l_mode": "side",
 		"kind": "smg",
 		"damage": 45, "rpm": 780, "auto": true, "pellets": 1, "spread": 0.02,
 		"mag": 32, "reserve": 192, "reload": 2.2, "head_mult": 2.5,
@@ -42,7 +42,7 @@ const WEAPONS := {
 	"frelon": {
 		"name": "Frelon", "upgraded_name": "Frelon Venimeux", "model": "SubmachineGun_4", "fbx": true, "length": 0.4,
 		"upgrade_effect": "chain", "upgrade_label": "Arc électrique",
-		"grip_r": Vector3(0.0, -0.09, 0.04), "grip_l": Vector3(0.0, -0.09, -0.06), "grip_l_mode": "side",
+		"grip_r": Vector3(0.0, -0.011, 0.147), "grip_l": Vector3(0.0, -0.049, 0.012), "grip_l_mode": "side",
 		"kind": "smg",
 		"damage": 36, "rpm": 900, "auto": true, "pellets": 1, "spread": 0.025,
 		"mag": 40, "reserve": 240, "reload": 2.0, "head_mult": 2.5,
@@ -51,7 +51,7 @@ const WEAPONS := {
 	"brise_porte": {
 		"name": "Brise-Porte", "upgraded_name": "Broyeur d'Os", "model": "Shotgun_1", "fbx": true, "length": 0.8,
 		"upgrade_effect": "knockback", "upgrade_label": "Souffle dévastateur",
-		"grip_r": Vector3(0.0, -0.03, 0.176), "grip_l": Vector3(0.0, -0.02, -0.096), "grip_l_mode": "under",
+		"grip_r": Vector3(0.0, -0.012, 0.188), "grip_l": Vector3(0.0, 0.014, -0.157), "grip_l_mode": "side",
 		"kind": "shotgun",
 		"damage": 45, "rpm": 70, "auto": false, "pellets": 8, "spread": 0.07,
 		"mag": 6, "reserve": 54, "reload": 3.0, "head_mult": 1.5,
@@ -60,7 +60,7 @@ const WEAPONS := {
 	"double_canon": {
 		"name": "Double Canon", "upgraded_name": "Double Canon Infernal", "model": "Shotgun_SawedOff", "fbx": true, "length": 0.5,
 		"upgrade_effect": "fire", "upgrade_label": "Balles incendiaires",
-		"grip_r": Vector3(0.0, -0.04, 0.14), "grip_l": Vector3(0.0, -0.03, -0.07), "grip_l_mode": "under",
+		"grip_r": Vector3(0.0, -0.011, 0.2), "grip_l": Vector3(0.0, 0.019, -0.114), "grip_l_mode": "side",
 		"kind": "shotgun",
 		"damage": 60, "rpm": 110, "auto": false, "pellets": 12, "spread": 0.09,
 		"mag": 2, "reserve": 28, "reload": 2.4, "head_mult": 1.5,
@@ -69,7 +69,7 @@ const WEAPONS := {
 	"k74": {
 		"name": "K-74", "upgraded_name": "K-74 Hurlant", "model": "AssaultRifle_3", "fbx": true, "length": 0.7,
 		"upgrade_effect": "chain", "upgrade_label": "Arc électrique",
-		"grip_r": Vector3(0.0, -0.1, 0.084), "grip_l": Vector3(0.0, -0.07, -0.154), "grip_l_mode": "under",
+		"grip_r": Vector3(0.0, -0.008, 0.3), "grip_l": Vector3(0.0, 0.104, -0.093), "grip_l_mode": "side",
 		"kind": "rifle",
 		"damage": 70, "rpm": 620, "auto": true, "pellets": 1, "spread": 0.014,
 		"mag": 30, "reserve": 270, "reload": 2.4, "head_mult": 3.0,
@@ -78,7 +78,7 @@ const WEAPONS := {
 	"spectre": {
 		"name": "Spectre", "upgraded_name": "Spectre Hanté", "model": "Bullpup_3", "fbx": true, "length": 0.65,
 		"upgrade_effect": "explosive", "upgrade_label": "Balles explosives",
-		"grip_r": Vector3(0.0, -0.07, 0.0), "grip_l": Vector3(0.0, -0.07, -0.13), "grip_l_mode": "under",
+		"grip_r": Vector3(0.0, -0.049, 0.081), "grip_l": Vector3(0.0, -0.01, -0.13), "grip_l_mode": "side",
 		"kind": "rifle",
 		"damage": 85, "rpm": 540, "auto": true, "pellets": 1, "spread": 0.012,
 		"mag": 35, "reserve": 280, "reload": 2.5, "head_mult": 3.0,
@@ -87,7 +87,7 @@ const WEAPONS := {
 	"tonnerre": {
 		"name": "Tonnerre", "upgraded_name": "Tonnerre Éternel", "model": "Bullpup_1", "fbx": true, "length": 0.72,
 		"upgrade_effect": "fire", "upgrade_label": "Balles incendiaires",
-		"grip_r": Vector3(0.0, -0.07, 0.014), "grip_l": Vector3(0.0, -0.07, -0.14), "grip_l_mode": "under",
+		"grip_r": Vector3(0.0, -0.035, 0.014), "grip_l": Vector3(0.0, -0.04, -0.25), "grip_l_mode": "side",
 		"kind": "lmg",
 		"damage": 80, "rpm": 650, "auto": true, "pellets": 1, "spread": 0.022,
 		"mag": 100, "reserve": 400, "reload": 4.0, "head_mult": 2.5,
@@ -97,7 +97,7 @@ const WEAPONS := {
 	"eclaireur": {
 		"name": "Éclaireur", "upgraded_name": "Éclaireur Spectral", "model": "SniperRifle_5", "fbx": true, "length": 0.85,
 		"upgrade_effect": "chain", "upgrade_label": "Arc électrique",
-		"grip_r": Vector3(0.0, -0.05, 0.17), "grip_l": Vector3(0.0, -0.04, -0.08), "grip_l_mode": "under",
+		"grip_r": Vector3(0.0, -0.004, 0.216), "grip_l": Vector3(0.0, 0.047, -0.037), "grip_l_mode": "side",
 		"kind": "rifle",
 		"damage": 190, "rpm": 240, "auto": false, "pellets": 1, "spread": 0.004,
 		"mag": 12, "reserve": 96, "reload": 2.6, "head_mult": 4.0,
@@ -107,7 +107,7 @@ const WEAPONS := {
 	"longue_vue": {
 		"name": "Longue-Vue", "upgraded_name": "Œil du Néant", "model": "SniperRifle_2", "fbx": true, "length": 0.95,
 		"upgrade_effect": "explosive", "upgrade_label": "Obus explosifs",
-		"grip_r": Vector3(0.0, -0.05, 0.19), "grip_l": Vector3(0.0, -0.04, -0.095), "grip_l_mode": "under",
+		"grip_r": Vector3(0.0, -0.029, 0.19), "grip_l": Vector3(0.0, 0.016, -0.045), "grip_l_mode": "side",
 		"kind": "sniper",
 		"damage": 500, "rpm": 50, "auto": false, "pellets": 1, "spread": 0.002,
 		"mag": 5, "reserve": 40, "reload": 3.2, "head_mult": 5.0,

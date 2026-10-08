@@ -103,6 +103,8 @@ var voice_volume := 1.0
 var vsync := true
 var max_fps_index := 0
 var shadow_quality := 3
+## Mode test : touches F1-F5 en jeu (armes, amélioration, munitions, atouts, manche suivante).
+var debug_mode := false
 var msaa_index := 1 # 0 = aucun, 1 = 2x, 2 = 4x, 3 = 8x
 var res_index := 1
 var render_scale := 1.0
@@ -333,6 +335,11 @@ func set_shadow_quality(q: int) -> void:
 	save_settings()
 
 
+func set_debug(on: bool) -> void:
+	debug_mode = on
+	save_settings()
+
+
 func set_msaa(i: int) -> void:
 	msaa_index = clampi(i, 0, MSAA_MODES.size() - 1)
 	apply_video()
@@ -355,7 +362,8 @@ func apply_video() -> void:
 	if DisplayServer.get_name() != "headless":
 		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if vsync else DisplayServer.VSYNC_DISABLED)
 	Engine.max_fps = FPS_LIMITS[max_fps_index]
-	var size: int = [0, 1024, 2048, 4096][shadow_quality]
+	# Atlas jamais à 0 : une lumière dont l'ombre est active mais sans atlas rend tout noir.
+	var size: int = [256, 1024, 2048, 4096][shadow_quality]
 	var root := get_tree().root if is_inside_tree() else null
 	if root:
 		root.positional_shadow_atlas_size = size
@@ -370,10 +378,13 @@ func apply_video() -> void:
 	RenderingServer.directional_shadow_atlas_set_size(maxi(size, 256), shadow_quality >= 2)
 	RenderingServer.directional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_HARD if shadow_quality <= 1 else (RenderingServer.SHADOW_QUALITY_SOFT_LOW if shadow_quality == 2 else RenderingServer.SHADOW_QUALITY_SOFT_HIGH))
 	RenderingServer.positional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_HARD if shadow_quality <= 1 else (RenderingServer.SHADOW_QUALITY_SOFT_LOW if shadow_quality == 2 else RenderingServer.SHADOW_QUALITY_SOFT_HIGH))
-	# Sans ombres : on coupe aussi le calcul côté lumières déjà présentes.
-	for l in get_tree().get_nodes_in_group("shadow_lights") if is_inside_tree() else []:
-		if l is Light3D:
-			l.shadow_enabled = shadow_quality > 0 and l.get_meta("wants_shadow", true)
+	# Sans ombres : on coupe le calcul sur TOUTES les lumières (on retient celles qui en voulaient).
+	if root:
+		for l in root.find_children("*", "Light3D", true, false):
+			var light := l as Light3D
+			if light.shadow_enabled and not light.has_meta("wants_shadow"):
+				light.set_meta("wants_shadow", true)
+			light.shadow_enabled = shadow_quality > 0 and light.get_meta("wants_shadow", false)
 
 
 func save_settings() -> void:
@@ -388,6 +399,7 @@ func save_settings() -> void:
 	cfg.set_value("video", "vsync", vsync)
 	cfg.set_value("video", "max_fps", max_fps_index)
 	cfg.set_value("video", "shadows", shadow_quality)
+	cfg.set_value("debug", "enabled", debug_mode)
 	cfg.set_value("video", "msaa", msaa_index)
 	cfg.set_value("video", "resolution", res_index)
 	cfg.set_value("video", "render_scale", render_scale)
@@ -408,6 +420,7 @@ func _load_settings() -> void:
 		vsync = cfg.get_value("video", "vsync", vsync)
 		max_fps_index = cfg.get_value("video", "max_fps", max_fps_index)
 		shadow_quality = cfg.get_value("video", "shadows", shadow_quality)
+		debug_mode = cfg.get_value("debug", "enabled", debug_mode)
 		msaa_index = cfg.get_value("video", "msaa", msaa_index)
 		res_index = cfg.get_value("video", "resolution", res_index)
 		render_scale = cfg.get_value("video", "render_scale", render_scale)

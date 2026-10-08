@@ -202,11 +202,11 @@ static func grip_for(d: Dictionary) -> Dictionary:
 	# Main droite : à droite de la poignée, poignet derrière, doigts vers l'avant et un peu vers le bas.
 	var right := {
 		"wrist": gr + Vector3(0.032, 0.012, 0.075),
-		"f": Vector3(-0.08, -0.25, -0.96), "n": Vector3(-1, 0, 0), "curl": 1.05, "thumb": 0.7,
+		"f": Vector3(-0.08, -0.25, -0.96), "n": Vector3(-1, 0, 0), "curl": 1.25, "thumb": 0.8,
 	}
 	var left: Dictionary
 	if mode == "under":
 		left = {"wrist": gl + Vector3(0.0, -0.035, 0.07), "f": Vector3(0, 0.0, -1), "n": Vector3(0, 1, 0), "curl": 0.9, "thumb": 0.5}
 	else:
-		left = {"wrist": gl + Vector3(-0.035, 0.0, 0.07), "f": Vector3(0.1, -0.2, -0.97), "n": Vector3(1, 0.05, 0), "curl": 1.0, "thumb": 0.6}
+		left = {"wrist": gl + Vector3(-0.035, 0.0, 0.07), "f": Vector3(0.1, -0.2, -0.97), "n": Vector3(1, 0.05, 0), "curl": 1.2, "thumb": 0.7}
 	return {"R": right, "L": left}
