@@ -80,7 +80,7 @@ static func options(parent: Node) -> Control:
 	UI.slider(box, "Voix (annonceur)", 0.0, 1.0, 0.05, GameManager.voice_volume, GameManager.set_voice_volume)
 	UI.label(box, "IMAGE", 26, UI.RED, UI.title_font())
 	UI.slider(box, "Champ de vision", 60.0, 100.0, 1.0, GameManager.fov, GameManager.set_fov, "%d°")
-	_option_row(box, "Qualité des ombres", ["Désactivées", "Basse", "Moyenne", "Élevée"], GameManager.shadow_quality, GameManager.set_shadow_quality)
+	_option_row(box, "Qualité des ombres", ["Désactivées (rapide)", "1 lampe", "2 lampes", "2 lampes + lune (lent)"], GameManager.shadow_quality, GameManager.set_shadow_quality)
 	var fps_names := []
 	for f in GameManager.FPS_LIMITS:
 		fps_names.append("Illimité" if f == 0 else "%d" % f)

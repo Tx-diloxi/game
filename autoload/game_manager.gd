@@ -102,7 +102,7 @@ var sfx_volume := 1.0
 var voice_volume := 1.0
 var vsync := true
 var max_fps_index := 0
-var shadow_quality := 3
+var shadow_quality := 0
 ## Mode test : touches F1-F5 en jeu (armes, amélioration, munitions, atouts, manche suivante).
 var debug_mode := false
 var msaa_index := 1 # 0 = aucun, 1 = 2x, 2 = 4x, 3 = 8x
@@ -363,7 +363,7 @@ func apply_video() -> void:
 		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if vsync else DisplayServer.VSYNC_DISABLED)
 	Engine.max_fps = FPS_LIMITS[max_fps_index]
 	# Atlas jamais à 0 : une lumière dont l'ombre est active mais sans atlas rend tout noir.
-	var size: int = [256, 1024, 2048, 4096][shadow_quality]
+	var size: int = [256, 512, 1024, 2048][shadow_quality]
 	var root := get_tree().root if is_inside_tree() else null
 	if root:
 		root.positional_shadow_atlas_size = size
@@ -376,15 +376,20 @@ func apply_video() -> void:
 				var screen := DisplayServer.screen_get_size()
 				DisplayServer.window_set_position((screen - res) / 2)
 	RenderingServer.directional_shadow_atlas_set_size(maxi(size, 256), shadow_quality >= 2)
-	RenderingServer.directional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_HARD if shadow_quality <= 1 else (RenderingServer.SHADOW_QUALITY_SOFT_LOW if shadow_quality == 2 else RenderingServer.SHADOW_QUALITY_SOFT_HIGH))
-	RenderingServer.positional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_HARD if shadow_quality <= 1 else (RenderingServer.SHADOW_QUALITY_SOFT_LOW if shadow_quality == 2 else RenderingServer.SHADOW_QUALITY_SOFT_HIGH))
+	RenderingServer.directional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_HARD if shadow_quality <= 2 else RenderingServer.SHADOW_QUALITY_SOFT_LOW)
+	RenderingServer.positional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_HARD if shadow_quality <= 2 else RenderingServer.SHADOW_QUALITY_SOFT_LOW)
 	# Sans ombres : on coupe le calcul sur TOUTES les lumières (on retient celles qui en voulaient).
 	if root:
 		for l in root.find_children("*", "Light3D", true, false):
 			var light := l as Light3D
 			if light.shadow_enabled and not light.has_meta("wants_shadow"):
 				light.set_meta("wants_shadow", true)
-			light.shadow_enabled = shadow_quality > 0 and light.get_meta("wants_shadow", false)
+			if light is DirectionalLight3D:
+				light.shadow_enabled = shadow_quality >= 3 and light.get_meta("wants_shadow", false)
+			else:
+				light.shadow_enabled = false # les lampes à ombre sont choisies par Game.refresh_shadow_lamps()
+		if game and is_instance_valid(game):
+			game.refresh_shadow_lamps()
 
 
 func save_settings() -> void:

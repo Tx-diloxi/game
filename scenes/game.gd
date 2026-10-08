@@ -113,6 +113,7 @@ func _ready() -> void:
 	add_child(rounds)
 
 	GameManager.power_changed.connect(_on_power)
+	_optimize_meshes()
 	GameManager.apply_video() # applique les réglages d'ombres aux lumières de la carte
 	await get_tree().physics_frame
 	_bake()
@@ -157,7 +158,55 @@ func _exit_tree() -> void:
 		GameManager.game = null
 
 
+## Les petits objets (planches, tuyaux, accessoires…) ne projettent pas d'ombre (elles rejouent toute la scène
+## pour chaque lampe) et disparaissent au loin : gros gain de dessins sur les cartes chargées.
+func _optimize_meshes() -> void:
+	for n in find_children("*", "MeshInstance3D", true, false):
+		var mi := n as MeshInstance3D
+		if mi.mesh == null or mi.is_in_group("keep_shadow"):
+			continue
+		var s := mi.global_transform.basis.get_scale()
+		var size := mi.get_aabb().size * s
+		var biggest := maxf(size.x, maxf(size.y, size.z))
+		if biggest < 0.9:
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			if biggest < 0.5:
+				mi.visibility_range_end = 30.0
+				mi.visibility_range_end_margin = 4.0
+				mi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
+
+
+var _shadow_t := 0.0
+var _shadow_cands: Array = []
+var _shadow_rebuild := 0.0
+
+
+## Seules les lampes les plus proches du joueur projettent des ombres (budget selon la qualité) :
+## chaque ombre de lampe rejoue toute la scène, c'est le poste le plus coûteux du rendu.
+func refresh_shadow_lamps() -> void:
+	var budget: int = [0, 1, 2, 2][GameManager.shadow_quality]
+	if _shadow_rebuild <= 0.0 or _shadow_cands.is_empty():
+		_shadow_rebuild = 5.0
+		_shadow_cands = find_children("*", "OmniLight3D", true, false).filter(func(l): return l.get_meta("wants_shadow", false))
+	var from := Vector3.ZERO
+	if player:
+		from = player.global_position
+	elif _menu_cam:
+		from = _menu_cam.global_position
+	var sorted := _shadow_cands.duplicate()
+	sorted.sort_custom(func(a, b): return a.global_position.distance_squared_to(from) < b.global_position.distance_squared_to(from))
+	for i in sorted.size():
+		var lamp := sorted[i] as OmniLight3D
+		lamp.omni_shadow_mode = OmniLight3D.SHADOW_DUAL_PARABOLOID # 2 passes au lieu de 6
+		lamp.shadow_enabled = i < budget
+
+
 func _process(delta: float) -> void:
+	_shadow_t -= delta
+	_shadow_rebuild -= delta
+	if _shadow_t <= 0.0:
+		_shadow_t = 0.4
+		refresh_shadow_lamps()
 	for l in _flicker:
 		var base: float = l.get_meta("base")
 		l.light_energy = base * (0.1 if randf() < 0.03 else randf_range(0.92, 1.0))
@@ -214,7 +263,8 @@ func _build_environment() -> void:
 	moon.shadow_enabled = GameManager.shadow_quality > 0
 	moon.add_to_group("shadow_lights")
 	moon.set_meta("wants_shadow", true)
-	moon.directional_shadow_max_distance = 70.0
+	moon.directional_shadow_max_distance = 40.0
+	moon.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL # une seule passe de profondeur
 	add_child(moon)
 
 
@@ -382,7 +432,13 @@ func _seg(along_x: bool, fixed: float, a: float, b: float, y0: float, y1: float,
 		return
 	var size := Vector3(b - a, y1 - y0, T) if along_x else Vector3(T, y1 - y0, b - a)
 	var pos := Vector3((a + b) * 0.5, (y0 + y1) * 0.5, fixed) if along_x else Vector3(fixed, (y0 + y1) * 0.5, (a + b) * 0.5)
-	MeshUtil.static_box(nav, size, pos, material)
+	var body := MeshUtil.static_box(nav, size, pos, material)
+	if minf(size.x, size.z) > 1.0 and size.y > 1.0 or maxf(size.x, size.z) > 2.5 and size.y > 2.0:
+		var occ := OccluderInstance3D.new() # les murs cachent ce qui est derrière (moins de dessins)
+		var box := BoxOccluder3D.new()
+		box.size = size
+		occ.occluder = box
+		body.add_child(occ)
 
 
 ## Plinthe sombre (purement visuelle) sur le pourtour intérieur d'une pièce.

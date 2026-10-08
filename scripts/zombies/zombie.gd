@@ -554,9 +554,15 @@ func _slam() -> void:
 			p.velocity += away.normalized() * 8.0 + Vector3.UP * 5.0
 
 
+static var _player_cache: Node3D = null
+
+
 func _get_player() -> Node3D:
+	if _player_cache and is_instance_valid(_player_cache) and _player_cache.is_inside_tree():
+		return _player_cache
 	var players := get_tree().get_nodes_in_group("player")
-	return players[0] if players.size() > 0 else null
+	_player_cache = players[0] if players.size() > 0 else null
+	return _player_cache
 
 
 func _flat_dist(p: Vector3) -> float:
@@ -571,7 +577,7 @@ func _stop() -> void:
 func _move_to(target: Vector3, delta: float) -> void:
 	_repath -= delta
 	if _repath <= 0.0:
-		_repath = 0.25
+		_repath = randf_range(0.4, 0.6) # chemins recalculés moins souvent (coûteux avec beaucoup de zombies)
 		agent.target_position = target
 	var dir := Vector3.ZERO
 	if not agent.is_navigation_finished():
@@ -587,19 +593,54 @@ func _move_to(target: Vector3, delta: float) -> void:
 	_face(dir, delta)
 
 
-## Évite que les zombies se superposent.
+static var _sep_frame := -1
+static var _sep_pos := PackedVector3Array()
+static var _sep_nodes: Array = []
+
+
+## Évite que les zombies se superposent. La liste des positions est construite une seule fois par image
+## (au lieu d'une requête de groupe par zombie) et chaque zombie ne s'y compare qu'une image sur deux.
 func _separate() -> void:
+	var frame := Engine.get_physics_frames()
+	if (frame + get_instance_id()) % 2 != 0:
+		return
+	if _sep_frame != frame:
+		_sep_frame = frame
+		_sep_nodes = get_tree().get_nodes_in_group("zombies")
+		_sep_pos.resize(_sep_nodes.size())
+		for i in _sep_nodes.size():
+			_sep_pos[i] = (_sep_nodes[i] as Node3D).global_position
+	var mine := global_position
 	var push := Vector3.ZERO
-	for z in get_tree().get_nodes_in_group("zombies"):
-		if z == self:
-			continue
-		var d: Vector3 = global_position - z.global_position
-		d.y = 0.0
-		var l := d.length()
-		if l < 0.75 and l > 0.001:
-			push += d / l * (0.75 - l)
-	velocity.x += push.x * 4.0
-	velocity.z += push.z * 4.0
+	for i in _sep_pos.size():
+		var o: Vector3 = _sep_pos[i]
+		var dx := mine.x - o.x
+		var dz := mine.z - o.z
+		var l2 := dx * dx + dz * dz
+		if l2 < 0.5625 and l2 > 0.000001:
+			var l := sqrt(l2)
+			push += Vector3(dx, 0.0, dz) / l * (0.75 - l)
+	velocity.x += push.x * 8.0
+	velocity.z += push.z * 8.0
+
+
+static var _pose_n := 0
+var _pose_acc := 0.0
+
+
+## Animation à fréquence réduite pour les zombies éloignés du joueur.
+func _pose(delta: float, moving: bool, anim_speed: float) -> void:
+	_pose_acc += delta
+	var every := 1
+	var p := _get_player()
+	if p:
+		var d := _flat_dist(p.global_position)
+		every = 1 if d < 12.0 else (2 if d < 25.0 else 4)
+	_pose_n += 1
+	if every > 1 and (_pose_n + get_instance_id()) % every != 0:
+		return
+	_model.update_pose(_pose_acc, moving, anim_speed)
+	_pose_acc = 0.0
 
 
 func _face(dir: Vector3, delta: float) -> void:
@@ -864,9 +905,9 @@ func _animate(delta: float, moving: bool) -> void:
 			_model.run_amount = move_toward(_model.run_amount, clampf((speed - 2.4) / 1.6, 0.0, 1.0) if kind == "zombie" and not crawling else 0.0, delta * 3.0)
 			if crawling and not _model.crawling:
 				_model.crawling = true
-			_model.update_pose(delta, moving and hspeed > 0.2, clampf(hspeed / ref, 0.45, 2.4) * _anim_scale)
+			_pose(delta, moving and hspeed > 0.2, clampf(hspeed / ref, 0.45, 2.4) * _anim_scale)
 		else:
-			_model.update_pose(delta, moving and hspeed > 0.2, clampf(hspeed / 4.0, 0.35, 1.3))
+			_pose(delta, moving and hspeed > 0.2, clampf(hspeed / 4.0, 0.35, 1.3))
 	for i in _legs.size():
 		_legs[i].rotation.x = swing * (1.0 if i % 2 == 0 else -1.0)
 	if kind != "dog":
