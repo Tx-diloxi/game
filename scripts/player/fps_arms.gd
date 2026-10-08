@@ -61,6 +61,14 @@ func _ready() -> void:
 		_add_sleeve(s)
 
 
+## Épaule `s` ("R"/"L") dans l'espace du parent (la caméra) et portée maximale du bras.
+func shoulder_info(s: String) -> Dictionary:
+	var ua: int = _b["upper_arm." + s]
+	var world: Vector3 = sk.global_transform * _rest[ua].origin
+	var reach: float = (_len[s][0] + _len[s][1]) * sk.global_transform.basis.get_scale().x
+	return {"pos": get_parent().to_local(world), "reach": reach}
+
+
 ## Manche de vêtement (cylindres) sur le bras et l'avant-bras, accrochée aux os.
 func _add_sleeve(s: String) -> void:
 	var specs := [["upper_arm." + s, "forearm." + s, 0.9, 0.74, 0.92], ["forearm." + s, "forearm.%s_end" % s, 0.7, 0.46, 0.74]]

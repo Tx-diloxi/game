@@ -1,0 +1,5 @@
+Tirs des armes (shot_<arme>*.wav) : "The Free Firearm Sound Library" - Ben Jaszczak, Brian Nelson, Kevin Heras, Matthew Nanney.
+Source : https://opengameart.org/content/the-free-firearm-sound-library
+Licence : CC0 (aucun credit requis, credit offert par courtoisie).
+Traitement : un coup decoupe par fichier, passage en mono 44,1 kHz 16 bits, normalisation.
+Armes enregistrees : 1911, AR-15, PPSh, Model 12, AK-47, Mosin Nagant, Smith & Wesson 642, Mossberg, Carl Gustav M45, SKS, Savage 10 .300 Blackout.

@@ -114,6 +114,10 @@ func build() -> void:
 	g._wall_buy(Vector3(51.79, 0, -11), Vector3.LEFT, "k74", 1400)
 	g._wall_buy(Vector3(40, 0, 13.79), Vector3.FORWARD, "tonnerre", 1500)
 	g._wall_buy(Vector3(45.79, 0, -18), Vector3.LEFT, "longue_vue", 1700)
+	g._wall_buy(Vector3(-1.5, 0, 7.79), Vector3.FORWARD, "revolver", 600)
+	g._wall_buy(Vector3(12.5, 0, 2.79), Vector3.FORWARD, "frelon", 1100)
+	g._wall_buy(Vector3(45.79, 0, -22), Vector3.LEFT, "eclaireur", 1600)
+	g._wall_buy(Vector3(34.21, 0, -26), Vector3.RIGHT, "spectre", 1800)
 
 	# Atouts
 	g._perk(Vector3(9.35, 0, 5), Vector3.LEFT, "second_souffle")

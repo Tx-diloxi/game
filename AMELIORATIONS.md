@@ -42,8 +42,8 @@ démembrement + zombies rampants · menus 3D · HUD à la craie · sons réels d
 ### 3.1 Armes
 | # | Fonctionnalité | État | Effort |
 |---|---|---|---|
-| 3.1.1 | **Plus d'armes** (20+ : pistolets, SMG, fusils d'assaut, fusils à pompe, snipers, mitrailleuses, lance-roquettes) | 🟡 8 armes | M par lot de 5 |
-| 3.1.2 | **Vrais modèles d'armes réalistes** + animations de rechargement/tir (au lieu des modèles « jouet » Kenney) | ❌ | L |
+| 3.1.1 | **Plus d'armes** (20+ : pistolets, SMG, fusils d'assaut, fusils à pompe, snipers, mitrailleuses, lance-roquettes) | 🟡 13 armes (5 de plus : revolver, Double Canon, Frelon, Spectre, Éclaireur) | M par lot de 5 |
+| 3.1.2 | **Vrais modèles d'armes réalistes** + animations de rechargement/tir (au lieu des modèles « jouet » Kenney) | 🟡 modèles Quaternius (low-poly réalistes) sur 12 armes ; pas de nouvelles animations de rechargement par arme | L |
 | 3.1.3 | **Accessoires** (viseurs, silencieux, poignées) | ❌ | M |
 | 3.1.4 | **Deuxième niveau d'amélioration** (Pack-a-Punch II / III avec nouvelle couleur et stats) | ❌ | M |
 | 3.1.5 | **Pénétration de balles** (traverser plusieurs zombies) | ❌ | S |
@@ -135,7 +135,7 @@ Effort : S par atout. Ajouter l'**icône HUD réaliste** et un **jingle propre �
 | 7.2 | **Annonceur** qui parle (« Munitions max », « Mort instantanée »…) | 🟡 désactivé (voix de synthèse refusée) ; à remplacer par de vrais enregistrements | S |
 | 7.3 | **Voix des personnages** (réactions, réanimation) | ❌ | M |
 | 7.4 | **Son 3D spatialisé** avec réverbération par pièce (bus audio + `AudioEffectReverb`) | 🟡 | M |
-| 7.5 | **Sons d'armes uniques** par arme (aujourd'hui partagés entre plusieurs) | 🟡 | S |
+| 7.5 | **Sons d'armes uniques** par arme (aujourd'hui partagés entre plusieurs) | ✅ tirs enregistrés dédiés (le Tonnerre réutilise celui du K-74 en plus grave) ; rechargements encore partagés | S |
 | 7.6 | **Sons de pas variés** par matériau | 🟡 | S |
 | 7.7 | **Mixage** : musique/effets/voix avec 3 curseurs dans les options | ✅ | S |
 | 7.8 | **Ambiance sonore dynamique** : grésillement des lumières, gouttes, vent | ❌ | S |

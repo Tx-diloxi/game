@@ -28,6 +28,7 @@ manches de chiens et tanks. Godot 4.7, GDScript, rendu Compatibility.
 - **Cadavres physiques (ragdoll)** : à la mort, un zombie debout devient 10 corps rigides reliés par des articulations (`start_ragdoll` dans `zombie_model_real.gd`) qui pilotent les os ; projeté à l'opposé du joueur, en l'air pour une explosion. 8 ragdolls simultanés au maximum (au-delà : animation de mort classique) ; les rampants et les chiens gardent l'animation de mort.
 - **Zombies** : 5 tenues (textures dérivées sans logo), silhouettes aléatoires, animation de course (sprinteurs penchés, bras qui pompent) avec foulée amplifiée, genoux levés et torsion du buste, et de reptation (bras tendus qui tirent, buste qui se tord, jambes qui traînent).
 
+- **Arsenal** (13 armes, `weapon_db.gd`) : P9, Justicier (revolver), Carabine M2, Vipère et Frelon (pistolets-mitrailleurs), Brise-Porte et Double Canon (fusils à pompe), K-74, Spectre (bullpup), Tonnerre (mitrailleuse), Éclaireur (fusil de précision semi-auto) et Longue-Vue (sniper), plus le Désintégrateur (arme futuriste, boîte mystère). Modèles 3D réalistes Quaternius, tir enregistré propre à chaque arme. Les armes longues sont poussées vers le joueur et le centre de l'écran pour que les deux mains les atteignent ; en visée, l'arme est calée sur sa ligne de mire.
 - **Cartes** : choix au clic sur *Jouer*. **Bunker abandonné** (3 zones) et **Laboratoire Sigma** (4 zones : accueil, couloir, salle des cuves, réacteur), 11 fenêtres, 10 atouts, 6 armes murales, un piège, la boîte mystère et la machine d'amélioration.
 - **Téléporteur** (laboratoire) : deux plateformes (accueil ↔ réacteur), courant requis, 750 points, recharge 25 s. La première utilisation ouvre la zone du réacteur sans payer sa porte.
 - **Quête secrète** (laboratoire) : les archives de l'accueil donnent trois indices ; il faut retrouver 3 fioles de sérum cachées (accueil, couloir, cuves), les rapporter à la console du réacteur (courant requis) et tenir 40 s pendant la synthèse. Récompense : une vie supplémentaire, munitions max et 3000 points.
@@ -75,7 +76,8 @@ Joue une partie accélérée et vérifie navigation, manches, économie, atouts,
 Bras du joueur : « FPS Arms (Rigged Only) » (CC0, maillage de base MakeHuman), OpenGameArt — voir `assets/models/arms/LICENSE.txt`.
 Zombies : modèle « Zombie » de [Pixelhouse](http://pixelhouse.com.ar) (CC-BY 3.0, [OpenGameArt](https://opengameart.org/content/zombie-0)) — voir `assets/models/zombie_real/LICENSE.txt`.
 Chiens : loup « Winter Wolf + Normal Wolf » de umask007 (CC-BY-SA 3.0, [OpenGameArt](https://opengameart.org/content/winter-wolf-normal-wolf)), converti en glTF — voir `assets/models/dog/LICENSE.txt`.
-Modèles d'armes, personnage de secours et sons d'impact : [Kenney](https://www.kenney.nl) (CC0) —
+Armes : « Ultimate Gun Pack » de [Quaternius](https://quaternius.com) (CC0, `assets/models/guns/LICENSE.txt`) ; tirs : « The Free Firearm Sound Library » de Ben Jaszczak et al. (CC0, `assets/sounds/CREDITS_GUNS.txt`).
+Armes futuristes, personnage de secours et sons d'impact : [Kenney](https://www.kenney.nl) (CC0) —
 Blaster Kit, Animated Characters Survivors, Impact Sounds. Voir `assets/LICENSE_kenney.txt`.
 Textures : [ambientCG](https://ambientcg.com) (CC0) — voir `assets/textures/CREDITS.txt`.
 Sons réels : tirs de Vincent Sevedge (CC-BY 3.0), rechargements, cris de zombies et rugissement du boss (CC0) — voir `assets/sounds/CREDITS.txt`.

@@ -43,6 +43,9 @@ var bob_t := 0.0
 var view: Node3D
 var arms: Node3D
 var _grip := {}
+## Recul de l'arme vers le joueur (m) pour que les deux mains l'atteignent, au repos et en visée.
+var _hip_shift := Vector3.ZERO
+var _ads_shift := Vector3.ZERO
 var muzzle_light: OmniLight3D
 var flash_mesh: MeshInstance3D
 var flash_timer := 0.0
@@ -228,7 +231,8 @@ func _process(delta: float) -> void:
 	var bob_amt := (1.0 - aim_blend * 0.85) * clampf(hspeed / 5.0, 0.0, 1.5)
 	var bob := Vector3(sin(bob_t) * 0.012, absf(cos(bob_t)) * 0.014, 0.0) * bob_amt
 
-	var pos := HIP_POS.lerp(ADS_POS, aim_blend) + bob
+	var ads := _ads_pos()
+	var pos := (HIP_POS + _hip_shift).lerp(ads + _ads_shift, aim_blend) + bob
 	var rot := Vector3.ZERO
 	pos.y -= lower_blend * 0.25
 	rot.x -= lower_blend * 0.7
@@ -256,8 +260,9 @@ func _process(delta: float) -> void:
 
 	var w = cur()
 	var ads_fov := 55.0
-	if w != null and WeaponDB.data(w.id).kind == "sniper":
-		ads_fov = 22.0
+	if w != null:
+		var wd := WeaponDB.data(w.id)
+		ads_fov = wd.get("ads_fov", 22.0 if wd.kind == "sniper" else 55.0)
 	camera.fov = lerpf(GameManager.fov, ads_fov, aim_blend)
 
 	flash_timer -= delta
@@ -315,7 +320,7 @@ func _try_fire(w: Dictionary, just_pressed: bool) -> void:
 	GameManager.vibrate(0.3, 0.0, 0.08)
 	var rate: float = d.rpm * (1.33 if GameManager.has_perk("tonique_eclair") else 1.0)
 	fire_timer = 60.0 / rate
-	Audio.play(d.sound, -7.0, randf_range(0.95, 1.05) * (0.85 if w.upgraded else 1.0))
+	Audio.play(d.sound, -7.0, randf_range(0.95, 1.05) * d.get("sound_pitch", 1.0) * (0.85 if w.upgraded else 1.0))
 	var spread := current_spread()
 	if d.kind == "shotgun":
 		get_tree().create_timer(0.35, false).timeout.connect(func(): Audio.play("shotgun_pump", -7.0))
@@ -578,6 +583,46 @@ func _update_arms() -> void:
 	arms.update_for_gun(view, _grip, extra, curl, extra_r)
 
 
+## Position de visée : l'arme est calée sur sa ligne de mire et repoussée si elle est longue (sinon sa crosse masque l'écran).
+func _ads_pos() -> Vector3:
+	var ads := ADS_POS
+	if view and view.has_meta("sight_y"):
+		ads.y = -0.03 - float(view.get_meta("sight_y"))
+		ads.z -= maxf(0.0, WeaponDB.data(cur().id).length * 0.5 - 0.2)
+	return ads
+
+
+## Calcule le décalage (vers le joueur et vers le centre) pour que les deux poignets restent à portée de bras.
+func _fit_reach() -> void:
+	_hip_shift = Vector3.ZERO
+	_ads_shift = Vector3.ZERO
+	if arms == null or _grip.is_empty() or view == null:
+		return
+	var ads := _ads_pos()
+	for pass_i in 2:
+		var base := HIP_POS if pass_i == 0 else ads
+		var shift := Vector3.ZERO
+		for _k in 14:
+			for s in ["R", "L"]:
+				var info: Dictionary = arms.shoulder_info(s)
+				var p: Vector3 = base + (_grip[s].wrist as Vector3) + shift
+				var d: float = p.distance_to(info.pos)
+				var limit: float = info.reach * 0.88
+				if d > limit:
+					var dirv: Vector3 = info.pos - p
+					dirv.y = 0.0
+					if dirv.length() > 0.001:
+						shift += dirv.normalized() * (d - limit) * 0.5
+		if pass_i == 1 and not view.has_meta("sight_y"):
+			shift = Vector3.ZERO
+		shift.x = clampf(shift.x, -0.15, 0.05)
+		shift.z = clampf(shift.z, 0.0, 0.3 if pass_i == 0 else 0.07)
+		if pass_i == 0:
+			_hip_shift = shift
+		else:
+			_ads_shift = shift
+
+
 func _rebuild_view() -> void:
 	if view:
 		muzzle_light.reparent(self, false)
@@ -596,5 +641,6 @@ func _rebuild_view() -> void:
 	flash_mesh.visible = false
 	muzzle_light.reparent(view, false)
 	muzzle_light.position = muzzle
+	_fit_reach()
 	for mi in view.find_children("*", "MeshInstance3D", true, false):
 		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

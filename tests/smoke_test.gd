@@ -10,6 +10,7 @@ const UpgradeScript := preload("res://scripts/interactables/upgrade_machine.gd")
 const TrapScript := preload("res://scripts/interactables/trap.gd")
 const ZombieScript := preload("res://scripts/zombies/zombie.gd")
 const WeaponDBTest := preload("res://scripts/weapons/weapon_db.gd")
+const MeshUtilTest := preload("res://scripts/util/mesh_util.gd")
 
 var game: Node
 var player: Node
@@ -476,6 +477,28 @@ func _ready() -> void:
 	game.spawn_powerup(player.global_position, "max_ammo")
 	await wait(0.3)
 	check(true, "ramassage de power-up sans erreur")
+
+	# Arsenal : chaque arme a un modèle, une ligne de mire, un tir sonore et des mains qui l'atteignent
+	var arsenal_ok := true
+	var sound_ok := true
+	for wid in WeaponDBTest.WEAPONS:
+		var wd: Dictionary = WeaponDBTest.WEAPONS[wid]
+		var g := MeshUtilTest.build_gun(game, wid, false, wd.color, wd.kind)
+		arsenal_ok = arsenal_ok and g != null and g.has_meta("muzzle")
+		if g:
+			g.queue_free()
+		if wd.get("fbx", false):
+			sound_ok = sound_ok and Audio._streams.get(wd.sound, []).size() >= 1
+	check(WeaponDBTest.WEAPONS.size() >= 13 and arsenal_ok, "13 armes, chacune avec son modèle 3D")
+	check(sound_ok and Audio._streams["shot_p9"].size() >= 2 and Audio._streams["shot_vipere"][0] is AudioStreamWAV, "tirs dédiés par arme chargés")
+	for wid in WeaponDBTest.BOX_POOL:
+		arsenal_ok = arsenal_ok and WeaponDBTest.WEAPONS.has(wid)
+	check(arsenal_ok, "la boîte mystère ne propose que des armes existantes")
+	for wid in ["revolver", "double_canon", "frelon", "eclaireur", "spectre"]:
+		player.holder.give_weapon(wid)
+		player.holder.switch_timer = 0.0
+		await wait(0.15)
+		check(player.holder._grip.has("R") and player.holder._hip_shift.length() < 0.35, "prise et portée des bras : %s" % wid)
 
 	# Zombies spéciaux : Brute (bouclier frontal) et Infecté (infection du joueur)
 	GameManager.active_powerups.clear()

@@ -260,6 +260,10 @@ func _build_map() -> void:
 	_wall_buy(Vector3(-6, 0, -9.79), Vector3.BACK, "vipere", 1000)
 	_wall_buy(Vector3(-2.79, 0, -16), Vector3.RIGHT, "brise_porte", 1200)
 	_wall_buy(Vector3(14.79, 0, -38), Vector3.LEFT, "k74", 1400)
+	_wall_buy(Vector3(6, 0, -9.79), Vector3.BACK, "revolver", 600)
+	_wall_buy(Vector3(2.79, 0, -24), Vector3.LEFT, "frelon", 1100)
+	_wall_buy(Vector3(14.79, 0, -42), Vector3.LEFT, "double_canon", 1200)
+	_wall_buy(Vector3(-4, 0, -49.79), Vector3.BACK, "spectre", 1800)
 
 	# Atouts
 	_perk(Vector3(9.35, 0, 6), Vector3.LEFT, "second_souffle")

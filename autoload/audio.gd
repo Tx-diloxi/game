@@ -172,6 +172,17 @@ func _build_library() -> void:
 		"down": [1.6, func(t, _st): return sin(TAU * (200.0 - 100.0 * t) * t) * 0.35 * (1.0 - t / 1.6)],
 		"grenade_throw": [0.2, func(t, st): return _noise(st, 0.3) * sin(PI * t / 0.2) * 0.4],
 	}
+	defs["shot_p9"] = defs["shot_pistol"]
+	defs["shot_revolver"] = defs["shot_pistol"]
+	defs["shot_carabine"] = defs["shot_rifle"]
+	defs["shot_vipere"] = defs["shot_smg"]
+	defs["shot_frelon"] = defs["shot_smg"]
+	defs["shot_brise_porte"] = defs["shot_shotgun"]
+	defs["shot_double_canon"] = defs["shot_shotgun"]
+	defs["shot_k74"] = defs["shot_rifle"]
+	defs["shot_spectre"] = defs["shot_rifle"]
+	defs["shot_eclaireur"] = defs["shot_rifle"]
+	defs["shot_longue_vue"] = defs["shot_sniper"]
 	defs["footstep"] = [0.08, func(t, st): return _noise(st, 0.3) * exp(-t * 60.0) * 0.3]
 	defs["monkey_cymbal"] = [0.25, func(t, st): return (sin(TAU * 2900.0 * t) * 0.4 + sin(TAU * 4370.0 * t) * 0.3 + _noise(st, 0.9) * 0.5) * exp(-t * 14.0)]
 	defs["boss_roar"] = [1.5, func(t, st): return (_saw(t, 60.0 + 20.0 * sin(TAU * 6.0 * t)) * 0.6 + _noise(st, 0.15) * 0.4) * sin(PI * t / 1.5)]
