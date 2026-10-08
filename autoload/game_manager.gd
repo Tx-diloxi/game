@@ -484,6 +484,14 @@ func _setup_input() -> void:
 	_mouse("weapon_next", MOUSE_BUTTON_WHEEL_DOWN)
 	_mouse("weapon_prev", MOUSE_BUTTON_WHEEL_UP)
 	_setup_gamepad()
+	# Navigation des menus à la manette : A valide, B annule
+	for pair in [["ui_accept", JOY_BUTTON_A], ["ui_cancel", JOY_BUTTON_B]]:
+		var has := false
+		for e in InputMap.action_get_events(pair[0]):
+			if e is InputEventJoypadButton and e.button_index == pair[1]:
+				has = true
+		if not has:
+			_pad_button(pair[0], pair[1])
 
 
 func _setup_gamepad() -> void:

@@ -15,7 +15,8 @@ manches de chiens et tanks. Godot 4.7, GDScript, rendu Compatibility.
 - **10 atouts, 6 cumulables** : Cuirasse, Main Leste, Tonique Éclair, Second Souffle, Triple Étui, et Œil de Lynx (tête +50 %), Pied Léger (vitesse +20 %), Mains d'Or (points +50 %), Bouclier (immunité aux explosions, soin 2× plus rapide), Ravitailleur (réserves +50 %).
 - **Tableau des scores** (Tab / bouton Retour) : manche, éliminations, tirs à la tête, précision, points, atouts achetés, temps de jeu.
 - **Manette** (Xbox) : sticks, gâchettes, boutons, vibrations ; les indications `[F]` deviennent `[Y]` quand la manette est utilisée. Navigation dans les menus à la manette.
-- **Annonceur** : voix française synthétique (Microsoft Hortense) filtrée « radio » pour les power-ups, le courant, le boss, les chiens et les manches 5, 10, 15…
+- **Annonceur** : désactivé (la voix de synthèse déplaisait). Le code `Audio.say` reste en place : il reprendra dès que des fichiers `assets/sounds/voice_*.wav` seront présents.
+- **Manette** : A valide et B annule dans les menus.
 - **Musique** : vraies boucles ambiance (menu et jeu), voir crédits.
 
 - **Options** : volume général, musique, effets et voix séparés (bus audio), qualité des ombres (4 niveaux), limite d'images/s, VSync, plein écran, champ de vision, sensibilité. Sauvegardées dans `user://settings.cfg`.
@@ -72,4 +73,4 @@ Modèles d'armes, personnage de secours et sons d'impact : [Kenney](https://www.
 Blaster Kit, Animated Characters Survivors, Impact Sounds. Voir `assets/LICENSE_kenney.txt`.
 Textures : [ambientCG](https://ambientcg.com) (CC0) — voir `assets/textures/CREDITS.txt`.
 Sons réels : tirs de Vincent Sevedge (CC-BY 3.0), rechargements, cris de zombies et rugissement du boss (CC0) — voir `assets/sounds/CREDITS.txt`.
-Musique : « Ambient Horror Track 01 » (CC0), « Dark Ambience Loop » d'Iwan Gabovitch (CC-BY 3.0), « String and piano horror stings » (CC0) et « Game over short jingle » (CC0), OpenGameArt. Annonceur : voix de synthèse générée localement. Sons restants : synthétisés au lancement (`autoload/audio.gd`).
+Musique : « Ambient Horror Track 01 » (CC0), « Dark Ambience Loop » d'Iwan Gabovitch (CC-BY 3.0), « String and piano horror stings » (CC0) et « Game over short jingle » (CC0), OpenGameArt. Sons restants : synthétisés au lancement (`autoload/audio.gd`).

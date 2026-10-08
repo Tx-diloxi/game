@@ -132,7 +132,7 @@ Effort : S par atout. Ajouter l'**icône HUD réaliste** et un **jingle propre �
 | # | Fonctionnalité | État | Effort |
 |---|---|---|---|
 | 7.1 | **Musique de fond** réelle (ambiance, manche, mort) | ✅ | S |
-| 7.2 | **Annonceur** qui parle (« Munitions max », « Mort instantanée »…) | ✅ voix de synthèse (à remplacer par de vrais enregistrements) | S |
+| 7.2 | **Annonceur** qui parle (« Munitions max », « Mort instantanée »…) | 🟡 désactivé (voix de synthèse refusée) ; à remplacer par de vrais enregistrements | S |
 | 7.3 | **Voix des personnages** (réactions, réanimation) | ❌ | M |
 | 7.4 | **Son 3D spatialisé** avec réverbération par pièce (bus audio + `AudioEffectReverb`) | 🟡 | M |
 | 7.5 | **Sons d'armes uniques** par arme (aujourd'hui partagés entre plusieurs) | 🟡 | S |

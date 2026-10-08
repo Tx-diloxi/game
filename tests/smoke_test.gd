@@ -252,10 +252,7 @@ func _ready() -> void:
 	GameManager.gamepad = false
 
 	# Sons : annonceur et musique
-	var voices_ok := true
-	for v in Audio.VOICES:
-		voices_ok = voices_ok and Audio._streams.has("voice_" + v)
-	check(voices_ok, "toutes les voix de l'annonceur sont chargées")
+	check(Audio._streams.keys().filter(func(k): return k.begins_with("voice_")).is_empty(), "annonceur désactivé (aucune voix chargée)")
 	var loop_ok := true
 	for m in ["menu_music", "ambience"]:
 		for st in Audio._streams[m]:
@@ -263,7 +260,8 @@ func _ready() -> void:
 				loop_ok = false
 	check(loop_ok, "les musiques bouclent")
 	Audio.say("max_ammo")
-	check(Audio._voice.playing, "l'annonceur parle")
+	check(not Audio._voice.playing, "l'annonceur reste muet")
+	check(InputMap.action_get_events("ui_accept").any(func(e): return e is InputEventJoypadButton), "A valide dans les menus")
 
 	# Options, records, remappage
 	check(AudioServer.get_bus_index("Music") >= 0 and AudioServer.get_bus_index("SFX") >= 0 and AudioServer.get_bus_index("Voice") >= 0, "bus audio musique/effets/voix")
