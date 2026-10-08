@@ -3,6 +3,8 @@ extends Node3D
 ## animations marche / attaque (« fury ») / mort, pilotées manuellement.
 ## Même interface que zombie_model.gd (update_pose, hide_head, _eyes) + attack() et die().
 
+const MeshUtil := preload("res://scripts/util/mesh_util.gd")
+
 const DIR := "res://assets/models/zombie_real/"
 const BASE := DIR + "walk.fbx"
 const SCALE := 3.2
@@ -56,7 +58,7 @@ static func available() -> bool:
 
 
 ## `variant` : "0".."4" (tenue). `tint` teinte la peau/le tout.
-func setup(variant: String, tint := Color.WHITE) -> void:
+func setup(variant: String, tint := Color.WHITE, style := "") -> void:
 	var pivot := Node3D.new()
 	pivot.scale = Vector3.ONE * SCALE
 	pivot.rotation.y = -PI * 0.5 # le modèle regarde -X, le jeu utilise -Z
@@ -81,6 +83,8 @@ func setup(variant: String, tint := Color.WHITE) -> void:
 	anim.play("walk")
 	anim.seek(randf() * 1.4, true)
 	_head = skeleton.find_bone("Bip01 Head")
+	if style != "":
+		_dress(style)
 
 	var eye_mat := StandardMaterial3D.new()
 	eye_mat.albedo_color = Color(1.0, 0.55, 0.1) if tint.r < 0.9 else Color(1.0, 0.12, 0.05)
@@ -101,6 +105,108 @@ func setup(variant: String, tint := Color.WHITE) -> void:
 		e.top_level = true
 		add_child(e)
 		_eyes.append(e)
+
+
+# --- Apparences : équipements portés (soldat, ouvrier, femmes) ------------------
+
+## Apparences possibles pour un zombie ordinaire ; "" = civil de base.
+const STYLES := ["", "soldier", "worker", "woman_a", "woman_b"]
+
+
+## Fixe un équipement sur un os. `offset` en mètres, dans le repère de l'équipement (avant -Z, haut +Y),
+## relatif à l'origine de l'os au repos ; `builder` y construit les maillages.
+func _attach(bone_name: String, offset: Vector3, builder: Callable) -> void:
+	var bi := skeleton.find_bone(bone_name)
+	if bi < 0:
+		return
+	var rest := skeleton.get_bone_global_rest(bi)
+	var turn := Basis(Vector3.UP, PI * 0.5) # avant du modèle : -X du squelette
+	var gear_rest := Transform3D(turn * Basis.from_scale(Vector3.ONE / SCALE), rest.origin + turn * offset / SCALE)
+	var att := BoneAttachment3D.new()
+	att.bone_name = bone_name
+	skeleton.add_child(att)
+	var holder := Node3D.new()
+	holder.transform = rest.affine_inverse() * gear_rest
+	att.add_child(holder)
+	builder.call(holder)
+	for mi in holder.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+
+## Calotte de cheveux : demi-sphère inclinée vers l'arrière (couvre le dessus et l'arrière, laisse le visage).
+func _hair_dome(parent: Node3D, mat: Material) -> void:
+	var mi := MeshInstance3D.new()
+	var sm := SphereMesh.new()
+	sm.radius = 0.112
+	sm.height = 0.224
+	sm.is_hemisphere = true
+	sm.radial_segments = 14
+	sm.rings = 6
+	mi.mesh = sm
+	mi.material_override = mat
+	mi.position = Vector3(0, -0.01, 0.015)
+	mi.rotation.x = 0.55
+	parent.add_child(mi)
+
+
+func _dress(style: String) -> void:
+	match style:
+		"soldier":
+			_attach("Bip01 Head", Vector3(0, 0.13, 0.0), func(n):
+				var olive := MeshUtil.mat(Color(0.2, 0.25, 0.15), 0.0, 0.7)
+				var cap := MeshUtil.sphere_mesh(n, 0.125, Vector3.ZERO, olive)
+				cap.scale = Vector3(1.0, 0.8, 1.1)
+				MeshUtil.cylinder_mesh(n, 0.128, 0.03, Vector3(0, -0.035, 0), MeshUtil.mat(Color(0.12, 0.14, 0.1), 0.0, 0.8)))
+			_attach("Bip01 Spine2", Vector3(0, 0.03, 0.0), func(n):
+				var vest := MeshUtil.mat(Color(0.17, 0.2, 0.14), 0.0, 0.85)
+				var strap := MeshUtil.mat(Color(0.1, 0.1, 0.09), 0.0, 0.9)
+				MeshUtil.box_mesh(n, Vector3(0.36, 0.36, 0.25), Vector3.ZERO, vest)
+				MeshUtil.box_mesh(n, Vector3(0.3, 0.1, 0.06), Vector3(0, -0.06, -0.135), strap)
+				for x in [-0.09, 0.0, 0.09]:
+					MeshUtil.box_mesh(n, Vector3(0.07, 0.1, 0.05), Vector3(x, -0.04, -0.15), strap))
+			_attach("Bip01 Spine2", Vector3(0, 0.0, 0.0), func(n):
+				MeshUtil.box_mesh(n, Vector3(0.28, 0.34, 0.14), Vector3(0, -0.02, 0.2), MeshUtil.mat(Color(0.19, 0.22, 0.16), 0.0, 0.9)))
+			_attach("Bip01 Pelvis", Vector3(0, 0.02, 0.0), func(n):
+				MeshUtil.box_mesh(n, Vector3(0.34, 0.07, 0.24), Vector3.ZERO, MeshUtil.mat(Color(0.1, 0.1, 0.09), 0.0, 0.9)))
+		"worker":
+			_attach("Bip01 Head", Vector3(0, 0.135, 0.0), func(n):
+				var yellow := MeshUtil.mat(Color(0.85, 0.7, 0.08), 0.0, 0.5)
+				var hat := MeshUtil.sphere_mesh(n, 0.125, Vector3.ZERO, yellow)
+				hat.scale = Vector3(1.0, 0.75, 1.1)
+				MeshUtil.cylinder_mesh(n, 0.15, 0.02, Vector3(0, -0.03, -0.02), yellow))
+			_attach("Bip01 Spine2", Vector3(0, 0.03, 0.0), func(n):
+				var orange := MeshUtil.mat(Color(0.85, 0.35, 0.05), 0.0, 0.8)
+				var refl := MeshUtil.mat(Color(0.7, 0.72, 0.7), 0.0, 0.6)
+				MeshUtil.box_mesh(n, Vector3(0.35, 0.36, 0.24), Vector3.ZERO, orange)
+				for y in [-0.07, 0.06]:
+					MeshUtil.box_mesh(n, Vector3(0.37, 0.04, 0.26), Vector3(0, y, 0), refl))
+		"woman_a":
+			_attach("Bip01 Head", Vector3(0, 0.115, 0.0), func(n):
+				var hair := MeshUtil.mat(Color(0.12, 0.07, 0.04), 0.0, 0.9)
+				_hair_dome(n, hair)
+				MeshUtil.box_mesh(n, Vector3(0.22, 0.46, 0.07), Vector3(0, -0.2, 0.1), hair)
+				for x in [-0.1, 0.1]:
+					MeshUtil.capsule_mesh(n, 0.035, 0.3, Vector3(x, -0.12, 0.0), hair))
+			_attach("Bip01 Pelvis", Vector3(0, -0.17, 0.0), func(n):
+				var cloth := MeshUtil.mat(Color(0.25, 0.1, 0.12), 0.0, 0.9)
+				var skirt := MeshInstance3D.new()
+				var cone := CylinderMesh.new()
+				cone.top_radius = 0.17
+				cone.bottom_radius = 0.3
+				cone.height = 0.38
+				cone.radial_segments = 14
+				cone.rings = 1
+				skirt.mesh = cone
+				skirt.material_override = cloth
+				n.add_child(skirt))
+		"woman_b":
+			_attach("Bip01 Head", Vector3(0, 0.115, 0.0), func(n):
+				var hair := MeshUtil.mat(Color(0.7, 0.55, 0.22), 0.0, 0.9)
+				_hair_dome(n, hair)
+				MeshUtil.capsule_mesh(n, 0.05, 0.34, Vector3(0, -0.1, 0.14), hair, Vector3(0.5, 0, 0))
+				MeshUtil.sphere_mesh(n, 0.035, Vector3(0, 0.04, 0.12), MeshUtil.mat(Color(0.8, 0.1, 0.1), 0.0, 0.5)))
+			_attach("Bip01 Spine2", Vector3(0, 0.0, 0.0), func(n):
+				MeshUtil.box_mesh(n, Vector3(0.33, 0.4, 0.22), Vector3.ZERO, MeshUtil.mat(Color(0.22, 0.3, 0.42), 0.0, 0.85)))
 
 
 func update_pose(delta: float, moving: bool, anim_speed: float) -> void:

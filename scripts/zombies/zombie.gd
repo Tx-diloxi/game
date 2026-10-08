@@ -989,10 +989,20 @@ func _build_real_model() -> void:
 		_build_armor()
 	else:
 		var v := randf_range(0.7, 0.95)
-		m.setup(str(randi() % RealModel.VARIANTS), Color(v, v * randf_range(0.96, 1.1), v * randf_range(0.88, 1.02)))
+		# Apparence : civil, soldat, ouvrier ou femme (kind "zombie" seulement)
+		var style := ""
+		var roll := randf()
+		if kind == "zombie":
+			style = "soldier" if roll < 0.17 else ("worker" if roll < 0.29 else ("woman_a" if roll < 0.46 else ("woman_b" if roll < 0.62 else "")))
+		m.setup(str(randi() % RealModel.VARIANTS), Color(v, v * randf_range(0.96, 1.1), v * randf_range(0.88, 1.02)), style)
 		# Silhouettes variées : plus ou moins grand, mince ou costaud
 		var h := randf_range(0.93, 1.07)
 		var w := randf_range(0.92, 1.1)
+		if style.begins_with("woman"):
+			h *= 0.94
+			w *= 0.88
+		elif style == "soldier":
+			w *= 1.06
 		visual.scale = Vector3(w, h, w)
 		head_height = 1.5 * h
 		_anim_scale = randf_range(0.88, 1.15)

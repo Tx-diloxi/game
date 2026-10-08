@@ -500,6 +500,17 @@ func _ready() -> void:
 		await wait(0.15)
 		check(player.holder._grip.has("R") and player.holder._hip_shift.length() < 0.35, "prise et portée des bras : %s" % wid)
 
+	# Apparences des zombies : équipements portés par les os
+	var styles_ok := true
+	for st in ["soldier", "worker", "woman_a", "woman_b"]:
+		var sm = load("res://scripts/zombies/zombie_model_real.gd").new()
+		game.add_child(sm)
+		sm.setup("0", Color.WHITE, st)
+		var n_att: int = sm.skeleton.find_children("*", "BoneAttachment3D", true, false).size()
+		styles_ok = styles_ok and n_att >= 1
+		sm.queue_free()
+	check(styles_ok, "soldats, ouvriers et femmes portent leur équipement")
+
 	# Zombies spéciaux : Brute (bouclier frontal) et Infecté (infection du joueur)
 	GameManager.active_powerups.clear()
 	player.invuln = 0.0

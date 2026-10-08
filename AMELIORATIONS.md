@@ -78,7 +78,7 @@ Effort : S par atout. Ajouter l'**icône HUD réaliste** et un **jingle propre �
 
 | # | Fonctionnalité | État | Effort | Détail |
 |---|---|---|---|---|
-| 4.1 | **Plusieurs modèles de zombies** (hommes, femmes, soldats, scientifiques, ouvriers) | 🟡 1 modèle, 5 tenues et silhouettes variées (femmes/soldats à ajouter) | M | Aujourd'hui tous partagent le t-shirt « PIXELHOUSE ». Recolorer/retexturer ou ajouter 3–4 modèles. |
+| 4.1 | **Plusieurs modèles de zombies** (hommes, femmes, soldats, scientifiques, ouvriers) | 🟡 1 corps de base, 5 tenues, silhouettes variées, soldats, ouvriers et femmes (équipement et cheveux ajoutés ; pas de vrai maillage féminin) | M | Aujourd'hui tous partagent le t-shirt « PIXELHOUSE ». Recolorer/retexturer ou ajouter 3–4 modèles. |
 | 4.2 | **Zombies sortant du sol** | ❌ | M | Spawn avec animation et particules de terre. |
 | 4.3 | **Zombies explosifs** (exploser au contact) | ✅ Kamikaze | S | Variante de `zombie.gd`. |
 | 4.4 | **Zombies spéciaux** (cracheur, hurleur, brute, infecté) | ✅ kamikaze, cracheur, hurleur, brute (bouclier + charge) et infecté (infection + nuage toxique) | M par type | Attaques à distance, aura, grand PV. |
