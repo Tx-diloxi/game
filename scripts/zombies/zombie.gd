@@ -690,6 +690,11 @@ func _die(head: bool, cause: String) -> void:
 	if GameManager.game:
 		GameManager.game.on_zombie_killed(self, cause)
 	var tw := create_tween()
+	if _real and _try_ragdoll(head, cause):
+		tw.tween_interval(5.0)
+		tw.tween_method(_model.ragdoll_sink, 0.0, -1.2, 1.5)
+		tw.tween_callback(queue_free)
+		return
 	if _real:
 		_model.die()
 		if not crawling:
@@ -702,6 +707,33 @@ func _die(head: bool, cause: String) -> void:
 		tw.tween_interval(2.0)
 	tw.tween_property(visual, "position:y", -1.2, 1.5)
 	tw.tween_callback(queue_free)
+
+
+## Mort en cadavre physique : le corps part à l'opposé du joueur ; l'explosion le projette en l'air.
+func _try_ragdoll(head: bool, cause: String) -> bool:
+	if crawling or not _model.has_method("start_ragdoll"):
+		return false
+	var away := Vector3.ZERO
+	var pl = GameManager.game.player if GameManager.game else null
+	if pl:
+		away = global_position - pl.global_position
+		away.y = 0.0
+	away = away.normalized() if away.length() > 0.01 else -global_basis.z
+	var strength := 2.0
+	var lift := 0.0
+	match cause:
+		"explosion", "nuke":
+			strength = 6.0
+			lift = 5.0
+		"melee":
+			strength = 3.0
+		"bullet":
+			strength = 3.5 if head else 2.5
+		"trap", "fire":
+			strength = 0.3
+	var vel := Vector3(velocity.x, 0.0, velocity.z) * 0.5 + away * strength * 0.4 + Vector3.UP * lift
+	var hit := global_position + Vector3.UP * (1.5 if head else 1.1)
+	return _model.start_ragdoll(vel, hit, away * strength * 14.0 + Vector3.UP * lift * 4.0)
 
 
 # --- Visuel ---------------------------------------------------------------

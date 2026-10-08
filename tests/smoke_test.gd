@@ -136,8 +136,12 @@ func _ready() -> void:
 	var mag_before: int = cw.mag
 	player.holder._try_fire(cw, true)
 	check(cw.mag == mag_before - 1, "tir consomme une balle")
+	var gren_before: int = player.holder.grenades
 	player.holder._throw_grenade()
-	await wait(2.6)
+	check(player.holder.throw_t >= 0.0 and player.holder.grenades == gren_before, "animation de lancer démarrée, grenade encore en main")
+	await wait(0.7)
+	check(player.holder.grenades == gren_before - 1, "la grenade quitte la main à la libération")
+	await wait(2.0)
 	check(true, "grenade lancée et explosée sans erreur")
 
 	# Chiens
@@ -148,6 +152,13 @@ func _ready() -> void:
 	var d0: float = dog.global_position.distance_to(player.global_position)
 	await wait(1.0)
 	check(dog.global_position.distance_to(player.global_position) < d0, "le chien court vers le joueur")
+	var rz = load("res://scripts/zombies/zombie.gd").new()
+	rz.setup("zombie", 100.0, 1.0, null)
+	game.add_child(rz)
+	rz.global_position = Vector3(0, 0, -30)
+	await wait(0.3)
+	rz.take_damage(9999.0, false, "bullet")
+	check(rz._model != null and rz._model._rag != null and rz._model._rag_bones.size() > 10, "cadavre physique (ragdoll) créé")
 	dog.take_damage(9999.0, false, "bullet")
 	await wait(1.5)
 	check(get_tree().get_nodes_in_group("zombies").size() == before, "le chien meurt sans erreur")
@@ -195,6 +206,7 @@ func _ready() -> void:
 	player.head.rotation.x = -0.3
 	player.holder.grenade_timer = 0.0
 	player.holder.throw_monkey()
+	await wait(0.7)
 	check(player.holder.monkeys == 0, "le singe est lancé")
 	check(await wait_until(func(): return game.decoy != null, 4.0), "le singe s'active au sol")
 	var md: Vector3 = game.decoy.global_position if game.decoy else Vector3.ZERO

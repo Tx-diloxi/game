@@ -86,7 +86,7 @@ Effort : S par atout. Ajouter l'**icône HUD réaliste** et un **jingle propre �
 | 4.6 | **Zombies qui grimpent aux murs / échelles** | ❌ | L | Points de navigation spéciaux. |
 | 4.7 | **Boss supplémentaires** (un par 10 manches, avec phases) | 🟡 1 boss | M par boss | Réutiliser le patron du Colosse. |
 | 4.8 | **Dégâts localisés** : tête, torse, membres avec multiplicateurs ; casques/gilets brisables | 🟡 | M | Étendre `on_limb_hit()`. |
-| 4.9 | **Cadavres persistants** (ragdoll physique) | ❌ | M | `PhysicalBoneSimulator3D` sur le squelette. |
+| 4.9 | **Cadavres persistants** (ragdoll physique) | ✅ 10 corps rigides + articulations (pas persistants : disparaissent après 5 s) | M | `PhysicalBoneSimulator3D` sur le squelette. |
 | 4.10 | **Vrais chiens infernaux** avec modèle dédié et attaque d'éclair | 🟡 | M | Aujourd'hui un loup low-poly. |
 
 ---
@@ -118,7 +118,7 @@ Effort : S par atout. Ajouter l'**icône HUD réaliste** et un **jingle propre �
 | 6.2 | **Modèles et textures réalistes** pour le décor (props PBR haute qualité) | 🟡 | L |
 | 6.3 | **Décals de sang et d'impact** (vrais `Decal` projetés sur les murs) | 🟡 | S |
 | 6.4 | **Sang sur la caméra** quand on est blessé ou qu'on tue de près | ❌ | S |
-| 6.5 | **Bras du joueur** dans la vue (FPS arms) avec animations | 🟡 bras + IK + rechargement ; animations de tir/prise en main à ajouter | L |
+| 6.5 | **Bras du joueur** dans la vue (FPS arms) avec animations | ✅ bras + IK, rechargement, prise en main, pompe/verrou, lancer de grenade et de singe | L |
 | 6.6 | **Animation de la caméra** : balancement, sprint, atterrissage, mort | 🟡 | S |
 | 6.7 | **Effets d'atouts à la boisson** (animation de bouteille) | ❌ | M |
 | 6.8 | **Étourdissement / flou de mouvement** après une explosion | ❌ | S |

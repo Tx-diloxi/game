@@ -166,7 +166,7 @@ func solve_arm(s: String, wrist: Vector3, f: Vector3, n: Vector3, pole: Vector3,
 
 ## Place les deux bras d'après le repère de l'arme (`gun` : nœud de l'arme, -Z = canon).
 ## `grip` : dictionnaire de la prise (voir FpsArms.grip_for) ; `extra_left` : décalage local de la main gauche (rechargement).
-func update_for_gun(gun: Node3D, grip: Dictionary, extra_left := Vector3.ZERO, left_curl_scale := 1.0) -> void:
+func update_for_gun(gun: Node3D, grip: Dictionary, extra_left := Vector3.ZERO, left_curl_scale := 1.0, extra_right := Vector3.ZERO) -> void:
 	if sk == null:
 		return
 	sk.reset_bone_poses()
@@ -175,7 +175,7 @@ func update_for_gun(gun: Node3D, grip: Dictionary, extra_left := Vector3.ZERO, l
 	var gb := gx.basis.orthonormalized()
 	for s in ["R", "L"]:
 		var p: Dictionary = grip[s]
-		var local: Vector3 = p.wrist + (extra_left if s == "L" else Vector3.ZERO)
+		var local: Vector3 = p.wrist + (extra_left if s == "L" else extra_right)
 		var wrist: Vector3 = to_sk * (gx * local)
 		var f: Vector3 = (to_sk.basis * (gb * p.f)).normalized()
 		var n: Vector3 = (to_sk.basis * (gb * p.n)).normalized()

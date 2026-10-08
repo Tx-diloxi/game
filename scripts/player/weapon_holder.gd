@@ -46,6 +46,20 @@ var _grip := {}
 var muzzle_light: OmniLight3D
 var flash_mesh: MeshInstance3D
 var flash_timer := 0.0
+var pump_t := 0.0        # animation de la pompe / du verrou après un tir
+var pump_total := 0.45
+var throw_t := -1.0      # >= 0 : lancer en cours (temps écoulé)
+var throw_kind := ""     # "grenade" ou "monkey"
+var throw_released := false
+var _prop: Node3D
+var _prop_kind := ""
+const THROW_TIME := 0.9
+const THROW_RELEASE := 0.5
+# Images clés des mains pendant un lancer (espace caméra) : [temps, position]
+const THROW_R := [[0.0, Vector3(0.26, -0.5, -0.3)], [0.2, Vector3(0.16, -0.2, -0.4)], [0.4, Vector3(0.22, -0.04, -0.2)],
+	[0.5, Vector3(0.12, 0.0, -0.6)], [0.65, Vector3(0.1, -0.3, -0.55)], [0.9, Vector3(0.26, -0.5, -0.3)]]
+const THROW_L := [[0.0, Vector3(-0.25, -0.5, -0.3)], [0.15, Vector3(-0.05, -0.2, -0.4)], [0.3, Vector3(-0.13, -0.12, -0.3)],
+	[0.45, Vector3(-0.25, -0.4, -0.3)], [0.9, Vector3(-0.25, -0.5, -0.3)]]
 
 
 func _ready() -> void:
@@ -159,6 +173,8 @@ func _physics_process(delta: float) -> void:
 	switch_timer = maxf(switch_timer - delta, 0.0)
 	melee_timer = maxf(melee_timer - delta, 0.0)
 	grenade_timer = maxf(grenade_timer - delta, 0.0)
+	pump_t = maxf(pump_t - delta, 0.0)
+	_update_throw(delta)
 	if reload_timer > 0.0:
 		reload_timer -= delta
 		if reload_timer <= 0.0:
@@ -201,7 +217,7 @@ func _physics_process(delta: float) -> void:
 func _process(delta: float) -> void:
 	if view == null:
 		return
-	var busy: bool = not player.can_act() or player.is_sprinting() or switch_timer > 0.0
+	var busy: bool = not player.can_act() or player.is_sprinting() or throw_t >= 0.0
 	aim_blend = move_toward(aim_blend, 1.0 if aiming else 0.0, delta * 6.0)
 	lower_blend = move_toward(lower_blend, 1.0 if busy else 0.0, delta * 5.0)
 	kick = move_toward(kick, 0.0, delta * 6.0)
@@ -216,6 +232,13 @@ func _process(delta: float) -> void:
 	var rot := Vector3.ZERO
 	pos.y -= lower_blend * 0.25
 	rot.x -= lower_blend * 0.7
+	if switch_timer > 0.0: # prise en main : l'arme remonte en tournant
+		var dr := smoothstep(0.0, 1.0, switch_timer / 0.45)
+		pos.y -= dr * 0.3
+		rot.x -= dr * 0.8
+		rot.z += dr * 0.35
+	if throw_t >= 0.0:
+		pos.y -= 0.4 * lower_blend
 	pos.z += kick * 0.06
 	rot.x += kick * 0.12
 	if reload_timer > 0.0 and reload_total > 0.0:
@@ -278,7 +301,7 @@ func _finish_reload() -> void:
 
 
 func _try_fire(w: Dictionary, just_pressed: bool) -> void:
-	if reload_timer > 0.0 or switch_timer > 0.0 or fire_timer > 0.0 or melee_timer > 0.3:
+	if reload_timer > 0.0 or switch_timer > 0.0 or fire_timer > 0.0 or melee_timer > 0.3 or throw_t >= 0.0:
 		return
 	if w.mag <= 0:
 		if just_pressed:
@@ -296,6 +319,11 @@ func _try_fire(w: Dictionary, just_pressed: bool) -> void:
 	var spread := current_spread()
 	if d.kind == "shotgun":
 		get_tree().create_timer(0.35, false).timeout.connect(func(): Audio.play("shotgun_pump", -7.0))
+		pump_total = 0.55
+		pump_t = 0.55
+	elif d.kind == "sniper":
+		pump_total = 0.8
+		pump_t = 0.8
 	for i in d.pellets:
 		_fire_ray(w, d, spread)
 	kick = minf(kick + 0.6, 1.0)
@@ -390,17 +418,9 @@ func _melee() -> void:
 
 
 func _throw_grenade() -> void:
-	if grenades <= 0 or grenade_timer > 0.0:
+	if grenades <= 0 or throw_t >= 0.0 or grenade_timer > 0.0:
 		return
-	grenades -= 1
-	grenade_timer = 0.8
-	ammo_changed.emit()
-	Audio.play("grenade_throw")
-	var g: RigidBody3D = GrenadeScript.new()
-	get_tree().current_scene.add_child(g)
-	var fwd := -camera.global_basis.z
-	g.global_position = camera.global_position + fwd * 0.6
-	g.linear_velocity = fwd * 15.0 + Vector3.UP * 3.0 + player.velocity * 0.5
+	_start_throw("grenade")
 
 
 func give_monkeys(n: int) -> void:
@@ -409,17 +429,104 @@ func give_monkeys(n: int) -> void:
 
 
 func throw_monkey() -> void:
-	if monkeys <= 0 or grenade_timer > 0.0:
+	if monkeys <= 0 or throw_t >= 0.0 or grenade_timer > 0.0:
 		return
-	monkeys -= 1
-	grenade_timer = 0.8
-	ammo_changed.emit()
+	_start_throw("monkey")
+
+
+func _start_throw(kind: String) -> void:
+	throw_kind = kind
+	throw_t = 0.0
+	throw_released = false
+	reload_timer = 0.0
+	Audio.play("knife", -14.0, 1.6) # saisie de l'objet
+
+
+## Avance le lancer : l'objet part à l'instant de la libération de la main.
+func _update_throw(delta: float) -> void:
+	if throw_t < 0.0:
+		return
+	throw_t += delta
+	if not throw_released and throw_t >= THROW_RELEASE:
+		throw_released = true
+		_release_throw()
+	if throw_t >= THROW_TIME:
+		throw_t = -1.0
+
+
+func _release_throw() -> void:
 	Audio.play("grenade_throw")
-	var m: RigidBody3D = MonkeyScript.new()
-	get_tree().current_scene.add_child(m)
+	var obj: RigidBody3D
+	var speed := 15.0
+	var lift := 3.0
+	if throw_kind == "grenade":
+		if grenades <= 0:
+			return
+		grenades -= 1
+		obj = GrenadeScript.new()
+	else:
+		if monkeys <= 0:
+			return
+		monkeys -= 1
+		obj = MonkeyScript.new()
+		speed = 11.0
+		lift = 3.5
+	ammo_changed.emit()
+	get_tree().current_scene.add_child(obj)
 	var fwd := -camera.global_basis.z
-	m.global_position = camera.global_position + fwd * 0.6
-	m.linear_velocity = fwd * 11.0 + Vector3.UP * 3.5 + player.velocity * 0.5
+	obj.global_position = camera.global_position + fwd * 0.6
+	obj.linear_velocity = fwd * speed + Vector3.UP * lift + player.velocity * 0.5
+
+
+static func _keys(keys: Array, t: float) -> Vector3:
+	if t <= keys[0][0]:
+		return keys[0][1]
+	for i in range(1, keys.size()):
+		if t <= keys[i][0]:
+			var u: float = (t - keys[i - 1][0]) / (keys[i][0] - keys[i - 1][0])
+			return (keys[i - 1][1] as Vector3).lerp(keys[i][1], smoothstep(0.0, 1.0, u))
+	return keys[keys.size() - 1][1]
+
+
+## Pose des deux mains pendant un lancer ; l'objet suit la main droite jusqu'à la libération.
+func _throw_grip() -> Dictionary:
+	var t := throw_t
+	var wind := smoothstep(0.25, 0.42, t) * (1.0 - smoothstep(0.42, 0.52, t))
+	var fr := Vector3(0.0, 0.15 + 0.4 * wind, -1.0).normalized()
+	var pinch := smoothstep(0.1, 0.2, t) * (1.0 - smoothstep(0.28, 0.36, t))
+	var rw: Vector3 = _keys(THROW_R, t)
+	var right := {"wrist": rw, "f": fr, "n": Vector3(-1, 0, 0), "curl": 1.0 if t < THROW_RELEASE else 0.15, "thumb": 0.6}
+	var left := {"wrist": _keys(THROW_L, t), "f": Vector3(0.25, 0.1, -0.95), "n": Vector3(1, 0.05, 0), "curl": 0.3 + 0.5 * pinch, "thumb": 0.3 + 0.4 * pinch}
+	_show_prop(not throw_released, rw + fr * 0.085 + Vector3(-0.03, 0.0, 0.0))
+	return {"R": right, "L": left}
+
+
+func _show_prop(on: bool, pos: Vector3) -> void:
+	if on and (_prop == null or _prop_kind != throw_kind):
+		if _prop:
+			_prop.queue_free()
+		_prop = Node3D.new()
+		_prop_kind = throw_kind
+		add_child(_prop)
+		if throw_kind == "grenade":
+			const MODEL := "res://assets/models/weapons/grenade-a.glb"
+			if ResourceLoader.exists(MODEL):
+				var m: Node3D = load(MODEL).instantiate()
+				m.scale = Vector3.ONE * 0.7
+				m.position.y = -0.06
+				_prop.add_child(m)
+			else:
+				MeshUtil.sphere_mesh(_prop, 0.045, Vector3.ZERO, MeshUtil.mat(Color(0.2, 0.28, 0.15), 0.0, 0.6, 0.3))
+		else:
+			var fur := MeshUtil.mat(Color(0.45, 0.28, 0.15), 0.0, 1.0)
+			MeshUtil.capsule_mesh(_prop, 0.05, 0.14, Vector3.ZERO, fur)
+			MeshUtil.sphere_mesh(_prop, 0.045, Vector3(0, 0.1, 0), fur)
+			MeshUtil.cylinder_mesh(_prop, 0.03, 0.03, Vector3(0, 0.15, 0), MeshUtil.mat(Color(0.7, 0.05, 0.05)))
+		for mi in _prop.find_children("*", "MeshInstance3D", true, false):
+			(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	if _prop:
+		_prop.visible = on
+		_prop.position = pos
 
 
 func _ray(from: Vector3, to: Vector3) -> Dictionary:
@@ -445,16 +552,30 @@ func _on_switched() -> void:
 func _update_arms() -> void:
 	if arms == null:
 		return
+	if throw_t >= 0.0:
+		arms.visible = true
+		arms.update_for_gun(self, _throw_grip())
+		return
+	if _prop:
+		_prop.visible = false
 	arms.visible = view != null and not _grip.is_empty()
 	if not arms.visible:
 		return
 	var extra := Vector3.ZERO
+	var extra_r := Vector3.ZERO
 	var curl := 1.0
 	if reload_timer > 0.0 and reload_total > 0.0:
 		var p := sin((1.0 - reload_timer / reload_total) * PI)
 		extra = Vector3(-0.03 * p, -0.17 * p, 0.09 * p)
 		curl = lerpf(1.0, 0.25, p)
-	arms.update_for_gun(view, _grip, extra, curl)
+	elif pump_t > 0.0 and pump_t < pump_total - 0.1:
+		var p := sin((1.0 - pump_t / pump_total) * PI)
+		var w = cur()
+		if w != null and WeaponDB.data(w.id).kind == "shotgun":
+			extra = Vector3(0.0, 0.0, 0.11 * p) # la main avant fait coulisser la pompe
+		else:
+			extra_r = Vector3(0.0, 0.025 * p, 0.07 * p) # la main droite arme le verrou
+	arms.update_for_gun(view, _grip, extra, curl, extra_r)
 
 
 func _rebuild_view() -> void:
