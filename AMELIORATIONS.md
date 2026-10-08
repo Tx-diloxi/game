@@ -8,12 +8,42 @@ Légende — État : ✅ fait · 🟡 partiel · ❌ absent. Effort : S (≤ 1 h
 
 ---
 
-## 1. Déjà en place (pour mémoire)
+## 1. Déjà en place (bilan au 8 octobre 2026)
 
-Manches avec PV/nombre croissants · barricades à 6 planches · points (touche, kill, tête, couteau) · portes payantes ·
-armes murales + rachat de munitions · boîte mystère qui déménage · courant · 5 atouts · machine d'amélioration
-avec effets spéciaux par arme · 2 pièges · 5 power-ups · grenades · singe-leurre · chiens · tank · boss (Colosse) ·
-démembrement + zombies rampants · menus 3D · HUD à la craie · sons réels de tirs/zombies · tests automatisés.
+**Cœur du mode Zombies** : manches (PV et nombre croissants, marcheurs → coureurs → sprinteurs) · barricades à 6 planches
+(réparation = points) · points (touche, kill, tête, couteau) · portes payantes · armes murales + rachat de munitions ·
+boîte mystère qui déménage · courant · machine d'amélioration avec effet spécial par arme · 2 pièges ·
+**10 atouts** (6 cumulables avec Triple Étui) · **10 power-ups** (Munitions max, Mort instantanée, Bombe, Points x2, Feu de vente,
+Bonus de points, Sang de zombie, Munitions illimitées, Dernier survivant, Charpentier) · grenades · singe-leurre.
+
+**Ennemis** : zombies (5 tenues, soldats, ouvriers, femmes) · chiens infernaux · tank · boss Colosse (manches 10/20/30) ·
+kamikaze, cracheur, hurleur, brute (bouclier + charge), infecté (infection + nuage toxique) · démembrement + rampants ·
+cadavres physiques (ragdoll).
+
+**Contenu** : 13 armes à modèles réalistes et tirs dédiés · 2 cartes (Bunker abandonné, Laboratoire Sigma) avec sélection ·
+téléporteur · quête secrète (3 fioles → synthèse du sérum) · bras du joueur animés (prise en main, pompe/verrou, lancers).
+
+**Confort** : menus 3D · HUD à la craie · manette + remappage clavier/manette · tableau des scores · records ·
+options audio/image · indicateurs de dégâts directionnels · musiques réelles · tests automatisés (~230 vérifications).
+
+---
+
+## 1 bis. Comparaison avec le mode Zombies original (ce qui manque encore)
+
+**Écarts les plus visibles en jeu, par priorité :**
+1. **Coop** (2.1/2.3) — c'est LE point fort de l'original (en ligne 2-4 joueurs, réanimation). Chantier XL, non testable seul.
+2. **Mouvement** : sauter par-dessus les fenêtres (2.9), glisser/plonger (2.10), zombies qui grimpent (4.6).
+3. **Armes** : deuxième niveau d'amélioration (3.1.4), accessoires (3.1.3), armes « miracle » à construire (3.1.9), lance-roquettes, animations de rechargement par arme (3.1.2).
+4. **Atouts** : ajouter double gain de points, gilet, recharge rapide, tir en rafale… (3.2) — rapide à faire.
+5. **Équipements** : mines, Molotov, tourelle, bouclier d'émeute (3.3).
+6. **Ambiance** : météo/orage (5.9), objets d'histoire (radios, ordinateurs, 5.7), musique secrète (5.6), annonceur vocal (7.2, désactivé), voix des personnages (7.3).
+7. **Rendu** : Forward+ (6.1), décors PBR (6.2), sang sur la caméra (6.4).
+8. **Structure du jeu** : difficulté (2.13), succès et statistiques à vie (8.5/8.6), sauvegarde (9.8), localisation (8.9).
+
+**Ce qui est à parité ou proche de l'original :** boucle de manches, économie de points, boîte mystère, courant, atouts, power-ups,
+amélioration d'armes, pièges, chiens, boss, quête secrète, variété de zombies spéciaux, démembrement.
+
+**Jamais testé à la main :** équilibrage (économie, courbe des manches, DPS des nouvelles armes), sensations de tir, sons.
 
 ---
 
@@ -23,11 +53,11 @@ démembrement + zombies rampants · menus 3D · HUD à la craie · sons réels d
 |---|---|---|---|---|
 | 2.1 | **Coop 2–4 joueurs en ligne** | ❌ | XL | `MultiplayerAPI` + ENet. Serveur autoritaire pour zombies/points. Réplication via `MultiplayerSynchronizer`. Points et atouts par joueur. |
 | 2.2 | **Coop locale (écran partagé)** | ❌ | L | 2 `SubViewport` + 2 joueurs ; manettes requises (voir 7.3). |
-| 2.3 | **Réanimation des coéquipiers** (maintenir F, 3 s ; jauge de saignement 30 s) | 🟡 | M | Aujourd'hui seul Second Souffle (auto) existe. Ajouter état « à terre » avec timer, ramper, pistolet seul. |
+| 2.3 | **Réanimation des coéquipiers** (maintenir F, 3 s ; jauge de saignement 30 s) | 🟡 | M | Aujourd'hui seul Second Souffle (auto) et la vie supplémentaire existent. Ajouter état « à terre » avec timer, ramper, pistolet seul. |
 | 2.4 | **Mode à terre en solo** : perdre tous les atouts, tirer au pistolet pendant 3 s avant de mourir | 🟡 | S | `player._go_down()` existe, manque le combat à terre. |
-| 2.5 | **Vraies manches « spéciales »** : chiens, mais aussi manches de zombies qui sprintent, d'infectés explosifs, de boss | 🟡 | M | `round_manager.gd` : table de manches spéciales au lieu d'un seul tirage. |
+| 2.5 | **Vraies manches « spéciales »** : chiens, mais aussi manches de zombies qui sprintent, d'infectés explosifs, de boss | 🟡 chiens (manches 5-7), boss (tous les 10), tanks (tous les 5) ; pas de manches thématiques | M | `round_manager.gd` : table de manches spéciales au lieu d'un seul tirage. |
 | 2.6 | **Plafond de zombies par joueur et par manche** réaliste (ex. 24 simultanés, 6+0,15·manche²…) | 🟡 | S | Ajuster `zombie_count()` et pondérer par nombre de joueurs. |
-| 2.7 | **Vitesse des zombies par manche** (marcheurs → coureurs → sprinteurs à partir de la manche ~8) avec transition progressive | 🟡 | S | Modèle d'animation « course » dédié (voir 4.5). |
+| 2.7 | **Vitesse des zombies par manche** (marcheurs → coureurs → sprinteurs à partir de la manche ~8) avec transition progressive | ✅ | S | Modèle d'animation « course » dédié (voir 4.5). |
 | 2.8 | **Système de « kiting » / exploitation de l'IA** : zombies qui se bloquent, trains de zombies | ❌ | M | Navigation avec `NavigationAgent3D` avoidance activée + file d'attente aux fenêtres. |
 | 2.9 | **Sauter par-dessus les fenêtres** pour le joueur (après réparation) | ❌ | M | Zone interactive à la fenêtre, animation de saut, collision temporaire. |
 | 2.10 | **Glisser / plonger** (slide, dive-to-prone) | ❌ | M | Pré-requis des atouts de plongeon (3.3). |
@@ -53,7 +83,7 @@ démembrement + zombies rampants · menus 3D · HUD à la craie · sons réels d
 | 3.1.9 | **Wonder Weapons uniques**, à construire à partir de pièces cachées | ❌ | L |
 
 ### 3.2 Atouts
-✅ Fait : Œil de Lynx, Pied Léger, Mains d'Or, Bouclier, Ravitailleur (10 atouts au total). Restent à ajouter : **double gain de points**, **gilet pare-balles** (réduit les dégâts), **sprint illimité**, **visée automatique tête**,
+✅ Fait (10) : Cuirasse, Main Leste, Tonique Éclair, Second Souffle, Triple Étui, Œil de Lynx, Pied Léger, Mains d'Or, Bouclier, Ravitailleur. Restent à ajouter : **double gain de points**, **gilet pare-balles** (réduit les dégâts), **sprint illimité**, **visée automatique tête**,
 **explosions amies sans dégâts + explosion à l'atterrissage**, **rechargement rapide**, **recharge de grenades**,
 **vision des zombies à travers les murs**, **Mule Kick** (3ᵉ arme — équivalent de Triple Étui, déjà présent).
 Effort : S par atout. Ajouter l'**icône HUD réaliste** et un **jingle propre à chaque atout**.
@@ -70,7 +100,7 @@ Effort : S par atout. Ajouter l'**icône HUD réaliste** et un **jingle propre �
 | Bouclier d'émeute (construit à partir de pièces) | ❌ | M |
 
 ### 3.4 Power-ups
-✅ Fait : Feu de vente, Bonus de points, Zombie Blood, Munitions illimitées, Dernier survivant (en solo : une vie supplémentaire ; en coop il réanimera tous les joueurs).
+✅ Fait (10) : Munitions max, Mort instantanée, Bombe, Points x2, Feu de vente, Bonus de points, Sang de zombie, Munitions illimitées, Dernier survivant (en solo : une vie supplémentaire ; en coop il réanimera tous les joueurs), Charpentier.
 
 ---
 
@@ -146,7 +176,7 @@ Effort : S par atout. Ajouter l'**icône HUD réaliste** et un **jingle propre �
 
 | # | Fonctionnalité | État | Effort |
 |---|---|---|---|
-| 8.1 | **Prise en charge manette** (axes, gâchettes, vibrations, remappage) | 🟡 jouable ; remappage à ajouter | M |
+| 8.1 | **Prise en charge manette** (axes, gâchettes, vibrations, remappage) | ✅ A/B valident et annulent dans les menus ; remappage disponible | M |
 | 8.2 | **Remappage des touches** | ✅ | M |
 | 8.3 | **Tableau des scores** (Tab) avec éliminations, tirs à la tête, réanimations, points | ✅ (réanimations à ajouter avec la coop) | S |
 | 8.4 | **Écran de fin détaillé** (manches, portes ouvertes, achats, précision) | 🟡 | S |
