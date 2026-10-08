@@ -604,7 +604,7 @@ func _update_arms() -> void:
 func _ads_pos() -> Vector3:
 	var ads := ADS_POS
 	if view and view.has_meta("sight_y"):
-		ads.y = -0.06 - float(view.get_meta("sight_y"))
+		ads.y = -0.035 - float(view.get_meta("sight_y"))
 		ads.z -= maxf(0.0, WeaponDB.data(cur().id).length * 0.5 - 0.2)
 	return ads
 
@@ -634,6 +634,8 @@ func _fit_reach() -> void:
 			shift = Vector3.ZERO
 		shift.x = clampf(shift.x, -0.15, 0.05)
 		shift.z = clampf(shift.z, 0.0, 0.3 if pass_i == 0 else 0.07)
+		if pass_i == 1:
+			shift.x = 0.0 # en visée l'arme reste pile au centre de l'écran
 		if pass_i == 0:
 			_hip_shift = shift
 		else:

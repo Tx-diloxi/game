@@ -548,13 +548,6 @@ func _draw_aim_reticle() -> void:
 			for d in [Vector2.DOWN, Vector2.UP]:
 				_crosshair.draw_line(c + d * t + Vector2(-5, 0), c + d * t + Vector2(5, 0), line, 1.5)
 		_crosshair.draw_circle(c, 2.0, Color(1, 0.1, 0.1, a))
-	else:
-		var col := Color(1, 1, 1, 0.9 * a)
-		var sh := Color(0, 0, 0, 0.5 * a)
-		for d in [Vector2.RIGHT, Vector2.LEFT, Vector2.DOWN, Vector2.UP]:
-			_crosshair.draw_line(c + d * 5.0, c + d * 11.0, sh, 3.5)
-			_crosshair.draw_line(c + d * 5.0, c + d * 11.0, col, 1.5)
-		_crosshair.draw_circle(c, 1.5, col)
 
 
 ## Flèches rouges autour du réticule, orientées vers la source des dégâts.
