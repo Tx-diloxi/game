@@ -26,6 +26,9 @@ var holder: Node3D
 var hud: Node = null
 
 var health := 100.0
+## Infection (zombie Infecté) : secondes restantes ; perte de vie continue, plus de régénération.
+var infected := 0.0
+var _infect_pulse := 0.0
 var max_health := 100.0
 var since_hit := 10.0
 var downed := false
@@ -136,6 +139,16 @@ func _physics_process(delta: float) -> void:
 	head.position.y = move_toward(head.position.y, target_h, delta * 4.0)
 
 	since_hit += delta
+	if infected > 0.0 and not dead and not downed:
+		infected -= delta
+		since_hit = 0.0
+		health = maxf(health - 3.5 * delta, minf(health, 12.0))
+		health_changed.emit(health, max_health)
+		_infect_pulse -= delta
+		if _infect_pulse <= 0.0:
+			_infect_pulse = 1.2
+			if hud:
+				hud.flash(Color(0.45, 0.8, 0.1, 0.5), 0.3)
 	var fast_heal := GameManager.has_perk("bouclier")
 	if since_hit > (REGEN_DELAY * 0.5 if fast_heal else REGEN_DELAY) and health < max_health and not downed:
 		health = minf(max_health, health + REGEN_RATE * (2.0 if fast_heal else 1.0) * delta)
@@ -207,6 +220,15 @@ func _process(delta: float) -> void:
 func add_recoil(amount: float) -> void:
 	head.rotation.x = clampf(head.rotation.x + deg_to_rad(amount) * 0.5, -1.5, 1.5)
 	rotate_y(deg_to_rad(randf_range(-amount, amount) * 0.15))
+
+
+## Infecte le joueur (prolonge l'infection en cours).
+func infect(seconds: float) -> void:
+	if dead or downed:
+		return
+	if infected <= 0.0:
+		GameManager.show_message("INFECTÉ", Color(0.6, 0.9, 0.2), "Vous perdez de la vie — plus de régénération")
+	infected = maxf(infected, seconds)
 
 
 func take_damage(amount: float, from := Vector3.INF) -> void:

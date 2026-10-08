@@ -9,7 +9,7 @@ const DogModel := preload("res://scripts/zombies/dog_model.gd")
 const Effects := preload("res://scripts/util/effects.gd")
 const AcidBall := preload("res://scripts/zombies/acid_ball.gd")
 
-const SPECIALS := ["bomber", "spitter", "screamer"]
+const SPECIALS := ["bomber", "spitter", "screamer", "brute", "infected"]
 
 ## Membres que l'on peut arracher : os -> zone de touche (rayon en m).
 const LIMBS := {
@@ -73,6 +73,13 @@ var _spit_wind := -1.0
 var _scream_cd := 4.0
 var _scream_wind := -1.0
 var _glow: OmniLight3D
+# Brute : bouclier frontal (absorbe 65 % des tirs au corps venant de face) et charge
+var shield := 0.0
+var _shield_node: Node3D
+var _brute_cd := 4.0
+var _brute_t := 0.0
+var _brute_hit := false
+var _brute_dir := Vector3.ZERO
 
 
 func setup(p_kind: String, p_hp: float, p_speed: float, p_barricade: Node3D) -> void:
@@ -103,6 +110,14 @@ func setup(p_kind: String, p_hp: float, p_speed: float, p_barricade: Node3D) -> 
 			attack_range = 0.0
 		"screamer":
 			damage = 15.0
+		"brute":
+			damage = 70.0
+			attack_range = 1.8
+			head_height = 1.7
+			shield = p_hp * 0.35
+		"infected":
+			damage = 20.0
+			attack_range = 1.4
 
 
 func _ready() -> void:
@@ -123,6 +138,9 @@ func _ready() -> void:
 		"boss":
 			cap.radius = 0.6
 			cap.height = 2.9
+		"brute":
+			cap.radius = 0.5
+			cap.height = 2.0
 		_:
 			cap.radius = 0.35
 			cap.height = 1.8
@@ -225,6 +243,8 @@ func _physics_process(delta: float) -> void:
 		State.CHASE:
 			var decoy: Node3D = _decoy()
 			if kind == "boss" and _boss_logic(delta, player):
+				pass
+			elif kind == "brute" and _brute_logic(delta, player):
 				pass
 			elif kind == "spitter" and player and not player.dead and _spitter_logic(delta, player):
 				moving = _flat_dist(player.global_position) < 6.0 and _spit_wind < 0.0
@@ -444,6 +464,80 @@ func _boss_logic(delta: float, player: Node3D) -> bool:
 	return false
 
 
+## Vrai si le joueur est dans le demi-plan avant du zombie (celui du bouclier).
+func _player_in_front() -> bool:
+	var p := _get_player()
+	if p == null:
+		return false
+	var to_p: Vector3 = p.global_position - global_position
+	to_p.y = 0.0
+	return to_p.length() > 0.01 and (-global_basis.z).dot(to_p.normalized()) > 0.3
+
+
+func _break_shield() -> void:
+	shield = 0.0
+	if _shield_node and is_instance_valid(_shield_node):
+		_shield_node.queue_free()
+	Audio.play_at("door_open", global_position + Vector3.UP * 1.2, 2.0, 1.5)
+	if GameManager.game:
+		Effects.spark_hit(GameManager.game, global_position + Vector3.UP * 1.2, Vector3.UP)
+		GameManager.show_message("BOUCLIER BRISÉ", Color(1.0, 0.6, 0.2))
+
+
+## Brute : charge tête baissée quand le joueur est à distance moyenne. Vrai s'il gère le tour.
+func _brute_logic(delta: float, player: Node3D) -> bool:
+	if player == null or player.dead:
+		return false
+	_brute_cd -= delta
+	if _brute_t > 0.0:
+		_brute_t -= delta
+		velocity.x = _brute_dir.x * 7.5
+		velocity.z = _brute_dir.z * 7.5
+		_face(_brute_dir, delta)
+		if not _brute_hit and _flat_dist(player.global_position) < 1.9 and absf(player.global_position.y - global_position.y) < 1.6:
+			_brute_hit = true
+			player.take_damage(45.0, global_position)
+			player.velocity += _brute_dir * 10.0 + Vector3.UP * 3.0
+			if GameManager.game:
+				GameManager.game._shake(0.4)
+			_brute_t = minf(_brute_t, 0.15)
+		if is_on_wall():
+			_brute_t = 0.0
+		return true
+	var d := _flat_dist(player.global_position)
+	if d > 5.0 and d < 13.0 and _brute_cd <= 0.0:
+		_brute_cd = randf_range(6.0, 9.0)
+		_brute_t = 1.0
+		_brute_hit = false
+		_brute_dir = player.global_position - global_position
+		_brute_dir.y = 0.0
+		_brute_dir = _brute_dir.normalized()
+		Audio.play_at("boss_roar", global_position + Vector3.UP * 1.8, 2.0, 0.9)
+		return true
+	return false
+
+
+## Plaque de blindage portée devant la Brute.
+func _build_shield() -> void:
+	_shield_node = Node3D.new()
+	_shield_node.position = Vector3(0.0, 1.05, -0.5)
+	visual.add_child(_shield_node)
+	var metal := preload("res://scripts/util/materials.gd").metal(Color(0.25, 0.26, 0.28))
+	MeshUtil.box_mesh(_shield_node, Vector3(0.75, 1.0, 0.07), Vector3.ZERO, metal)
+	MeshUtil.box_mesh(_shield_node, Vector3(0.55, 0.12, 0.09), Vector3(0, 0.2, 0), MeshUtil.mat(Color(0.6, 0.1, 0.05), 0.4))
+
+
+## Nuage toxique laissé par un infecté : infecte le joueur qui s'y attarde.
+func _toxic_cloud() -> void:
+	var game := GameManager.game
+	if game == null:
+		return
+	var cloud := Node3D.new()
+	cloud.set_script(preload("res://scripts/zombies/toxic_cloud.gd"))
+	game.add_child(cloud)
+	cloud.global_position = Vector3(global_position.x, 0.0, global_position.z)
+
+
 func _slam() -> void:
 	var game := GameManager.game
 	if game == null:
@@ -538,6 +632,8 @@ func _update_attack(delta: float, player: Node3D) -> void:
 		if player and _flat_dist(player.global_position) < attack_range + 0.8 \
 				and absf(player.global_position.y - global_position.y) < 1.6:
 			player.take_damage(damage, global_position)
+			if kind == "infected" and player.has_method("infect"):
+				player.infect(10.0)
 
 
 # --- Dégâts ---------------------------------------------------------------
@@ -554,6 +650,14 @@ func take_damage(amount: float, head: bool, cause: String) -> bool:
 		amount *= 0.25
 		if armor <= 0.0:
 			_break_helmet()
+	if shield > 0.0 and not head and cause in ["bullet", "melee"] and _player_in_front():
+		# Le bouclier encaisse l'essentiel des tirs de face jusqu'à se briser.
+		var absorbed := amount * 0.65
+		shield -= absorbed
+		amount -= absorbed
+		Audio.play_at("hit", global_position + Vector3.UP * 1.2, -4.0, 2.2)
+		if shield <= 0.0:
+			_break_shield()
 	hp -= amount
 	_flinch = 1.0
 	if hp <= 0.0:
@@ -683,6 +787,10 @@ func _die(head: bool, cause: String) -> void:
 		Audio.play("headshot", -4.0)
 	if kind == "bomber" and cause != "nuke":
 		_explode_bomber(cause == "bomber_self")
+	if kind == "infected" and cause != "nuke":
+		_toxic_cloud()
+	if _shield_node and is_instance_valid(_shield_node):
+		_shield_node.queue_free()
 	if kind == "boss":
 		GameManager.add_points(500)
 		if _helmet:
@@ -862,6 +970,18 @@ func _build_real_model() -> void:
 		head_height = 1.65
 		_anim_scale = 1.15
 		_add_glow(Color(0.55, 0.7, 1.0), 0.8)
+	elif kind == "brute":
+		visual.scale = Vector3(1.3, 1.05, 1.3)
+		m.setup("2", Color(0.75, 0.55, 0.5))
+		head_height = 1.7
+		_anim_scale = 0.85
+		_build_shield()
+	elif kind == "infected":
+		visual.scale = Vector3(0.95, 1.03, 0.95)
+		m.setup("1", Color(0.75, 1.0, 0.45))
+		head_height = 1.5
+		_anim_scale = 1.2
+		_add_glow(Color(0.7, 0.95, 0.2), 0.8)
 	elif kind == "boss":
 		visual.scale = Vector3.ONE * 1.6
 		m.setup("", Color(0.95, 0.45, 0.4))

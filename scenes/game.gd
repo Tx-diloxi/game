@@ -21,6 +21,7 @@ const PerkScript := preload("res://scripts/interactables/perk_machine.gd")
 const BoxScript := preload("res://scripts/interactables/mystery_box.gd")
 const UpgradeScript := preload("res://scripts/interactables/upgrade_machine.gd")
 const PowerScript := preload("res://scripts/interactables/power_switch.gd")
+const MapLab := preload("res://scripts/game/map_lab.gd")
 const TrapScript := preload("res://scripts/interactables/trap.gd")
 
 const H := 4.0 # hauteur des murs
@@ -41,6 +42,8 @@ var player: CharacterBody3D
 var hud: CanvasLayer
 var rounds: Node
 var barricades: Array = []
+var map_id := "bunker"
+var rooms: Array = ROOMS
 var active_zones := {0: true}
 var box_locations: Array[Transform3D] = []
 var box: Node3D
@@ -63,6 +66,9 @@ var m_fence: Material
 
 func _ready() -> void:
 	menu_mode = GameManager.menu_mode
+	map_id = "bunker" if menu_mode else GameManager.map_id
+	if map_id == "lab":
+		rooms = MapLab.ROOMS
 	if not menu_mode:
 		GameManager.game = self
 		GameManager.in_game = true # permet aussi de lancer cette scène directement (F6)
@@ -81,8 +87,11 @@ func _ready() -> void:
 	nm.agent_height = 2.0
 	nav.navigation_mesh = nm
 	add_child(nav)
-	_build_map()
-	MapArt.new(self, nav, H).decorate()
+	if map_id == "lab":
+		MapLab.new(self).build()
+	else:
+		_build_map()
+		MapArt.new(self, nav, H).decorate()
 
 	if menu_mode:
 		_setup_menu_scene()
@@ -90,7 +99,7 @@ func _ready() -> void:
 
 	player = PlayerScript.new()
 	add_child(player)
-	player.global_position = Vector3(0, 0.1, 3)
+	player.global_position = MapLab.START if map_id == "lab" else Vector3(0, 0.1, 3)
 
 	hud = HudScript.new()
 	add_child(hud)
@@ -365,11 +374,11 @@ func _barricade(pos: Vector3, inward: Vector3, zone: int) -> void:
 	barricades.append(b)
 
 
-func _door(pos: Vector3, cost: int, zone: int) -> void:
+func _door(pos: Vector3, cost: int, zone: int, facing := Vector3.BACK) -> void:
 	var d := DoorScript.new()
 	d.cost = cost
 	d.unlock_zone = zone
-	_place(d, nav, pos, Vector3.BACK)
+	_place(d, nav, pos, facing)
 
 
 func _wall_buy(pos: Vector3, facing: Vector3, weapon_id: String, price: int) -> void:
@@ -453,7 +462,7 @@ func spawn_enemy(info: Dictionary) -> bool:
 	z.rotation.y = randf() * TAU
 	if info.kind == "dog":
 		_lightning(pos)
-	elif info.kind in ["bomber", "spitter", "screamer"]:
+	elif info.kind in ["bomber", "spitter", "screamer", "brute", "infected"]:
 		Effects.dirt_puff(self, pos)
 		_announce_special(info.kind)
 	elif info.kind == "boss":
@@ -475,6 +484,8 @@ func _announce_special(kind: String) -> void:
 	var texts := {
 		"bomber": ["KAMIKAZE", "Il explose à votre approche — éliminez-le de loin", Color(1.0, 0.5, 0.15)],
 		"spitter": ["CRACHEUR", "Il vous bombarde d'acide — esquivez ou approchez", Color(0.5, 0.95, 0.2)],
+		"brute": ["BRUTE", "Son bouclier encaisse les tirs de face — visez la tête ou contournez-le", Color(0.85, 0.5, 0.3)],
+		"infected": ["INFECTÉ", "Ses griffes vous infectent : perte de vie continue", Color(0.65, 0.9, 0.25)],
 		"screamer": ["HURLEUR", "Son cri étourdit et enrage les zombies — abattez-le vite", Color(0.6, 0.75, 1.0)],
 	}
 	var t: Array = texts[kind]
@@ -547,7 +558,7 @@ func on_zombie_killed(z: Node3D, cause: String) -> void:
 
 
 func _is_reachable(pos: Vector3) -> bool:
-	for r in ROOMS:
+	for r in rooms:
 		if active_zones.has(r[0]) and (r[1] as Rect2).has_point(Vector2(pos.x, pos.z)):
 			return true
 	return false

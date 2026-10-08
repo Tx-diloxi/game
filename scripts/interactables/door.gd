@@ -10,6 +10,7 @@ var _body: StaticBody3D
 
 
 func _ready() -> void:
+	add_to_group("doors")
 	radius = 2.8
 	_body = MeshUtil.static_box(self, size, Vector3(0, size.y * 0.5, 0), null)
 	var wood := Mat.textured("planks", Color(0.6, 0.48, 0.38), 1.0, 0.0, false)
@@ -38,6 +39,16 @@ func get_prompt(_player: Node) -> String:
 func interact(_player: Node) -> void:
 	if opened or not GameManager.spend(cost):
 		return
+	_open()
+
+
+## Ouverture sans payer (téléporteur).
+func force_open() -> void:
+	if not opened:
+		_open()
+
+
+func _open() -> void:
 	opened = true
 	remove_from_group("interactable")
 	Audio.play_at("door_open", global_position + Vector3.UP * 1.5)

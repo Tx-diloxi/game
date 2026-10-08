@@ -99,6 +99,13 @@ func _pick_enemy() -> Dictionary:
 	var p_bomber := clampf(0.04 + (r - 6) * 0.01, 0.0, 0.14) if r >= 6 else 0.0
 	var p_spit := clampf(0.04 + (r - 8) * 0.008, 0.0, 0.11) if r >= 8 else 0.0
 	var p_scream := clampf(0.03 + (r - 10) * 0.006, 0.0, 0.08) if r >= 10 else 0.0
+	var p_brute := clampf(0.03 + (r - 7) * 0.008, 0.0, 0.09) if r >= 7 else 0.0
+	var p_inf := clampf(0.04 + (r - 9) * 0.008, 0.0, 0.1) if r >= 9 else 0.0
+	if roll < p_brute:
+		return {"kind": "brute", "hp": zombie_hp(r) * 3.0, "speed": 1.9}
+	elif roll < p_brute + p_inf:
+		return {"kind": "infected", "hp": zombie_hp(r) * 0.8, "speed": 3.0 + randf() * 0.5}
+	roll -= p_brute + p_inf
 	if roll < p_bomber:
 		return {"kind": "bomber", "hp": zombie_hp(r) * 0.8, "speed": 1.9 + randf() * 0.4}
 	elif roll < p_bomber + p_spit:

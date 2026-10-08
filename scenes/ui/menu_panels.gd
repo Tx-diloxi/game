@@ -45,6 +45,24 @@ static func _check(col: Node, title: String, value: bool, cb: Callable) -> void:
 	col.add_child(c)
 
 
+## Choix de la carte : un gros bouton par carte avec sa description.
+static func map_select(parent: Node, on_pick: Callable) -> Control:
+	var col := _panel(parent, "CHOISIR UNE CARTE")
+	var first: Button = null
+	for id in GameManager.MAPS:
+		var info: Dictionary = GameManager.MAPS[id]
+		var b := UI.button(col, str(info.name).to_upper(), func():
+			GameManager.map_id = id
+			on_pick.call(), 34)
+		if first == null:
+			first = b
+		var d := UI.label(col, info.desc, 20, UI.GREY)
+		d.autowrap_mode = TextServer.AUTOWRAP_WORD
+		d.custom_minimum_size = Vector2(500, 0)
+	first.grab_focus.call_deferred()
+	return col.get_parent()
+
+
 static func options(parent: Node) -> Control:
 	var col := _panel(parent, "OPTIONS")
 	var scroll := ScrollContainer.new()

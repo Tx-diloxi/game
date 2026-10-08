@@ -477,6 +477,85 @@ func _ready() -> void:
 	await wait(0.3)
 	check(true, "ramassage de power-up sans erreur")
 
+	# Zombies spéciaux : Brute (bouclier frontal) et Infecté (infection du joueur)
+	GameManager.active_powerups.clear()
+	player.invuln = 0.0
+	player.health = player.max_health
+	player.global_position = Vector3(0, 0.1, 3)
+	var brute = ZombieScript.new()
+	brute.setup("brute", 1000.0, 0.01, null)
+	game.add_child(brute)
+	brute.global_position = Vector3(0, 0, 0)
+	brute.set_physics_process(false)
+	brute.rotation.y = 0.0 # regarde -Z ; le joueur est derrière lui (+Z)
+	await wait(0.2)
+	var hp0: float = brute.hp
+	brute.take_damage(100.0, false, "bullet")
+	var back_loss: float = hp0 - brute.hp
+	brute.rotation.y = PI # regarde +Z : le joueur est devant
+	await wait(0.1)
+	var hp1: float = brute.hp
+	var sh1: float = brute.shield
+	brute.take_damage(100.0, false, "bullet")
+	var front_loss: float = hp1 - brute.hp
+	check(back_loss > 99.0 and front_loss < 50.0 and brute.shield < sh1, "la Brute encaisse les tirs de face avec son bouclier")
+	brute.take_damage(100.0, true, "bullet")
+	check(hp1 - front_loss - brute.hp > 99.0, "le bouclier ne protège pas la tête")
+	brute.take_damage(99999.0, false, "nuke")
+	var inf = ZombieScript.new()
+	inf.setup("infected", 100.0, 0.01, null)
+	game.add_child(inf)
+	inf.global_position = Vector3(8, 0, 8)
+	player.infect(6.0)
+	var hp_inf: float = player.health
+	await wait(1.0)
+	check(player.infected > 0.0 and player.health < hp_inf, "l'infection fait perdre de la vie")
+	player.infected = 0.0
+	inf.take_damage(9999.0, false, "bullet")
+	await wait(0.4)
+	check(get_tree().get_nodes_in_group("player").size() > 0 and game.get_children().any(func(n): return n.get_script() == load("res://scripts/zombies/toxic_cloud.gd")), "l'Infecté laisse un nuage toxique")
+
+	# Carte 2 : laboratoire, téléporteur et quête secrète
+	GameManager.in_game = false
+	game.queue_free()
+	await wait(0.5)
+	GameManager.map_id = "lab"
+	GameManager.quest_vials = 0
+	GameManager.in_game = true
+	game = load("res://scenes/game.tscn").instantiate()
+	add_child(game)
+	await wait(1.2)
+	player = game.player
+	player.invuln = 1e9
+	game.rounds.set_physics_process(false)
+	check(game.map_id == "lab" and game.barricades.size() == 11, "le laboratoire est construit (11 fenêtres)")
+	check(find_interactables(TrapScript).size() == 1 and find_interactables(PerkScript).size() == 10, "atouts et piège du laboratoire")
+	check(player.global_position.distance_to(Vector3(0, 0.1, 0)) < 1.0, "départ dans l'accueil du laboratoire")
+	var pads: Array = find_interactables(load("res://scripts/interactables/teleporter.gd"))
+	check(pads.size() == 2, "deux plateformes de téléportation")
+	GameManager.add_points(5000)
+	var pad: Node3D = pads[0] if pads[0].zone == 0 else pads[1]
+	GameManager.set_power(true)
+	pad.interact(player)
+	await wait(0.3)
+	check(player.global_position.z < -15.0 and player.global_position.x > 30.0, "le téléporteur emmène le joueur au réacteur")
+	check(game.active_zones.has(3), "le réacteur est débloqué par la téléportation")
+	var door3 = get_tree().get_nodes_in_group("doors").filter(func(d): return d.unlock_zone == 3)
+	check(door3.is_empty() or door3[0].opened, "la porte du réacteur s'ouvre toute seule")
+	var console = find_interactables(load("res://scripts/interactables/reactor_console.gd"))[0]
+	console.interact(player)
+	check(console._state == 0, "la console refuse sans les trois fioles")
+	for v in find_interactables(load("res://scripts/interactables/vial.gd")):
+		v.interact(player)
+	check(GameManager.quest_vials == 3, "trois fioles ramassées")
+	var lives_before: int = GameManager.extra_lives
+	console.interact(player)
+	check(console._state == 1, "la synthèse démarre avec les trois fioles")
+	console._t = console.SYNTH_TIME - 0.05
+	await wait(0.3)
+	check(GameManager.quest_done and GameManager.extra_lives == lives_before + 1, "la quête secrète donne une vie supplémentaire")
+	GameManager.map_id = "bunker"
+
 	print("==== %s (%d échec(s)) ====" % ["SUCCÈS" if fails == 0 else "ÉCHEC", fails])
 	get_tree().quit(fails)
 

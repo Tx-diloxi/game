@@ -14,6 +14,15 @@ const GAME_SCENE := "res://scenes/game.tscn"
 const GAME_OVER_SCENE := "res://scenes/game_over.tscn"
 const SETTINGS_PATH := "user://settings.cfg"
 var records_path := "user://records.cfg"
+## Carte choisie dans le menu et quête secrète du laboratoire.
+const MAPS := {
+	"bunker": {"name": "Bunker abandonné", "desc": "Trois zones en enfilade : salle de départ, couloir, grande salle."},
+	"lab": {"name": "Laboratoire Sigma", "desc": "Quatre zones, téléporteur vers le réacteur et une quête secrète à découvrir."},
+}
+var map_id := "bunker"
+var quest_vials := 0
+var quest_started := false
+var quest_done := false
 const FPS_LIMITS := [0, 30, 60, 90, 120, 144, 240]
 const RESOLUTIONS := [Vector2i(1024, 576), Vector2i(1280, 720), Vector2i(1600, 900), Vector2i(1920, 1080), Vector2i(2560, 1440)]
 const MSAA_MODES := [Viewport.MSAA_DISABLED, Viewport.MSAA_2X, Viewport.MSAA_4X, Viewport.MSAA_8X]
@@ -139,6 +148,9 @@ func new_game() -> void:
 	play_time = 0.0
 	perks_bought = 0
 	power_on = false
+	quest_vials = 0
+	quest_started = false
+	quest_done = false
 	perks.clear()
 	active_powerups.clear()
 	drops_this_round = 0
