@@ -66,6 +66,14 @@ func run_host() -> void:
 	check(await wait_until(func(): return remote.global_position.distance_to(Vector3(3, 0.1, -2)) < 0.6), "l'avatar de l'invité suit sa position")
 	check(remote.weapon_id == "p9", "l'arme de l'invité est visible (%s)" % remote.weapon_id)
 	check(remote.player_name == "Invite", "le nom s'affiche au-dessus de l'avatar")
+	# Zombie partagé : l'hôte le simule, il attaque l'avatar de l'invité, l'invité le tue
+	var z: CharacterBody3D = load("res://scripts/zombies/zombie.gd").new()
+	z.setup("zombie", 1000.0, 1.3, null)
+	Net.register_zombie(z, Vector3(5, 0.1, -2))
+	game.add_child(z)
+	z.global_position = Vector3(5, 0.1, -2)
+	check(await wait_until(func(): return z.state == z.State.DEAD, 20.0), "le zombie de l'hôte meurt sous les coups de l'invité")
+	check(not is_instance_valid(z) or z.attacker_id == 0, "l'auteur du coup est remis à zéro")
 	# Fin : attendre le verdict de l'invité
 	check(await wait_until(func(): return FileAccess.file_exists(result_file), 20.0), "l'invité a terminé son test")
 	if FileAccess.file_exists(result_file):
@@ -92,9 +100,22 @@ func run_client(port: int, result_file: String) -> void:
 	var coop: Node = game.get_children().filter(func(n): return n.get_script() != null and str(n.get_script().resource_path).ends_with("coop.gd")).front()
 	check(await wait_until(func(): return coop.remotes.size() == 1), "l'avatar de l'hôte est créé")
 	game.player.global_position = Vector3(3, 0.1, -2)
+	game.player.invuln = 0.0
 	var remote: Node3D = coop.remotes.values()[0]
 	check(await wait_until(func(): return remote.global_position.distance_to(Vector3(-2, 0.1, 2)) < 0.6), "l'avatar de l'hôte suit sa position")
 	check(remote.player_name == "Hote", "le nom de l'hôte s'affiche")
+	# Le zombie de l'hôte apparaît chez l'invité (marionnette) et attaque son joueur
+	check(await wait_until(func(): return Net.zombies.size() == 1), "le zombie de l'hôte apparaît chez l'invité")
+	var pz: Node = Net.zombies.values()[0] if Net.zombies.size() > 0 else null
+	check(pz != null and pz.puppet, "c'est une marionnette (pas d'IA locale)")
+	check(await wait_until(func(): return game.player.health < game.player.max_health, 15.0), "le zombie de l'hôte blesse le joueur de l'invité")
+	check(pz != null and pz.global_position.distance_to(Vector3(3, 0.1, -2)) < 4.0, "la marionnette est proche de sa cible")
+	var pts0 := GameManager.points
+	game.player.invuln = 1e9
+	if pz != null:
+		pz.take_damage(1e9, false, "bullet")
+		check(await wait_until(func(): return pz.state == pz.State.DEAD, 8.0), "le zombie meurt aussi chez l'invité")
+		check(await wait_until(func(): return GameManager.points > pts0, 8.0), "l'invité reçoit les points du kill (%d)" % (GameManager.points - pts0))
 	await get_tree().create_timer(1.0).timeout
 	var f := FileAccess.open(result_file, FileAccess.WRITE)
 	f.store_string("\n".join(lines) + "\n" + ("FAIL\n" if fails > 0 else ""))

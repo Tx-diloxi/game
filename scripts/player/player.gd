@@ -63,6 +63,7 @@ var _shake := 0.0
 
 func _ready() -> void:
 	add_to_group("player")
+	add_to_group("targets")
 	collision_layer = GameManager.L_PLAYER
 	collision_mask = GameManager.L_WORLD | GameManager.L_PLAYER_BLOCK | GameManager.L_ZOMBIE
 	floor_snap_length = 0.3

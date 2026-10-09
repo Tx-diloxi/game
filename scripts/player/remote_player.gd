@@ -11,6 +11,7 @@ var target_yaw := 0.0
 var pitch := 0.0
 var weapon_id := ""
 var downed := false
+var dead := false
 var _head: Node3D
 var _gun_root: Node3D
 var _gun_id := ""
@@ -18,6 +19,7 @@ var _label: Label3D
 
 
 func _ready() -> void:
+	add_to_group("targets")
 	var col := Color.from_hsv(fmod(peer_id * 0.17, 1.0), 0.55, 0.8)
 	var body_mat := MeshUtil.mat(col.darkened(0.3))
 	MeshUtil.cylinder_mesh(self, 0.3, 1.1, Vector3(0, 0.75, 0), body_mat)
@@ -40,6 +42,7 @@ func apply_state(s: Dictionary) -> void:
 	pitch = s.get("pitch", pitch)
 	weapon_id = s.get("weapon", weapon_id)
 	downed = s.get("downed", false)
+	dead = downed
 
 
 func _process(delta: float) -> void:
@@ -55,3 +58,12 @@ func _process(delta: float) -> void:
 		if _gun_id != "" and WeaponDB.WEAPONS.has(_gun_id):
 			var d := WeaponDB.data(_gun_id)
 			MeshUtil.build_gun(_gun_root, _gun_id, 0, d.color, d.kind)
+
+
+## Les zombies de l'hôte attaquent cet avatar : les dégâts sont appliqués chez son propriétaire.
+func take_damage(amount: float, from := Vector3.INF) -> void:
+	Net.hurt(peer_id, amount, from)
+
+
+func infect(seconds: float) -> void:
+	Net.infect(peer_id, seconds)

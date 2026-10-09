@@ -49,6 +49,16 @@ var _real := false
 var _anim_scale := 1.0
 ## Décor du menu : avance lentement sans IA.
 var menu_idle := false
+
+## Coop : id réseau (0 = zombie local), mode « marionnette » côté invité, auteur du dernier coup reçu.
+var net_id := 0
+var puppet := false
+var attacker_id := 0
+var _atk_count := 0
+var _net_pos := Vector3.ZERO
+var _net_yaw := 0.0
+var _net_speed := 0.0
+var _net_atk := 0
 ## Rampe au sol après avoir perdu une jambe.
 var crawling := false
 var _shape: CollisionShape3D
@@ -123,7 +133,7 @@ func setup(p_kind: String, p_hp: float, p_speed: float, p_barricade: Node3D) -> 
 func _ready() -> void:
 	add_to_group("zombies")
 	collision_layer = GameManager.L_ZOMBIE
-	collision_mask = GameManager.L_WORLD
+	collision_mask = 0 if puppet else GameManager.L_WORLD
 	floor_snap_length = 0.4
 
 	var cs := CollisionShape3D.new()
@@ -149,13 +159,14 @@ func _ready() -> void:
 	add_child(cs)
 	_shape = cs
 
-	agent = NavigationAgent3D.new()
-	agent.path_desired_distance = 0.5
-	agent.target_desired_distance = 0.4
-	agent.radius = 0.5
-	agent.height = 2.0
-	agent.path_max_distance = 3.0
-	add_child(agent)
+	if not puppet:
+		agent = NavigationAgent3D.new()
+		agent.path_desired_distance = 0.5
+		agent.target_desired_distance = 0.4
+		agent.radius = 0.5
+		agent.height = 2.0
+		agent.path_max_distance = 3.0
+		add_child(agent)
 
 	visual = Node3D.new()
 	add_child(visual)
@@ -170,8 +181,11 @@ func _ready() -> void:
 		_build_model()
 	else:
 		_build_humanoid()
-	state = State.WINDOW if barricade else State.CHASE
+	state = State.WINDOW if barricade and not puppet else State.CHASE
 	_groan_t = randf_range(1.0, 6.0)
+	_net_pos = global_position
+	if net_id != 0:
+		tree_exiting.connect(func(): Net.zombies.erase(net_id))
 
 
 # --- Boucle ---------------------------------------------------------------
@@ -180,6 +194,9 @@ func _physics_process(delta: float) -> void:
 	if state == State.DEAD:
 		if _real:
 			_model.update_pose(delta, false, 1.0)
+		return
+	if puppet:
+		_puppet_step(delta)
 		return
 	if menu_idle:
 		var fwd := -global_basis.z
@@ -308,6 +325,38 @@ func _physics_process(delta: float) -> void:
 			Audio.play_at("dog_bark", global_position, -2.0, randf_range(0.8, 1.2))
 		else:
 			Audio.play_at("groan", global_position + Vector3.UP * 1.5, -4.0, randf_range(0.7, 1.2) * (0.7 if kind == "tank" else 1.0))
+
+
+## Invité : le zombie suit les instantanés de l'hôte (position, cap, vitesse, attaque).
+func apply_snapshot(pos: Vector3, yaw: float, spd: float, atk: int) -> void:
+	_net_pos = pos
+	_net_yaw = yaw
+	_net_speed = spd
+	if atk != _net_atk:
+		_net_atk = atk
+		_attack_wind = 0.45
+		if _real:
+			_model.attack()
+
+
+func _puppet_step(delta: float) -> void:
+	global_position = global_position.lerp(_net_pos, minf(delta * 14.0, 1.0))
+	rotation.y = lerp_angle(rotation.y, _net_yaw, minf(delta * 14.0, 1.0))
+	var fwd := -global_basis.z
+	velocity = Vector3(fwd.x, 0, fwd.z) * _net_speed
+	if _attack_wind >= 0.0:
+		_attack_wind -= delta
+		if _attack_wind < 0.0:
+			_attack_wind = -1.0
+	_animate(delta, _net_speed > 0.2)
+
+
+## Points pour le joueur qui a porté le coup (l'hôte les envoie à l'invité concerné).
+func _award(amount: int) -> void:
+	if attacker_id == 0 or attacker_id == Net.my_id():
+		GameManager.add_points(amount)
+	else:
+		Net.award(attacker_id, amount)
 
 
 ## Explosion du kamikaze : blesse le joueur, les zombies voisins et le décor.
@@ -557,7 +606,19 @@ func _slam() -> void:
 static var _player_cache: Node3D = null
 
 
+## Cible : le joueur local (solo) ou, en coop, le joueur vivant le plus proche (avatars compris).
 func _get_player() -> Node3D:
+	if Net.active and Net.is_host and Net.players.size() > 1:
+		var best: Node3D = null
+		var best_d := INF
+		for t in get_tree().get_nodes_in_group("targets"):
+			if t.dead and best != null:
+				continue
+			var d: float = _flat_dist(t.global_position) + (1000.0 if t.dead else 0.0)
+			if d < best_d:
+				best_d = d
+				best = t
+		return best
 	if _player_cache and is_instance_valid(_player_cache) and _player_cache.is_inside_tree():
 		return _player_cache
 	var players := get_tree().get_nodes_in_group("player")
@@ -655,6 +716,7 @@ func _try_attack() -> void:
 	if _attack_cd > 0.0 or _attack_wind >= 0.0:
 		return
 	_attack_wind = 0.25 if kind == "dog" else 0.45
+	_atk_count += 1
 	if _real:
 		_model.attack()
 	if kind == "dog":
@@ -683,6 +745,12 @@ func _update_attack(delta: float, player: Node3D) -> void:
 func take_damage(amount: float, head: bool, cause: String) -> bool:
 	if state == State.DEAD:
 		return false
+	if puppet:
+		# Invité : l'hôte applique les dégâts ; ici seulement le retour visuel et sonore
+		Net.hit_zombie(net_id, amount, head, cause)
+		_flinch = 1.0
+		Audio.play("hit", -8.0)
+		return false
 	if GameManager.is_powerup_active("insta_kill") and kind != "tank" and kind != "boss":
 		amount = hp
 	if kind == "boss" and armor > 0.0 and head:
@@ -705,7 +773,7 @@ func take_damage(amount: float, head: bool, cause: String) -> bool:
 		_die(head, cause)
 		return true
 	if cause in ["bullet", "melee", "explosion"]:
-		GameManager.add_points(10)
+		_award(10)
 		Audio.play("hit", -8.0)
 	return false
 
@@ -805,18 +873,24 @@ func _die(head: bool, cause: String) -> void:
 	remove_from_group("zombies")
 	collision_layer = 0
 	_stop()
-	GameManager.kills += 1
+	if not puppet:
+		GameManager.kills += 1
+	if net_id != 0 and not puppet:
+		Net.zombie_died(net_id, head, cause)
 	match cause:
 		"bullet":
-			GameManager.add_points(100 if head else 60)
-			if head:
-				GameManager.headshots += 1
+			if not puppet:
+				_award(100 if head else 60)
+				if head and attacker_id == 0:
+					GameManager.headshots += 1
 		"melee":
-			GameManager.add_points(130)
+			if not puppet:
+				_award(130)
 		"trap":
 			pass
 		"explosion", "fire":
-			GameManager.add_points(60)
+			if not puppet:
+				_award(60)
 	if _model:
 		for e in _model._eyes:
 			e.visible = false
@@ -826,14 +900,15 @@ func _die(head: bool, cause: String) -> void:
 		elif _head:
 			_head.visible = false
 		Audio.play("headshot", -4.0)
-	if kind == "bomber" and cause != "nuke":
+	if kind == "bomber" and cause != "nuke" and not puppet:
 		_explode_bomber(cause == "bomber_self")
-	if kind == "infected" and cause != "nuke":
+	if kind == "infected" and cause != "nuke" and not puppet:
 		_toxic_cloud()
 	if _shield_node and is_instance_valid(_shield_node):
 		_shield_node.queue_free()
 	if kind == "boss":
-		GameManager.add_points(500)
+		if not puppet:
+			_award(500)
 		if _helmet:
 			_helmet.queue_free()
 	if GameManager.game:

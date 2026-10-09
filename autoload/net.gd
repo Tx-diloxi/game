@@ -16,6 +16,10 @@ var my_name := ""
 ## id de pair -> nom (l'hôte a toujours l'id 1).
 var players := {}
 var _peer: ENetMultiplayerPeer
+## Zombies de la partie : id réseau -> noeud (réels chez l'hôte, marionnettes chez les invités).
+var zombies := {}
+var _next_zid := 1
+const ZombieScript := preload("res://scripts/zombies/zombie.gd")
 
 
 func _ready() -> void:
@@ -70,6 +74,8 @@ func leave() -> void:
 	active = false
 	is_host = false
 	players = {}
+	zombies = {}
+	_next_zid = 1
 	players_changed.emit()
 
 
@@ -128,3 +134,126 @@ func send_state(state: Dictionary) -> void:
 @rpc("any_peer", "unreliable_ordered")
 func _state(state: Dictionary) -> void:
 	remote_state.emit(multiplayer.get_remote_sender_id(), state)
+
+
+# --- Zombies (l'hôte simule, les invités affichent) ----------------------------
+
+## Hôte : attribue un id au zombie et l'annonce aux invités.
+func register_zombie(z: Node, pos: Vector3) -> void:
+	z.net_id = _next_zid
+	_next_zid += 1
+	zombies[z.net_id] = z
+	if players.size() > 1:
+		_zspawn.rpc(z.net_id, z.kind, z.max_hp, z.speed, pos)
+
+
+@rpc("authority", "reliable")
+func _zspawn(id: int, kind: String, hp: float, spd: float, pos: Vector3) -> void:
+	var game := GameManager.game
+	if game == null or zombies.has(id):
+		return
+	var z: CharacterBody3D = ZombieScript.new()
+	z.puppet = true
+	z.net_id = id
+	z.setup(kind, hp, spd, null)
+	zombies[id] = z
+	game.add_child(z)
+	z.global_position = pos
+
+
+## Hôte : position, cap, vitesse et compteur d'attaques de chaque zombie vivant.
+func send_zombies(list: Array) -> void:
+	if players.size() > 1:
+		_zsnap.rpc(list)
+
+
+@rpc("authority", "unreliable_ordered")
+func _zsnap(list: Array) -> void:
+	for e in list:
+		var z = zombies.get(e[0])
+		if z != null and is_instance_valid(z) and z.puppet:
+			z.apply_snapshot(e[1], e[2], e[3], e[4])
+
+
+func zombie_died(id: int, head: bool, cause: String) -> void:
+	if players.size() > 1:
+		_zdie.rpc(id, head, cause)
+
+
+@rpc("authority", "reliable")
+func _zdie(id: int, head: bool, cause: String) -> void:
+	var z = zombies.get(id)
+	if z != null and is_instance_valid(z) and z.puppet and z.state != z.State.DEAD:
+		z._die(head, cause)
+
+
+## Invité : demande à l'hôte d'appliquer des dégâts à un zombie.
+func hit_zombie(id: int, amount: float, head: bool, cause: String) -> void:
+	if active and not is_host:
+		_zhit.rpc_id(1, id, amount, head, cause)
+
+
+@rpc("any_peer", "reliable")
+func _zhit(id: int, amount: float, head: bool, cause: String) -> void:
+	if not is_host:
+		return
+	var z = zombies.get(id)
+	if z != null and is_instance_valid(z) and not z.puppet:
+		z.attacker_id = multiplayer.get_remote_sender_id()
+		z.take_damage(amount, head, cause)
+		z.attacker_id = 0
+
+
+## Hôte -> invité : points gagnés, dégâts subis, infection.
+func award(peer: int, points: int) -> void:
+	_award.rpc_id(peer, points)
+
+
+@rpc("authority", "reliable")
+func _award(points: int) -> void:
+	GameManager.add_points(points)
+
+
+func hurt(peer: int, amount: float, from: Vector3) -> void:
+	_hurt.rpc_id(peer, amount, from)
+
+
+@rpc("authority", "reliable")
+func _hurt(amount: float, from: Vector3) -> void:
+	if GameManager.game and GameManager.game.player:
+		GameManager.game.player.take_damage(amount, from)
+
+
+func infect(peer: int, seconds: float) -> void:
+	_infect.rpc_id(peer, seconds)
+
+
+@rpc("authority", "reliable")
+func _infect(seconds: float) -> void:
+	if GameManager.game and GameManager.game.player:
+		GameManager.game.player.infect(seconds)
+
+
+# --- Manches ---------------------------------------------------------------------
+
+func round_started(r: int, dog: bool) -> void:
+	if players.size() > 1:
+		_round_started.rpc(r, dog)
+
+
+@rpc("authority", "reliable")
+func _round_started(r: int, dog: bool) -> void:
+	GameManager.set_round(r)
+	if GameManager.game:
+		GameManager.game.on_round_started(r, dog)
+
+
+func round_ended() -> void:
+	if players.size() > 1:
+		_round_ended.rpc()
+
+
+@rpc("authority", "reliable")
+func _round_ended() -> void:
+	if GameManager.game:
+		GameManager.game.hud.round_over()

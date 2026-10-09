@@ -8,6 +8,8 @@ var game: Node
 var player: Node3D
 var remotes := {}
 var _t := 0.0
+var _zt := 0.0
+const ZOMBIE_INTERVAL := 1.0 / 15.0
 
 
 func _ready() -> void:
@@ -40,6 +42,15 @@ func _refresh() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if Net.is_host:
+		_zt += delta
+		if _zt >= ZOMBIE_INTERVAL:
+			_zt = 0.0
+			var list := []
+			for z in Net.zombies.values():
+				if is_instance_valid(z) and z.state != z.State.DEAD:
+					list.append([z.net_id, z.global_position, z.rotation.y, Vector2(z.velocity.x, z.velocity.z).length(), z._atk_count])
+			Net.send_zombies(list)
 	_t += delta
 	if _t < SEND_INTERVAL or player == null:
 		return

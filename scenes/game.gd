@@ -50,6 +50,7 @@ var rounds: Node
 var barricades: Array = []
 ## Emprises (x, z) des zones couvertes d'un plafond : pas de pluie à l'intérieur.
 var roofs: Array[Rect2] = []
+var rounds_disabled := false
 var map_id := "bunker"
 var rooms: Array = ROOMS
 var active_zones := {0: true}
@@ -116,6 +117,8 @@ func _ready() -> void:
 	add_child(PauseScript.new())
 
 	if Net.active:
+		if not Net.is_host:
+			rounds_disabled = true
 		var coop := CoopScript.new()
 		coop.game = self
 		coop.player = player
@@ -132,6 +135,8 @@ func _ready() -> void:
 	rounds = RoundManagerScript.new()
 	rounds.game = self
 	add_child(rounds)
+	if rounds_disabled:
+		rounds.set_physics_process(false)
 
 	GameManager.power_changed.connect(_on_power)
 	_optimize_meshes()
@@ -610,6 +615,8 @@ func spawn_enemy(info: Dictionary) -> bool:
 		pos = barricade.spawn_point()
 	var z: CharacterBody3D = ZombieScript.new()
 	z.setup(info.kind, info.hp, info.speed, barricade)
+	if Net.active and Net.is_host:
+		Net.register_zombie(z, pos)
 	add_child(z)
 	z.global_position = pos
 	z.rotation.y = randf() * TAU
@@ -671,6 +678,8 @@ func _lightning(pos: Vector3) -> void:
 
 
 func on_round_started(r: int, dog: bool) -> void:
+	if Net.active and Net.is_host:
+		Net.round_started(r, dog)
 	hud.show_round(r, dog)
 	if dog:
 		Audio.say("dogs")
@@ -686,6 +695,8 @@ func on_round_started(r: int, dog: bool) -> void:
 
 
 func on_round_ended(_r: int, dog: bool, pos: Vector3) -> void:
+	if Net.active and Net.is_host:
+		Net.round_ended()
 	hud.round_over()
 	if dog:
 		spawn_powerup(pos, "max_ammo")
@@ -695,7 +706,7 @@ func on_zombie_killed(z: Node3D, cause: String) -> void:
 	var pos := z.global_position
 	if cause != "nuke":
 		Effects.blood_decal(self, Vector3(pos.x, 0.0, pos.z), randf_range(1.2, 1.9), Vector3.UP, 2.5)
-	if menu_mode:
+	if menu_mode or (Net.active and not Net.is_host):
 		return
 	rounds.on_killed(pos)
 	if z.kind == "boss":

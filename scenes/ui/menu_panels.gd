@@ -66,7 +66,7 @@ static func map_select(parent: Node, on_pick: Callable) -> Control:
 ## Lobby de la coop en ligne : héberger ou rejoindre, liste des joueurs, lancement par l'hôte.
 static func coop(parent: Node) -> Control:
 	var col := _panel(parent, "COOP EN LIGNE")
-	var info := UI.label(col, "Les zombies et les points ne sont pas encore partagés (bêta).", 18, UI.GREY)
+	var info := UI.label(col, "Bêta : zombies et manches partagés ; portes, boîte, machines et power-ups pas encore.", 18, UI.GREY)
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD
 	info.custom_minimum_size = Vector2(500, 0)
 	var name_row := HBoxContainer.new()
