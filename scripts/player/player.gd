@@ -22,6 +22,8 @@ const REGEN_DELAY := 3.0
 const REGEN_RATE := 60.0
 ## Secondes pendant lesquelles on peut tirer au pistolet à terre avant de mourir (sans Second Souffle).
 const DOWN_TIME := 5.0
+## En coop, on a plus de temps : un coéquipier peut venir relever.
+const COOP_DOWN_TIME := 30.0
 const DOWN_SPEED := 1.2
 const SLIDE_TIME := 0.7
 const SLIDE_SPEED := 9.0
@@ -402,8 +404,8 @@ func _go_down() -> void:
 	holder.enter_downed()
 	downed_changed.emit(true)
 	_revive_on_end = GameManager.has_perk("second_souffle")
-	down_left = 3.0 if _revive_on_end else DOWN_TIME
-	GameManager.show_message("À TERRE", Color(0.9, 0.3, 0.2), "Tirez au pistolet pour survivre" if not _revive_on_end else "Réanimation en cours…")
+	down_left = 3.0 if _revive_on_end else (COOP_DOWN_TIME if Net.multiplayer_session() else DOWN_TIME)
+	GameManager.show_message("À TERRE", Color(0.9, 0.3, 0.2), "Réanimation en cours…" if _revive_on_end else ("Un coéquipier peut vous relever" if Net.multiplayer_session() else "Tirez au pistolet pour survivre"))
 
 
 ## Fin du temps à terre : réanimation (Second Souffle) ou mort.
@@ -422,5 +424,42 @@ func _end_down() -> void:
 		var tw := create_tween()
 		tw.tween_property(head, "position:y", 0.25, 0.8)
 		tw.parallel().tween_property(head, "rotation:z", 1.2, 0.8)
+		if Net.multiplayer_session():
+			# Coop : la partie continue tant qu'un coéquipier est en vie
+			GameManager.show_message("VOUS ÊTES MORT", Color(0.9, 0.2, 0.15), "Retour à la prochaine manche si l'équipe survit")
+			Net.report_dead(true)
+			return
 		await get_tree().create_timer(2.5, false).timeout
 		GameManager.game_over()
+
+
+## Relevé par un coéquipier.
+func revive() -> void:
+	if not downed or dead:
+		return
+	downed = false
+	holder.exit_downed()
+	invuln = 2.0
+	health = max_health * 0.5
+	health_changed.emit(health, max_health)
+	downed_changed.emit(false)
+	GameManager.show_message("RÉANIMÉ PAR UN COÉQUIPIER", Color(0.3, 0.8, 1.0))
+	Audio.play("powerup", 0.0, 1.3)
+
+
+## Coop : retour à la vie au début d'une manche (sans les atouts).
+func respawn() -> void:
+	if not dead:
+		return
+	dead = false
+	downed = false
+	holder.exit_downed()
+	GameManager.clear_perks()
+	invuln = 3.0
+	health = max_health
+	head.rotation.z = 0.0
+	head.position.y = STAND_HEIGHT
+	health_changed.emit(health, max_health)
+	downed_changed.emit(false)
+	GameManager.show_message("DE RETOUR", Color(0.3, 0.8, 1.0), "Vous revenez avec la nouvelle manche")
+	Net.report_dead(false)

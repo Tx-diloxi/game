@@ -51,9 +51,9 @@ amélioration d'armes, pièges, chiens, boss, quête secrète, variété de zomb
 
 | # | Fonctionnalité | État | Effort | Notes d'implémentation |
 |---|---|---|---|---|
-| 2.1 | **Coop 2–4 joueurs en ligne** | 🟡 lobby, avatars, zombies, manches, portes, courant, pièges, barricades, boîte et power-ups partagés (hôte autoritaire) ; reste : réanimation, fin de partie commune, effets des zombies spéciaux sur les invités | XL | `MultiplayerAPI` + ENet. Serveur autoritaire pour zombies/points. Réplication via `MultiplayerSynchronizer`. Points et atouts par joueur. |
+| 2.1 | **Coop 2–4 joueurs en ligne** | 🟡 lobby, avatars, zombies, manches, portes, courant, pièges, barricades, boîte et power-ups partagés (hôte autoritaire) ; réanimation par un coéquipier et fin de partie commune faites ; reste : effets des zombies spéciaux sur les invités, pause commune, test réel par Internet | XL | `MultiplayerAPI` + ENet. Serveur autoritaire pour zombies/points. Réplication via `MultiplayerSynchronizer`. Points et atouts par joueur. |
 | 2.2 | **Coop locale (écran partagé)** | ❌ | L | 2 `SubViewport` + 2 joueurs ; manettes requises (voir 7.3). |
-| 2.3 | **Réanimation des coéquipiers** (maintenir F, 3 s ; jauge de saignement 30 s) | 🟡 | M | Aujourd'hui seul Second Souffle (auto) et la vie supplémentaire existent. Ajouter état « à terre » avec timer, ramper, pistolet seul. |
+| 2.3 | **Réanimation des coéquipiers** (maintenir F, 3 s ; jauge de saignement 30 s) | ✅ | M | Fait en coop : 30 s à terre, relevé en 3 s par un coéquipier. En solo : Second Souffle ou 5 s au pistolet. |
 | 2.4 | **Mode à terre en solo** : perdre tous les atouts, tirer au pistolet pendant 3 s avant de mourir | ✅ | S | À terre 5 s : ramper et tirer au pistolet (Second Souffle : 3 s puis réanimation). Reste : réanimation par un coéquipier (coop). |
 | 2.5 | **Vraies manches « spéciales »** : chiens, mais aussi manches de zombies qui sprintent, d'infectés explosifs, de boss | 🟡 chiens (manches 5-7), boss (tous les 10), tanks (tous les 5) ; pas de manches thématiques | M | `round_manager.gd` : table de manches spéciales au lieu d'un seul tirage. |
 | 2.6 | **Plafond de zombies par joueur et par manche** réaliste (ex. 24 simultanés, 6+0,15·manche²…) | 🟡 | S | Ajuster `zombie_count()` et pondérer par nombre de joueurs. |

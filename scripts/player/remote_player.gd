@@ -12,6 +12,10 @@ var pitch := 0.0
 var weapon_id := ""
 var downed := false
 var dead := false
+var radius := 2.2
+var _revive_t := 0.0
+var _since_hold := 1.0
+const REVIVE_TIME := 3.0
 var _head: Node3D
 var _gun_root: Node3D
 var _gun_id := ""
@@ -20,6 +24,7 @@ var _label: Label3D
 
 func _ready() -> void:
 	add_to_group("targets")
+	add_to_group("interactable")
 	var col := Color.from_hsv(fmod(peer_id * 0.17, 1.0), 0.55, 0.8)
 	var body_mat := MeshUtil.mat(col.darkened(0.3))
 	MeshUtil.cylinder_mesh(self, 0.3, 1.1, Vector3(0, 0.75, 0), body_mat)
@@ -46,6 +51,9 @@ func apply_state(s: Dictionary) -> void:
 
 
 func _process(delta: float) -> void:
+	_since_hold += delta
+	if _since_hold > 0.3:
+		_revive_t = 0.0
 	var k := minf(delta * 12.0, 1.0)
 	global_position = global_position.lerp(target_pos, k)
 	rotation.y = lerp_angle(rotation.y, target_yaw, k)
@@ -67,3 +75,29 @@ func take_damage(amount: float, from := Vector3.INF) -> void:
 
 func infect(seconds: float) -> void:
 	Net.infect(peer_id, seconds)
+
+
+# --- Réanimation par un coéquipier (maintenir F) ---------------------------------
+
+func is_available(_player: Node) -> bool:
+	return downed and not Net.dead_peers.has(peer_id)
+
+
+func get_prompt(_player: Node) -> String:
+	if _revive_t > 0.0:
+		return "Réanimation de %s… %d %%" % [player_name, int(_revive_t / REVIVE_TIME * 100.0)]
+	return "Maintenir [F] pour relever %s" % player_name
+
+
+func interact(_player: Node) -> void:
+	pass
+
+
+func interact_hold(_player: Node, delta: float) -> void:
+	_since_hold = 0.0
+	_revive_t += delta
+	if _revive_t >= REVIVE_TIME:
+		_revive_t = 0.0
+		Net.revive(peer_id)
+		downed = false
+		dead = false

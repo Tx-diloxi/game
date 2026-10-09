@@ -20,6 +20,8 @@ var players := {}
 var _peer: ENetMultiplayerPeer
 ## Zombies de la partie : id réseau -> noeud (réels chez l'hôte, marionnettes chez les invités).
 var zombies := {}
+## Joueurs hors d'état de jouer (morts) : id -> true.
+var dead_peers := {}
 var _next_zid := 1
 const ZombieScript := preload("res://scripts/zombies/zombie.gd")
 
@@ -77,6 +79,7 @@ func leave() -> void:
 	is_host = false
 	players = {}
 	zombies = {}
+	dead_peers = {}
 	_next_zid = 1
 	players_changed.emit()
 
@@ -243,11 +246,13 @@ func _infect(seconds: float) -> void:
 
 func round_started(r: int, dog: bool) -> void:
 	if players.size() > 1:
+		world_event.emit("respawn", 0, null, 1)
 		_round_started.rpc(r, dog)
 
 
 @rpc("authority", "reliable")
 func _round_started(r: int, dog: bool) -> void:
+	world_event.emit("respawn", 0, null, 1)
 	GameManager.set_round(r)
 	if GameManager.game:
 		GameManager.game.on_round_started(r, dog)
@@ -286,3 +291,38 @@ func _ask(kind: String, idx: int, data) -> void:
 @rpc("authority", "call_local", "reliable")
 func _apply(kind: String, idx: int, data, sender: int) -> void:
 	world_event.emit(kind, idx, data, sender)
+
+
+# --- Réanimation, mort et fin de partie ---------------------------------------------
+
+func multiplayer_session() -> bool:
+	return active and players.size() > 1
+
+
+## Un coéquipier relève ce joueur (appelé par celui qui maintient F).
+func revive(peer: int) -> void:
+	_revive.rpc_id(peer)
+
+
+@rpc("any_peer", "reliable")
+func _revive() -> void:
+	if GameManager.game and GameManager.game.player:
+		GameManager.game.player.revive()
+
+
+## Signale que le joueur local est mort (true) ou de retour (false). L'hôte termine la partie
+## quand tous les joueurs sont morts.
+func report_dead(is_dead: bool) -> void:
+	act("dead", 0, is_dead)
+
+
+func _on_dead_event(sender: int, is_dead: bool) -> void:
+	if is_dead:
+		dead_peers[sender] = true
+	else:
+		dead_peers.erase(sender)
+	if is_host and is_dead:
+		for id in players:
+			if not dead_peers.has(id):
+				return
+		act("game_over", 0, null)

@@ -89,6 +89,26 @@ func run_host() -> void:
 	var has_bonus := func(): return game.powerups.values().any(func(pu): return is_instance_valid(pu) and pu.kind == "bonus_points")
 	check(has_bonus.call(), "l'hôte lâche un power-up")
 	check(await wait_until(func(): return not has_bonus.call(), 15.0), "le power-up ramassé par l'invité disparaît chez l'hôte")
+	# Réanimation, mort, retour à la manche suivante, fin de partie commune
+	GameManager.records_path = "user://records_coop_test.cfg"
+	game.player.global_position = Vector3(3, 0.1, -1)
+	check(await wait_until(func(): return remote.downed, 15.0), "l'hôte voit l'invité à terre")
+	check(remote.is_available(game.player), "l'invité à terre peut être relevé")
+	for i in 40:
+		remote.interact_hold(game.player, 0.1)
+		await get_tree().create_timer(0.02).timeout
+	check(await wait_until(func(): return not remote.downed, 10.0), "l'invité est relevé après 3 s de maintien")
+	var cid: int = Net.players.keys().filter(func(k): return k != 1)[0]
+	check(await wait_until(func(): return Net.dead_peers.has(cid), 20.0), "l'invité mort est signalé à l'hôte")
+	check(GameManager.in_game, "la partie continue tant que l'hôte est en vie")
+	Net.round_started(2, false)
+	check(await wait_until(func(): return not Net.dead_peers.has(cid), 10.0), "l'invité mort revient à la manche suivante")
+	check(await wait_until(func(): return Net.dead_peers.has(cid), 20.0), "l'invité meurt de nouveau")
+	game.player.invuln = 0.0
+	game.player.health = 1.0
+	game.player.take_damage(999.0)
+	game.player.down_left = 0.05
+	check(await wait_until(func(): return not GameManager.in_game, 10.0), "tous les joueurs sont morts : fin de partie chez l'hôte")
 	# Fin : attendre le verdict de l'invité
 	check(await wait_until(func(): return FileAccess.file_exists(result_file), 20.0), "l'invité a terminé son test")
 	if FileAccess.file_exists(result_file):
@@ -159,6 +179,27 @@ func run_client(port: int, result_file: String) -> void:
 	Net.act("pu_take", bonus_id)
 	check(await wait_until(func(): return not has_bonus.call(), 15.0), "le power-up est ramassé chez l'invité")
 	check(await wait_until(func(): return GameManager.points > pts2, 15.0), "l'invité reçoit l'effet du power-up")
+	# Réanimation, mort, retour, fin de partie
+	GameManager.records_path = "user://records_coop_test.cfg"
+	game.player.invuln = 0.0
+	game.player.health = 1.0
+	game.player.take_damage(999.0)
+	check(game.player.downed and game.player.down_left > 20.0, "en coop, le temps à terre est plus long")
+	check(await wait_until(func(): return not game.player.downed, 15.0), "l'invité est relevé par l'hôte")
+	check(game.player.health >= game.player.max_health * 0.4, "la santé revient après la réanimation")
+	await get_tree().create_timer(1.5).timeout
+	game.player.invuln = 0.0
+	game.player.health = 1.0
+	game.player.take_damage(999.0)
+	game.player.down_left = 0.05
+	check(await wait_until(func(): return game.player.dead, 10.0), "sans réanimation l'invité meurt")
+	check(await wait_until(func(): return not game.player.dead, 15.0), "l'invité revient à la manche suivante")
+	await get_tree().create_timer(1.5).timeout
+	game.player.invuln = 0.0
+	game.player.health = 1.0
+	game.player.take_damage(999.0)
+	game.player.down_left = 0.05
+	check(await wait_until(func(): return not GameManager.in_game, 20.0), "tous les joueurs sont morts : fin de partie chez l'invité")
 	await get_tree().create_timer(1.0).timeout
 	var f := FileAccess.open(result_file, FileAccess.WRITE)
 	f.store_string("\n".join(lines) + "\nBOX %f %f\n" % [game.box.global_position.x, game.box.global_position.z] + ("FAIL\n" if fails > 0 else ""))

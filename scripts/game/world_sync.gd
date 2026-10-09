@@ -52,9 +52,17 @@ func _on_event(kind: String, idx: int, data, sender: int) -> void:
 				p.tree_exiting.connect(func(): game.powerups.erase(idx))
 				game.add_child(p)
 				p.global_position = data.pos
+		"dead":
+			Net._on_dead_event(sender, bool(data))
+		"game_over":
+			GameManager.game_over()
 		"pu_take":
 			if Net.is_host and game.powerups.has(idx) and not _applied_pu.has(idx):
 				Net.act("pu_apply", idx, game.powerups[idx].kind)
+		"respawn":
+			# Nouvelle manche : les joueurs morts reviennent
+			if game.player and game.player.dead:
+				game.player.respawn()
 		"pu_apply":
 			if not _applied_pu.has(idx):
 				_applied_pu[idx] = true
