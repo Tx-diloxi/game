@@ -19,6 +19,7 @@ manches de chiens et tanks. Godot 4.7, GDScript, rendu Compatibility.
 - **Manette** : A valide et B annule dans les menus.
 - **Musique** : vraies boucles ambiance (menu et jeu), voir crédits.
 
+- **Exécutable Windows** : `Godot_..._console.exe --headless --path . --export-release "Windows Desktop" build/BunkerZ.exe` produit un `.exe` unique (≈ 160 Mo, données incluses) dans `build/` (ignoré par git). Nécessite les modèles d'export Godot 4.7.2 (Éditeur > Gérer les modèles d'export). Réglages et records sont enregistrés dans `%APPDATA%\Bunker Z\`.
 - **Performances** : ombres désactivées par défaut (une seule ombre de lampe coûte plus de la moitié des images/s sur un GPU intégré ; les niveaux 1 à 3 ajoutent 1 lampe, 2 lampes, puis la lune), petits objets sans ombre et masqués au loin, occlusion par les murs, zombies animés à fréquence réduite quand ils sont loin, séparation et chemins moins coûteux. Mesure : `Godot_console.exe --path . res://tests/perf.tscn -- 24 sq0` (24 zombies ; options `sq0`..`sq3`, `msaa0`, `noglow`…).
 - **Mode test** (Options > Test) : en jeu, F1 arme suivante (les 13 armes), F2 améliorer/retirer l'amélioration, F3 munitions pleines et +50000 points, F4 tous les atouts, F5 terminer la manche.
 - **Options** : volume général, musique, effets et voix séparés (bus audio), qualité des ombres (4 niveaux), limite d'images/s, VSync, plein écran, champ de vision, sensibilité. Sauvegardées dans `user://settings.cfg`.
