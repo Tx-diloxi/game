@@ -79,6 +79,7 @@ func _ready() -> void:
 
 	var play_btn := UI.button(left, "JOUER", func(): _show(func(p): return Panels.map_select(p, _play)), 40)
 	play_btn.grab_focus.call_deferred()
+	UI.button(left, "COOP EN LIGNE", func(): _show(Panels.coop))
 	UI.button(left, "OPTIONS", func(): _show(Panels.options))
 	UI.button(left, "COMMANDES", func(): _show(Panels.controls))
 	UI.button(left, "RECORDS", func(): _show(Panels.records))
@@ -105,6 +106,7 @@ func _ready() -> void:
 	root.add_child(_fade)
 	create_tween().tween_property(_fade, "color:a", 0.0, 1.5)
 	Audio.play_music("menu_music", -4.0)
+	Net.game_starting.connect(_on_coop_start)
 
 
 func _process(delta: float) -> void:
@@ -122,6 +124,10 @@ func _show(builder: Callable) -> void:
 	var panel: Control = builder.call(_content)
 	panel.modulate.a = 0.0
 	create_tween().tween_property(panel, "modulate:a", 1.0, 0.25)
+
+
+func _on_coop_start(_map_id: String) -> void:
+	_play()
 
 
 func _play() -> void:

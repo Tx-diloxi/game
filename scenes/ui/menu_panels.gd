@@ -63,6 +63,55 @@ static func map_select(parent: Node, on_pick: Callable) -> Control:
 	return col.get_parent()
 
 
+## Lobby de la coop en ligne : héberger ou rejoindre, liste des joueurs, lancement par l'hôte.
+static func coop(parent: Node) -> Control:
+	var col := _panel(parent, "COOP EN LIGNE")
+	var info := UI.label(col, "Les zombies et les points ne sont pas encore partagés (bêta).", 18, UI.GREY)
+	info.autowrap_mode = TextServer.AUTOWRAP_WORD
+	info.custom_minimum_size = Vector2(500, 0)
+	var name_row := HBoxContainer.new()
+	col.add_child(name_row)
+	UI.label(name_row, "Pseudo", 22, UI.GREY).custom_minimum_size = Vector2(120, 0)
+	var name_edit := LineEdit.new()
+	name_edit.text = Net.my_name
+	name_edit.custom_minimum_size = Vector2(300, 0)
+	name_edit.text_changed.connect(func(t: String): Net.my_name = t.strip_edges())
+	name_row.add_child(name_edit)
+	var ip_row := HBoxContainer.new()
+	col.add_child(ip_row)
+	UI.label(ip_row, "Adresse", 22, UI.GREY).custom_minimum_size = Vector2(120, 0)
+	var ip_edit := LineEdit.new()
+	ip_edit.text = "127.0.0.1"
+	ip_edit.custom_minimum_size = Vector2(300, 0)
+	ip_row.add_child(ip_edit)
+	var status := UI.label(col, "", 20, UI.BONE)
+	var list := UI.label(col, "", 22, UI.BONE)
+	var start_btn: Button
+	var refresh := func():
+		var lines := []
+		for id in Net.players:
+			lines.append("%s%s" % [Net.players[id], "  (hôte)" if id == 1 else ""])
+		list.text = "\n".join(lines)
+		if start_btn:
+			start_btn.visible = Net.active and Net.is_host
+	UI.button(col, "HÉBERGER", func():
+		var err := Net.host()
+		status.text = ("En attente de joueurs sur le port %d…" % Net.DEFAULT_PORT) if err == OK else "Impossible d'héberger (port occupé ?)", 28)
+	UI.button(col, "REJOINDRE", func():
+		var err := Net.join(ip_edit.text.strip_edges())
+		status.text = "Connexion…" if err == OK else "Adresse invalide", 28)
+	start_btn = UI.button(col, "LANCER LA PARTIE", func(): Net.start_game(GameManager.map_id), 32)
+	start_btn.visible = false
+	Net.players_changed.connect(refresh)
+	var on_lost := func(reason: String): status.text = reason
+	Net.connection_lost.connect(on_lost)
+	col.tree_exited.connect(func():
+		Net.players_changed.disconnect(refresh)
+		Net.connection_lost.disconnect(on_lost))
+	refresh.call()
+	return col.get_parent()
+
+
 static func options(parent: Node) -> Control:
 	var col := _panel(parent, "OPTIONS")
 	var scroll := ScrollContainer.new()

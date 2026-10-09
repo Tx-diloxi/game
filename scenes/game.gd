@@ -21,6 +21,7 @@ const WorkbenchScript := preload("res://scripts/interactables/workbench.gd")
 const CraftPartScript := preload("res://scripts/interactables/craft_part.gd")
 const WeatherScript := preload("res://scripts/game/weather.gd")
 const RadioScript := preload("res://scripts/interactables/radio.gd")
+const CoopScript := preload("res://scripts/game/coop.gd")
 const PerkScript := preload("res://scripts/interactables/perk_machine.gd")
 const BoxScript := preload("res://scripts/interactables/mystery_box.gd")
 const UpgradeScript := preload("res://scripts/interactables/upgrade_machine.gd")
@@ -113,6 +114,15 @@ func _ready() -> void:
 	hud.bind(player)
 	player.hud = hud
 	add_child(PauseScript.new())
+
+	if Net.active:
+		var coop := CoopScript.new()
+		coop.game = self
+		coop.player = player
+		add_child(coop)
+		# Chaque joueur démarre à un point différent
+		var idx: int = Net.players.keys().find(Net.my_id())
+		player.global_position = start_position() + Vector3(1.2 * idx, 0, 0)
 
 	var weather := WeatherScript.new()
 	weather.game = self
@@ -526,6 +536,10 @@ func _radio(pos: Vector3, facing: Vector3, entry: int, computer := false) -> voi
 	r.entry = entry
 	r.computer = computer
 	_place(r, nav, pos, facing)
+
+
+func start_position() -> Vector3:
+	return MapLab.START if map_id == "lab" else Vector3(0, 0.1, 3)
 
 
 func _craft_part(index: int, pos: Vector3) -> void:

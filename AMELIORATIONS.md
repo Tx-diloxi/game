@@ -51,7 +51,7 @@ amélioration d'armes, pièges, chiens, boss, quête secrète, variété de zomb
 
 | # | Fonctionnalité | État | Effort | Notes d'implémentation |
 |---|---|---|---|---|
-| 2.1 | **Coop 2–4 joueurs en ligne** | ❌ | XL | `MultiplayerAPI` + ENet. Serveur autoritaire pour zombies/points. Réplication via `MultiplayerSynchronizer`. Points et atouts par joueur. |
+| 2.1 | **Coop 2–4 joueurs en ligne** | 🟡 lobby (hôte/invité, ENet) et avatars visibles ; reste : zombies partagés, points par joueur, interactions, réanimation | XL | `MultiplayerAPI` + ENet. Serveur autoritaire pour zombies/points. Réplication via `MultiplayerSynchronizer`. Points et atouts par joueur. |
 | 2.2 | **Coop locale (écran partagé)** | ❌ | L | 2 `SubViewport` + 2 joueurs ; manettes requises (voir 7.3). |
 | 2.3 | **Réanimation des coéquipiers** (maintenir F, 3 s ; jauge de saignement 30 s) | 🟡 | M | Aujourd'hui seul Second Souffle (auto) et la vie supplémentaire existent. Ajouter état « à terre » avec timer, ramper, pistolet seul. |
 | 2.4 | **Mode à terre en solo** : perdre tous les atouts, tirer au pistolet pendant 3 s avant de mourir | ✅ | S | À terre 5 s : ramper et tirer au pistolet (Second Souffle : 3 s puis réanimation). Reste : réanimation par un coéquipier (coop). |

@@ -19,6 +19,7 @@ config/icon="res://icon.png"
 
 GameManager="*res://autoload/game_manager.gd"
 Audio="*res://autoload/audio.gd"
+Net="*res://autoload/net.gd"
 MCPRuntimeServer="*res://addons/godot_mcp_toolkit/runtime/mcp_runtime_server.gd"
 
 [display]

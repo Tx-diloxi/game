@@ -196,6 +196,7 @@ func game_over() -> void:
 
 
 func to_menu() -> void:
+	Net.leave()
 	in_game = false
 	game = null
 	get_tree().paused = false
