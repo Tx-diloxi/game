@@ -7,6 +7,7 @@ var _lamp: MeshInstance3D
 
 func _ready() -> void:
 	radius = 2.0
+	add_to_group("power_switch")
 	var metal := Mat.metal(Color(0.4, 0.45, 0.38))
 	MeshUtil.box_mesh(self, Vector3(0.9, 1.3, 0.25), Vector3(0, 1.4, 0.12), metal)
 	MeshUtil.label3d(self, "COURANT", Vector3(0, 2.25, 0.26), 56, Color(1.0, 0.85, 0.2))
@@ -27,6 +28,15 @@ func get_prompt(_player: Node) -> String:
 
 
 func interact(_player: Node) -> void:
+	if GameManager.power_on:
+		return
+	if Net.active:
+		Net.act("power", 0, null)
+	else:
+		activate()
+
+
+func activate() -> void:
 	if GameManager.power_on:
 		return
 	create_tween().tween_property(_lever, "rotation:x", 0.8, 0.4)

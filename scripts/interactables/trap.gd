@@ -9,6 +9,7 @@ const COOLDOWN := 45.0
 const PLAYER_DPS := 70.0
 
 var kind := "electric" # "electric" ou "fire"
+var net_index := -1
 var cost := 1000
 var zone_center := Vector3.ZERO
 var zone_size := Vector3(4, 2, 3)
@@ -155,6 +156,15 @@ func interact(_player: Node) -> void:
 		Audio.play("deny")
 		return
 	if not GameManager.spend(cost):
+		return
+	if Net.active:
+		Net.act("trap", net_index, null)
+	else:
+		activate()
+
+
+func activate() -> void:
+	if _active_t > 0.0:
 		return
 	_active_t = ACTIVE_TIME
 	Audio.say("trap_on")

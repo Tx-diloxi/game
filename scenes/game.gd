@@ -21,6 +21,7 @@ const WorkbenchScript := preload("res://scripts/interactables/workbench.gd")
 const CraftPartScript := preload("res://scripts/interactables/craft_part.gd")
 const WeatherScript := preload("res://scripts/game/weather.gd")
 const RadioScript := preload("res://scripts/interactables/radio.gd")
+const WorldSyncScript := preload("res://scripts/game/world_sync.gd")
 const CoopScript := preload("res://scripts/game/coop.gd")
 const PerkScript := preload("res://scripts/interactables/perk_machine.gd")
 const BoxScript := preload("res://scripts/interactables/mystery_box.gd")
@@ -51,6 +52,10 @@ var barricades: Array = []
 ## Emprises (x, z) des zones couvertes d'un plafond : pas de pluie à l'intérieur.
 var roofs: Array[Rect2] = []
 var rounds_disabled := false
+var doors: Array = []
+var traps: Array = []
+var powerups := {}
+var _next_pu := 1
 var map_id := "bunker"
 var rooms: Array = ROOMS
 var active_zones := {0: true}
@@ -119,6 +124,9 @@ func _ready() -> void:
 	if Net.active:
 		if not Net.is_host:
 			rounds_disabled = true
+		var sync := WorldSyncScript.new()
+		sync.game = self
+		add_child(sync)
 		var coop := CoopScript.new()
 		coop.game = self
 		coop.player = player
@@ -508,6 +516,7 @@ func _place(node: Node3D, parent: Node, pos: Vector3, facing: Vector3) -> Node3D
 func _barricade(pos: Vector3, inward: Vector3, zone: int) -> void:
 	var b := BarricadeScript.new()
 	b.zone = zone
+	b.net_index = barricades.size()
 	# -Z local doit pointer vers l'intérieur, donc +Z vers l'extérieur.
 	_place(b, self, pos, -inward)
 	barricades.append(b)
@@ -517,6 +526,8 @@ func _door(pos: Vector3, cost: int, zone: int, facing := Vector3.BACK) -> void:
 	var d := DoorScript.new()
 	d.cost = cost
 	d.unlock_zone = zone
+	d.net_index = doors.size()
+	doors.append(d)
 	_place(d, nav, pos, facing)
 
 
@@ -533,6 +544,8 @@ func _trap(pos: Vector3, facing: Vector3, kind: String, cost: int, center: Vecto
 	t.cost = cost
 	t.zone_center = center
 	t.zone_size = size
+	t.net_index = traps.size()
+	traps.append(t)
 	_place(t, self, pos, facing)
 
 
@@ -568,12 +581,34 @@ func unlock_zone(zone: int) -> void:
 
 
 func relocate_box(b: Node3D) -> void:
+	if Net.active and Net.players.size() > 1:
+		# Coop : l'hôte choisit le nouvel emplacement pour tout le monde
+		if Net.is_host:
+			Net.act("box_move", _pick_box_index(), null)
+		else:
+			Net.act("box_pick", 0, null)
+		return
 	var choices: Array[int] = []
 	for i in box_locations.size():
 		if i != _box_index:
 			choices.append(i)
 	_box_index = choices.pick_random()
 	b.global_transform = box_locations[_box_index]
+	GameManager.show_message("La boîte est réapparue ailleurs", Color(0.4, 0.8, 1.0))
+	Audio.say("box_moved")
+
+
+func _pick_box_index() -> int:
+	var choices: Array[int] = []
+	for i in box_locations.size():
+		if i != _box_index:
+			choices.append(i)
+	return choices.pick_random()
+
+
+func apply_box_index(i: int) -> void:
+	_box_index = i
+	box.global_transform = box_locations[i]
 	GameManager.show_message("La boîte est réapparue ailleurs", Color(0.4, 0.8, 1.0))
 	Audio.say("box_moved")
 
@@ -733,6 +768,13 @@ func spawn_powerup(pos: Vector3, kind: String) -> void:
 		pos = player.global_position + (-player.global_basis.z * 2.0)
 	var p: Node3D = PowerupScript.new()
 	p.kind = kind
+	if Net.active:
+		p.net_id = _next_pu
+		_next_pu += 1
+		powerups[p.net_id] = p
+		p.tree_exiting.connect(func(): powerups.erase(p.net_id))
+		if Net.is_host:
+			Net.act("pu_spawn", p.net_id, {"kind": kind, "pos": Vector3(pos.x, 0.0, pos.z)})
 	add_child(p)
 	p.global_position = Vector3(pos.x, 0.0, pos.z)
 

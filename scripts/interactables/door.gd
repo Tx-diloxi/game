@@ -3,6 +3,7 @@ extends "res://scripts/interactables/interactable.gd"
 ## pour bloquer le maillage de navigation tant qu'elle est fermée.
 
 var cost := 750
+var net_index := -1
 var unlock_zone := 1
 var size := Vector3(3.0, 3.0, 0.4)
 var opened := false
@@ -39,13 +40,19 @@ func get_prompt(_player: Node) -> String:
 func interact(_player: Node) -> void:
 	if opened or not GameManager.spend(cost):
 		return
-	_open()
+	if Net.active:
+		Net.act("door", net_index, null)
+	else:
+		_open()
 
 
 ## Ouverture sans payer (téléporteur).
 func force_open() -> void:
 	if not opened:
-		_open()
+		if Net.active:
+			Net.act("door", net_index, null)
+		else:
+			_open()
 
 
 func _open() -> void:

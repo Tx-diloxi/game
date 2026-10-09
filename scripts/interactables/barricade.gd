@@ -8,6 +8,7 @@ const WIDTH := 1.6
 const HEIGHT := 2.4
 
 var zone := 0
+var net_index := -1
 var boards := MAX_BOARDS
 var _repair_t := 0.0
 var _board_nodes: Array[MeshInstance3D] = []
@@ -47,6 +48,7 @@ func remove_board() -> void:
 	if boards <= 0:
 		return
 	boards -= 1
+	_net_boards()
 	var b := _board_nodes[boards]
 	Audio.play_at("board_break", global_position + Vector3.UP, 0.0, randf_range(0.9, 1.1))
 	var tw := b.create_tween()
@@ -61,12 +63,27 @@ func add_board() -> void:
 		return
 	var b := _board_nodes[boards]
 	boards += 1
+	_net_boards()
 	b.show()
 	b.transform = _board_rest[boards - 1]
 	var final_pos := b.position
 	b.position = final_pos + Vector3(0, 0, -0.8)
 	b.create_tween().tween_property(b, "position", final_pos, 0.2)
 	Audio.play_at("board_repair", global_position + Vector3.UP)
+
+
+## Hôte : annonce l'état des planches aux invités.
+func _net_boards() -> void:
+	if Net.active and Net.is_host and net_index >= 0:
+		Net.act("boards", net_index, boards)
+
+
+## Invité : aligne les planches sur l'état annoncé par l'hôte.
+func set_boards(n: int) -> void:
+	while boards > n:
+		remove_board()
+	while boards < n:
+		add_board()
 
 
 func repair_all() -> void:
@@ -93,5 +110,8 @@ func interact_hold(_player: Node, delta: float) -> void:
 	if _repair_t >= REPAIR_TIME:
 		_repair_t = 0.0
 		if boards < MAX_BOARDS:
-			add_board()
-			GameManager.add_points(10)
+			if Net.active and not Net.is_host:
+				Net.act("repair", net_index, null) # l'hôte pose la planche et paie les points
+			else:
+				add_board()
+				GameManager.add_points(10)

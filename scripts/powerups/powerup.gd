@@ -7,6 +7,8 @@ const LIFETIME := 25.0
 const PICKUP_RADIUS := 1.3
 
 var kind := "max_ammo"
+var net_id := 0
+var _sent := false
 var _t := 0.0
 var _visual: Node3D
 
@@ -44,6 +46,11 @@ func _process(delta: float) -> void:
 		var d: Vector3 = p.global_position - global_position
 		d.y = 0.0
 		if d.length() < PICKUP_RADIUS and not p.dead:
+			if Net.active and Net.players.size() > 1:
+				if not _sent:
+					_sent = true
+					Net.act("pu_take", net_id, null)
+				return
 			if GameManager.game:
 				GameManager.game.apply_powerup(kind)
 			queue_free()

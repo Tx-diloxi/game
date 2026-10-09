@@ -6,6 +6,8 @@ signal players_changed
 signal connection_lost(reason: String)
 signal game_starting(map_id: String)
 signal remote_state(id: int, state: Dictionary)
+## Événement du monde appliqué chez tous les joueurs : (genre, indice, données, émetteur).
+signal world_event(kind: String, idx: int, data, sender: int)
 
 const DEFAULT_PORT := 7777
 const MAX_PLAYERS := 4
@@ -206,7 +208,10 @@ func _zhit(id: int, amount: float, head: bool, cause: String) -> void:
 
 ## Hôte -> invité : points gagnés, dégâts subis, infection.
 func award(peer: int, points: int) -> void:
-	_award.rpc_id(peer, points)
+	if peer == my_id():
+		GameManager.add_points(points)
+	else:
+		_award.rpc_id(peer, points)
 
 
 @rpc("authority", "reliable")
@@ -257,3 +262,27 @@ func round_ended() -> void:
 func _round_ended() -> void:
 	if GameManager.game:
 		GameManager.game.hud.round_over()
+
+
+# --- Événements du monde (portes, courant, pièges, barricades, boîte, power-ups) ----
+
+## Action d'un joueur sur le monde. L'hôte la rediffuse à tout le monde (lui compris) ;
+## hors coop, elle s'applique directement.
+func act(kind: String, idx: int, data = null) -> void:
+	if not active or players.size() < 2:
+		world_event.emit(kind, idx, data, my_id())
+	elif is_host:
+		_apply.rpc(kind, idx, data, 1)
+	else:
+		_ask.rpc_id(1, kind, idx, data)
+
+
+@rpc("any_peer", "reliable")
+func _ask(kind: String, idx: int, data) -> void:
+	if is_host:
+		_apply.rpc(kind, idx, data, multiplayer.get_remote_sender_id())
+
+
+@rpc("authority", "call_local", "reliable")
+func _apply(kind: String, idx: int, data, sender: int) -> void:
+	world_event.emit(kind, idx, data, sender)
