@@ -8,6 +8,7 @@ manches de chiens et tanks. Godot 4.7, GDScript, rendu Compatibility.
 - **Pièges** (courant requis, 1000 points, actifs 25 s, recharge 45 s) : électrique dans le couloir, à feu près de la fenêtre ouest de la grande salle. Ils tuent tous les zombies dans la zone et blessent le joueur.
 - **Deux niveaux d'amélioration** : niveau 1 (5000 points, camouflage violet, dégâts x2,5) puis niveau II (8000 points, camouflage doré, dégâts x4, chargeurs x2). Munitions de niveau II : 6000 à l'arme murale.
 - **Arme unique** (Bunker) : trois pièces cachées (Bobine, Batterie, Condensateur : coin de la salle de départ, couloir, derrière un pilier de la grande salle) à assembler à l'établi de la salle de départ → **Arc Tonnerre** (foudre qui rebondit sur 3 zombies, absente de la boîte mystère).
+- **Mouvement** : Saut près d'une fenêtre dont toutes les planches sont arrachées = enjambée (on passe de l'autre côté) ; s'accroupir en plein sprint = glissade (0,7 s, tir possible).
 - **Boisson d'atout** : un flacon de la couleur de l'atout monte à la bouche pendant l'achat.
 - **À terre** : à zéro vie, on tombe 5 s (3 s avec Second Souffle, qui réanime) ; on rampe et on tire au pistolet seul, les autres armes sont rendues à la réanimation.
 - **Difficulté** (Options > Jeu) : Facile (dégâts x0,6, ennemis -20 % de santé, régénération rapide), Normal, Réaliste (dégâts x1,6, ennemis +30 % de santé et +10 % de vitesse, régénération lente).

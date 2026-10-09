@@ -422,6 +422,31 @@ func _ready() -> void:
 	player.drink(Color.RED)
 	check(player.camera.get_child_count() == drink_kids + 1, "un flacon apparaît pendant la boisson")
 
+	# Mouvement : enjamber une fenêtre et glisser
+	var win: Node = game.barricades[0]
+	var tp: Vector3 = win.to_global(Vector3(0, 0, -1.0))
+	player.global_position = Vector3(tp.x, 0.1, tp.z)
+	var dwin: Vector3 = win.global_position - player.global_position
+	player.rotation.y = atan2(-dwin.x, -dwin.z)
+	player.busy_timer = 0.0
+	player.head.rotation.x = 0.0
+	win.boards = 2
+	check(not player._try_vault(), "on n'enjambe pas une fenêtre barricadée")
+	win.boards = 0
+	check(player._try_vault(), "on enjambe une fenêtre dégagée")
+	await wait(1.0)
+	check(not player.vaulting and win.to_local(player.global_position).z > 0.8, "le joueur arrive de l'autre côté de la fenêtre")
+	check(player.collision_mask != 0, "la collision est rétablie après l'enjambée")
+	win.boards = 6
+	player.global_position = Vector3(0, 0.1, 0)
+	player.velocity = Vector3.ZERO
+	player.slide_t = 0.5
+	player._slide_dir = Vector3.RIGHT
+	await wait(0.15)
+	check(player.crouching and player.velocity.x > 3.0, "la glissade propulse le joueur accroupi")
+	await wait(0.8)
+	check(player.slide_t <= 0.0 and player.slide_cd >= 0.0, "la glissade se termine")
+
 	# Difficulté
 	GameManager.set_difficulty(0)
 	player.invuln = 0.0

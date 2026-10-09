@@ -59,8 +59,8 @@ amélioration d'armes, pièges, chiens, boss, quête secrète, variété de zomb
 | 2.6 | **Plafond de zombies par joueur et par manche** réaliste (ex. 24 simultanés, 6+0,15·manche²…) | 🟡 | S | Ajuster `zombie_count()` et pondérer par nombre de joueurs. |
 | 2.7 | **Vitesse des zombies par manche** (marcheurs → coureurs → sprinteurs à partir de la manche ~8) avec transition progressive | ✅ | S | Modèle d'animation « course » dédié (voir 4.5). |
 | 2.8 | **Système de « kiting » / exploitation de l'IA** : zombies qui se bloquent, trains de zombies | ❌ | M | Navigation avec `NavigationAgent3D` avoidance activée + file d'attente aux fenêtres. |
-| 2.9 | **Sauter par-dessus les fenêtres** pour le joueur (après réparation) | ❌ | M | Zone interactive à la fenêtre, animation de saut, collision temporaire. |
-| 2.10 | **Glisser / plonger** (slide, dive-to-prone) | ❌ | M | Pré-requis des atouts de plongeon (3.3). |
+| 2.9 | **Sauter par-dessus les fenêtres** pour le joueur (quand elle est dégagée, touche Saut) | ✅ | M | Zone interactive à la fenêtre, animation de saut, collision temporaire. |
+| 2.10 | **Glisser / plonger** (slide, dive-to-prone) | 🟡 glissade faite, plongeon à faire | M | Pré-requis des atouts de plongeon (3.3). |
 | 2.11 | **Arme de poing secondaire dédiée + couteau amélioré** (bowie, machette) | 🟡 | S | Le couteau est unique. Ajouter variantes achetables. |
 | 2.12 | **Chargement de la partie, sauvegarde du meilleur score par carte** | 🟡 records globaux faits (pas encore par carte) | S | `ConfigFile` dans `user://`. |
 | 2.13 | **Mode de difficulté** (Facile / Normal / Réaliste) : vitesse, dégâts reçus, régénération | ✅ | S | `GameManager.DIFFICULTIES`, réglage dans Options > Jeu. À équilibrer à la main. |

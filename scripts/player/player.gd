@@ -23,6 +23,10 @@ const REGEN_RATE := 60.0
 ## Secondes pendant lesquelles on peut tirer au pistolet à terre avant de mourir (sans Second Souffle).
 const DOWN_TIME := 5.0
 const DOWN_SPEED := 1.2
+const SLIDE_TIME := 0.7
+const SLIDE_SPEED := 9.0
+const SLIDE_COOLDOWN := 0.6
+const VAULT_TIME := 0.65
 
 var head: Node3D
 var camera: Camera3D
@@ -42,6 +46,10 @@ var dead := false
 var busy_timer := 0.0
 var invuln := 0.0
 var sprinting := false
+var slide_t := 0.0
+var slide_cd := 0.0
+var _slide_dir := Vector3.ZERO
+var vaulting := false
 var crouching := false
 var interact_target: Node = null
 var _step_t := 0.0
@@ -108,15 +116,25 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 
+	if vaulting:
+		return
+	slide_cd = maxf(slide_cd - delta, 0.0)
 	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var dir := (transform.basis * Vector3(input.x, 0, input.y)).normalized()
-	crouching = Input.is_action_pressed("crouch") and not downed
+	# Glissade : s'accroupir en plein sprint
+	if sprinting and Input.is_action_just_pressed("crouch") and is_on_floor() and slide_cd <= 0.0 and not downed:
+		slide_t = SLIDE_TIME
+		_slide_dir = dir if dir != Vector3.ZERO else -transform.basis.z
+		Audio.play("footstep", -4.0, 0.7)
+	crouching = (Input.is_action_pressed("crouch") or slide_t > 0.0) and not downed
 	sprinting = Input.is_action_pressed("sprint") and input.y < -0.3 and not crouching \
 		and can_act() and not holder.aiming and not holder.is_reloading()
 
 	var speed := WALK_SPEED
 	if downed:
 		speed = DOWN_SPEED
+	elif slide_t > 0.0:
+		speed = 0.0
 	elif sprinting:
 		speed = SPRINT_SPEED * (1.3 if GameManager.has_perk("sprinteur") else 1.0)
 	elif crouching:
@@ -133,8 +151,19 @@ func _physics_process(delta: float) -> void:
 	velocity.x = lerpf(velocity.x, dir.x * speed, t)
 	velocity.z = lerpf(velocity.z, dir.z * speed, t)
 
+	if slide_t > 0.0:
+		slide_t -= delta
+		var k := clampf(slide_t / SLIDE_TIME, 0.0, 1.0)
+		var sv := _slide_dir * lerpf(3.0, SLIDE_SPEED, k * k)
+		velocity.x = sv.x
+		velocity.z = sv.z
+		if slide_t <= 0.0:
+			slide_cd = SLIDE_COOLDOWN
+	if Input.is_action_just_pressed("jump") and not downed and _try_vault():
+		return
 	if is_on_floor() and Input.is_action_just_pressed("jump") and not downed and not crouching:
 		velocity.y = JUMP_VELOCITY
+		slide_t = 0.0
 
 	move_and_slide()
 
@@ -199,6 +228,48 @@ func _update_interact(delta: float) -> void:
 
 
 # --- API ------------------------------------------------------------------
+
+## Enjambe une fenêtre dégagée (plus aucune planche) située juste devant le joueur.
+func _try_vault() -> bool:
+	if not can_act() or GameManager.game == null:
+		return false
+	var fwd := -camera.global_basis.z
+	fwd.y = 0.0
+	fwd = fwd.normalized()
+	for b in GameManager.game.barricades:
+		if b.boards > 0:
+			continue
+		var lp: Vector3 = b.to_local(global_position)
+		if absf(lp.x) > b.WIDTH * 0.5 + 0.1 or absf(lp.z) > 1.5:
+			continue
+		var to_side := 1.0 if lp.z < 0.0 else -1.0 # côté d'arrivée (+Z local = extérieur)
+		var dest: Vector3 = b.to_global(Vector3(clampf(lp.x, -0.5, 0.5), 0.0, to_side * 1.5))
+		var to_dest := dest - global_position
+		to_dest.y = 0.0
+		if fwd.dot(to_dest.normalized()) < 0.5:
+			continue
+		_vault_to(dest)
+		return true
+	return false
+
+
+func _vault_to(dest: Vector3) -> void:
+	vaulting = true
+	slide_t = 0.0
+	velocity = Vector3.ZERO
+	var start := global_position
+	collision_mask = 0
+	Audio.play("footstep", -2.0, 0.8)
+	var tw := create_tween()
+	tw.tween_method(func(t: float):
+		var pos := start.lerp(dest, t)
+		pos.y = start.y + sin(t * PI) * 0.7
+		global_position = pos, 0.0, 1.0, VAULT_TIME)
+	await tw.finished
+	global_position = Vector3(dest.x, start.y, dest.z)
+	collision_mask = GameManager.L_WORLD | GameManager.L_PLAYER_BLOCK | GameManager.L_ZOMBIE
+	vaulting = false
+
 
 func can_act() -> bool:
 	return not downed and not dead and busy_timer <= 0.0

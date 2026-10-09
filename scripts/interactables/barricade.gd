@@ -79,6 +79,8 @@ func is_available(_player: Node) -> bool:
 
 
 func get_prompt(_player: Node) -> String:
+	if boards == 0:
+		return "Maintenir [F] pour réparer — [Saut] pour enjamber"
 	return "Maintenir [F] pour réparer la barricade"
 
 
