@@ -17,6 +17,8 @@ const GameOverScript := preload("res://scenes/ui/game_over_overlay.gd")
 const BarricadeScript := preload("res://scripts/interactables/barricade.gd")
 const DoorScript := preload("res://scripts/interactables/door.gd")
 const WallBuyScript := preload("res://scripts/interactables/wall_buy.gd")
+const WorkbenchScript := preload("res://scripts/interactables/workbench.gd")
+const CraftPartScript := preload("res://scripts/interactables/craft_part.gd")
 const PerkScript := preload("res://scripts/interactables/perk_machine.gd")
 const BoxScript := preload("res://scripts/interactables/mystery_box.gd")
 const UpgradeScript := preload("res://scripts/interactables/upgrade_machine.gd")
@@ -366,6 +368,12 @@ func _build_map() -> void:
 	_perk(Vector3(9.35, 0, 0.5), Vector3.LEFT, "gilet")
 	_perk(Vector3(0, 0, 9.35), Vector3.FORWARD, "sprinteur")
 
+	# Arme unique : établi et trois pièces cachées
+	_place(WorkbenchScript.new(), nav, Vector3(9.0, 0, -6.8), Vector3.LEFT)
+	_craft_part(0, Vector3(8.6, 0.1, 8.7))
+	_craft_part(1, Vector3(-2.3, 0.1, -14.0))
+	_craft_part(2, Vector3(-8.2, 0.1, -38.0))
+
 	# Courant et amélioration
 	_place(PowerScript.new(), nav, Vector3(0, 0, -49.79), Vector3.BACK)
 	_place(UpgradeScript.new(), nav, Vector3(7, 0, -43), Vector3.BACK)
@@ -494,6 +502,13 @@ func _trap(pos: Vector3, facing: Vector3, kind: String, cost: int, center: Vecto
 	t.zone_center = center
 	t.zone_size = size
 	_place(t, self, pos, facing)
+
+
+func _craft_part(index: int, pos: Vector3) -> void:
+	var p := CraftPartScript.new()
+	p.index = index
+	add_child(p)
+	p.global_position = pos
 
 
 func _perk(pos: Vector3, facing: Vector3, perk_id: String) -> void:

@@ -70,7 +70,7 @@ func interact(player: Node) -> void:
 	if not GameManager.spend(GameManager.PERKS[perk_id].price):
 		return
 	_pending = true
-	player.drink()
+	player.drink(GameManager.PERKS[perk_id].color)
 	await get_tree().create_timer(1.4, false).timeout
 	_pending = false
 	GameManager.add_perk(perk_id)

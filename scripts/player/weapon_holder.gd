@@ -408,7 +408,7 @@ func _fire_ray(w: Dictionary, d: Dictionary, spread: float) -> void:
 		return
 	var col: Object = hit.collider
 	var pos: Vector3 = hit.position
-	var effect: String = d.get("upgrade_effect", "") if w.upgraded else ""
+	var effect: String = d.get("upgrade_effect", "") if w.upgraded else d.get("native_effect", "")
 	if col != null and col.has_method("take_damage"):
 		var head: bool = pos.y > col.global_position.y + col.head_height
 		var hm: float = d.head_mult * (1.5 if GameManager.has_perk("oeil_de_lynx") else 1.0)

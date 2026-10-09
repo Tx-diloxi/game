@@ -21,6 +21,9 @@ const MAPS := {
 }
 var map_id := "bunker"
 var quest_vials := 0
+## Arme unique à construire : pièces trouvées et assemblage terminé.
+var craft_parts := [false, false, false]
+var craft_done := false
 var quest_started := false
 var quest_done := false
 const FPS_LIMITS := [0, 30, 60, 90, 120, 144, 240]
@@ -163,6 +166,8 @@ func new_game() -> void:
 	perks_bought = 0
 	power_on = false
 	quest_vials = 0
+	craft_parts = [false, false, false]
+	craft_done = false
 	quest_started = false
 	quest_done = false
 	perks.clear()
@@ -345,6 +350,10 @@ func set_shadow_quality(q: int) -> void:
 	shadow_quality = clampi(q, 0, 3)
 	apply_video()
 	save_settings()
+
+
+func craft_count() -> int:
+	return craft_parts.count(true)
 
 
 func set_difficulty(i: int) -> void:

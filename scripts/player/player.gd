@@ -1,6 +1,7 @@
 extends CharacterBody3D
 ## Joueur FPS : déplacements, santé régénérante, interaction, mise à terre.
 
+const MeshUtil := preload("res://scripts/util/mesh_util.gd")
 const WeaponHolderScript := preload("res://scripts/player/weapon_holder.gd")
 
 signal health_changed(health: float, max_health: float)
@@ -259,9 +260,25 @@ func take_damage(amount: float, from := Vector3.INF) -> void:
 
 
 ## Boire un atout : les armes sont baissées pendant un court instant.
-func drink() -> void:
+func drink(color := Color(0.8, 0.8, 0.8)) -> void:
 	busy_timer = 1.6
 	Audio.play("perk_drink")
+	# Flacon coloré : il monte vers la bouche, s'incline, puis redescend
+	var bottle := Node3D.new()
+	var glass := MeshUtil.cylinder_mesh(bottle, 0.025, 0.11, Vector3.ZERO, MeshUtil.mat(color, 0.7))
+	MeshUtil.cylinder_mesh(bottle, 0.011, 0.045, Vector3(0, 0.077, 0), MeshUtil.mat(color.darkened(0.4), 0.6))
+	glass.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	camera.add_child(bottle)
+	bottle.position = Vector3(0.22, -0.55, -0.4)
+	var tw := create_tween()
+	tw.tween_property(bottle, "position", Vector3(0.12, -0.2, -0.32), 0.35).set_trans(Tween.TRANS_SINE)
+	tw.parallel().tween_property(bottle, "rotation:z", 0.0, 0.35)
+	tw.tween_property(bottle, "position", Vector3(0.03, -0.08, -0.26), 0.35).set_trans(Tween.TRANS_SINE)
+	tw.parallel().tween_property(bottle, "rotation:z", deg_to_rad(115.0), 0.35)
+	tw.tween_interval(0.35)
+	tw.tween_property(bottle, "position", Vector3(0.22, -0.55, -0.4), 0.4).set_trans(Tween.TRANS_SINE)
+	tw.parallel().tween_property(bottle, "rotation:z", 0.0, 0.4)
+	tw.tween_callback(bottle.queue_free)
 
 
 func apply_perks() -> void:

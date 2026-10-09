@@ -122,6 +122,16 @@ const WEAPONS := {
 		"mag": 20, "reserve": 160, "reload": 3.0, "head_mult": 1.0,
 		"splash": 3.0, "sound": "shot_plasma", "recoil": 2.0, "color": Color(0.1, 0.9, 0.3),
 	},
+	# Arme unique : n'existe pas dans la boîte, se construit à l'établi
+	"arc_tonnerre": {
+		"name": "Arc Tonnerre", "upgraded_name": "Arc Tonnerre Orageux", "model": "blaster-j", "length": 0.38,
+		"upgrade_effect": "chain", "upgrade_label": "Foudre à longue portée", "native_effect": "chain",
+		"grip_r": Vector3(0.0, -0.06, 0.07), "grip_l": Vector3(0.0, -0.07, -0.085), "grip_l_mode": "side",
+		"kind": "wonder",
+		"damage": 1500, "rpm": 150, "auto": false, "pellets": 1, "spread": 0.003,
+		"mag": 12, "reserve": 96, "reload": 2.6, "head_mult": 2.0,
+		"splash": 0.0, "sound": "shot_plasma", "recoil": 1.5, "color": Color(0.4, 0.75, 1.0),
+	},
 }
 
 ## Armes que peut donner la boîte mystère.

@@ -33,7 +33,7 @@ options audio/image · indicateurs de dégâts directionnels · musiques réelle
 **Écarts les plus visibles en jeu, par priorité :**
 1. **Coop** (2.1/2.3) — c'est LE point fort de l'original (en ligne 2-4 joueurs, réanimation). Chantier XL, non testable seul.
 2. **Mouvement** : sauter par-dessus les fenêtres (2.9), glisser/plonger (2.10), zombies qui grimpent (4.6).
-3. **Armes** : deuxième niveau d'amélioration (3.1.4), accessoires (3.1.3), armes « miracle » à construire (3.1.9), lance-roquettes, animations de rechargement par arme (3.1.2).
+3. **Armes** : deuxième niveau d'amélioration (3.1.4), accessoires (3.1.3), autres armes « miracle » (3.1.9), lance-roquettes, animations de rechargement par arme (3.1.2).
 4. **Atouts** : ajouter double gain de points, gilet, recharge rapide, tir en rafale… (3.2) — rapide à faire.
 5. **Équipements** : mines, Molotov, tourelle, bouclier d'émeute (3.3).
 6. **Ambiance** : météo/orage (5.9), objets d'histoire (radios, ordinateurs, 5.7), musique secrète (5.6), annonceur vocal (7.2, désactivé), voix des personnages (7.3).
@@ -80,7 +80,7 @@ amélioration d'armes, pièges, chiens, boss, quête secrète, variété de zomb
 | 3.1.6 | **Munitions limitées par type** et ramassage au sol | ❌ | S |
 | 3.1.7 | **Mode de tir** (auto/semi/rafale) commutable | ❌ | S |
 | 3.1.8 | **Animations de visée réalistes** (zoom de lunette avec rendu séparé) | 🟡 | M |
-| 3.1.9 | **Wonder Weapons uniques**, à construire à partir de pièces cachées | ❌ | L |
+| 3.1.9 | **Wonder Weapons uniques**, à construire à partir de pièces cachées | 🟡 Arc Tonnerre (3 pièces + établi, Bunker) ; manque le Laboratoire et d autres armes | L |
 
 ### 3.2 Atouts
 ✅ Fait (12) : Cuirasse, Main Leste, Tonique Éclair, Second Souffle, Triple Étui, Œil de Lynx, Pied Léger, Mains d'Or (points +50 %), Bouclier, Ravitailleur, Gilet Lourd, Course Folle. Restent à ajouter : **sprint illimité**, **visée automatique tête**,
@@ -150,7 +150,7 @@ Effort : S par atout. Ajouter l'**icône HUD réaliste** et un **jingle propre �
 | 6.4 | **Sang sur la caméra** quand on est blessé ou qu'on tue de près | ❌ | S |
 | 6.5 | **Bras du joueur** dans la vue (FPS arms) avec animations | ✅ bras + IK, rechargement, prise en main, pompe/verrou, lancer de grenade et de singe | L |
 | 6.6 | **Animation de la caméra** : balancement, sprint, atterrissage, mort | 🟡 | S |
-| 6.7 | **Effets d'atouts à la boisson** (animation de bouteille) | ❌ | M |
+| 6.7 | **Effets d'atouts à la boisson** (animation de bouteille) | ✅ flacon coloré qui monte à la bouche | M |
 | 6.8 | **Étourdissement / flou de mouvement** après une explosion | ❌ | S |
 | 6.9 | **Réglages graphiques** (qualité des ombres, résolution, VSync, FPS max) | ✅ ombres, VSync, FPS max, MSAA, résolution, échelle de rendu | S |
 | 6.10 | **Écran de chargement** et transitions | 🟡 | S |

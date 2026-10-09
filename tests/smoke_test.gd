@@ -403,6 +403,25 @@ func _ready() -> void:
 	player.health = 5.0
 	player.take_damage(999.0)
 	check(not player.dead and not player.downed and GameManager.extra_lives == lives0 and player.health == player.max_health, "la vie supplémentaire annule le coup fatal")
+	# Arme unique à construire
+	var bench: Node = find_interactables(load("res://scripts/interactables/workbench.gd"))[0]
+	var parts: Array = find_interactables(load("res://scripts/interactables/craft_part.gd"))
+	check(parts.size() == 3, "trois pièces cachées dans le bunker")
+	player.holder.give_weapon("k74")
+	bench.interact(player)
+	check(bench._t < 0.0, "l'établi refuse sans les pièces")
+	for pt in parts:
+		pt.interact(player)
+	check(GameManager.craft_count() == 3, "trois pièces ramassées")
+	bench.interact(player)
+	bench._t = 0.05
+	await wait(0.4)
+	check(GameManager.craft_done and player.holder.has_weapon("arc_tonnerre"), "l'Arc Tonnerre est assemblé")
+	check(not bench.is_available(player), "l'établi ne sert qu'une fois")
+	var drink_kids: int = player.camera.get_child_count()
+	player.drink(Color.RED)
+	check(player.camera.get_child_count() == drink_kids + 1, "un flacon apparaît pendant la boisson")
+
 	# Difficulté
 	GameManager.set_difficulty(0)
 	player.invuln = 0.0
