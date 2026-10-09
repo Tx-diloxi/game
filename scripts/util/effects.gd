@@ -99,17 +99,20 @@ static func _particle_mat(color: Color, emission := 0.0, unshaded := false) -> S
 
 ## Particules ponctuelles qui se détruisent toutes seules.
 static func burst(parent: Node, pos: Vector3, normal: Vector3, color: Color, amount: int, speed: float,
-		size: float, lifetime: float, gravity := 9.8, emission := 0.0, spread_deg := 45.0) -> CPUParticles3D:
+		size: float, lifetime: float, gravity := 9.8, emission := 0.0, spread_deg := 45.0, mesh: Mesh = null) -> CPUParticles3D:
 	var p := CPUParticles3D.new()
 	p.one_shot = true
 	p.explosiveness = 0.95
 	p.amount = amount
 	p.lifetime = lifetime
 	p.local_coords = false
-	var quad := QuadMesh.new()
-	quad.size = Vector2.ONE * size
-	quad.material = _particle_mat(color, emission, emission > 0.0)
-	p.mesh = quad
+	if mesh:
+		p.mesh = mesh
+	else:
+		var quad := QuadMesh.new()
+		quad.size = Vector2.ONE * size
+		quad.material = _particle_mat(color, emission, emission > 0.0)
+		p.mesh = quad
 	p.direction = normal if normal.length_squared() > 0.01 else Vector3.UP
 	p.spread = spread_deg
 	p.initial_velocity_min = speed * 0.4
@@ -130,8 +133,23 @@ static func burst(parent: Node, pos: Vector3, normal: Vector3, color: Color, amo
 	return p
 
 
+static var _drop_mesh: SphereMesh
+
+
+## Sang : petites gouttes rondes et brillantes (des sphères, pas des carrés plats).
 static func blood_hit(parent: Node, pos: Vector3, dir: Vector3, heavy := false) -> void:
-	burst(parent, pos, -dir + Vector3.UP * 0.3, Color(0.45, 0.02, 0.02), 14 if heavy else 7, 3.5 if heavy else 2.2, 0.06, 0.6, 9.8, 0.0, 35.0)
+	if _drop_mesh == null:
+		_drop_mesh = SphereMesh.new()
+		_drop_mesh.radius = 0.014
+		_drop_mesh.height = 0.028
+		_drop_mesh.radial_segments = 8
+		_drop_mesh.rings = 4
+		var m := StandardMaterial3D.new()
+		m.albedo_color = Color(0.4, 0.015, 0.015)
+		m.roughness = 0.25
+		m.metallic_specular = 0.8
+		_drop_mesh.material = m
+	burst(parent, pos, -dir + Vector3.UP * 0.3, Color(0.45, 0.02, 0.02), 14 if heavy else 7, 3.5 if heavy else 2.2, 0.03, 0.6, 9.8, 0.0, 35.0, _drop_mesh)
 
 
 static func spark_hit(parent: Node, pos: Vector3, normal: Vector3) -> void:
