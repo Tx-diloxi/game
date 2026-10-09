@@ -134,8 +134,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		KEY_F2:
 			var cur = h.cur()
 			if cur:
-				h.give_weapon(cur.id, not cur.upgraded)
-				GameManager.show_message("AMÉLIORATION " + ("ACTIVE" if h.cur().upgraded else "RETIRÉE"), Color(0.8, 0.5, 1.0))
+				h.give_weapon(cur.id, (cur.tier + 1) % 3)
+				GameManager.show_message("AMÉLIORATION NIVEAU %d" % h.cur().tier, Color(0.8, 0.5, 1.0))
 		KEY_F3:
 			h.refill_all()
 			GameManager.add_points(50000)
@@ -363,6 +363,8 @@ func _build_map() -> void:
 	_perk(Vector3(2.35, 0, -14.0), Vector3.LEFT, "mains_d_or")
 	_perk(Vector3(14.35, 0, -34.0), Vector3.LEFT, "bouclier")
 	_perk(Vector3(9.0, 0, -30.65), Vector3.FORWARD, "ravitailleur")
+	_perk(Vector3(9.35, 0, 0.5), Vector3.LEFT, "gilet")
+	_perk(Vector3(0, 0, 9.35), Vector3.FORWARD, "sprinteur")
 
 	# Courant et amélioration
 	_place(PowerScript.new(), nav, Vector3(0, 0, -49.79), Vector3.BACK)

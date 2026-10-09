@@ -1,9 +1,8 @@
 extends "res://scripts/interactables/interactable.gd"
-## Machine d'amélioration : l'arme en main est améliorée pour 5000 points (courant requis).
+## Machine d'amélioration : l'arme en main passe au niveau 1 (5000 points) puis au niveau II (8000), courant requis.
 
 enum State { IDLE, WORKING, READY }
 
-const COST := 5000
 const WORK_TIME := 5.0
 const READY_TIME := 15.0
 
@@ -34,7 +33,7 @@ func _ready() -> void:
 	_ring.position = Vector3(0, 1.75, -0.45)
 	_ring.rotation.x = PI / 2
 	add_child(_ring)
-	MeshUtil.label3d(self, "AMÉLIORATION  %d" % COST, Vector3(0, 2.95, -0.2), 48, Color(0.85, 0.5, 1.0))
+	MeshUtil.label3d(self, "AMÉLIORATION", Vector3(0, 2.95, -0.2), 48, Color(0.85, 0.5, 1.0))
 	_slot = Node3D.new()
 	_slot.position = Vector3(0, 1.1, 0.1)
 	add_child(_slot)
@@ -65,7 +64,7 @@ func _process(delta: float) -> void:
 			if _t <= 0.0:
 				state = State.READY
 				_t = READY_TIME
-				_show_gun(true)
+				_show_gun(int(stored.get("tier", 0)) + 1)
 				Audio.play_at("powerup", global_position + Vector3.UP)
 		State.READY:
 			_t -= delta
@@ -87,11 +86,11 @@ func get_prompt(player: Node) -> String:
 	if not GameManager.power_on:
 		return "Il faut rétablir le courant"
 	if state == State.READY:
-		return "[F] Récupérer %s" % WeaponDB.data(stored.id).upgraded_name
+		return "[F] Récupérer %s" % WeaponDB.display_name(WeaponDB.make(stored.id, int(stored.get("tier", 0)) + 1))
 	var w = player.holder.cur()
-	if w.upgraded:
-		return "Arme déjà améliorée"
-	return "[F] Améliorer l'arme  [%d]" % COST
+	if w.get("tier", 0) >= 2:
+		return "Arme déjà au niveau maximum"
+	return "[F] Améliorer l'arme (niveau %d)  [%d]" % [w.get("tier", 0) + 1, _cost(w)]
 
 
 func interact(player: Node) -> void:
@@ -99,26 +98,31 @@ func interact(player: Node) -> void:
 		Audio.play("deny")
 		return
 	if state == State.READY:
-		player.holder.give_weapon(stored.id, true)
+		var new_tier := int(stored.get("tier", 0)) + 1
+		player.holder.give_weapon(stored.id, new_tier)
 		var label: String = WeaponDB.data(stored.id).get("upgrade_label", "")
-		if label != "":
-			GameManager.show_message(WeaponDB.data(stored.id).upgraded_name.to_upper(), Color(0.8, 0.5, 1.0), label)
+		var col := Color(0.8, 0.5, 1.0) if new_tier < 2 else Color(1.0, 0.8, 0.3)
+		GameManager.show_message(WeaponDB.display_name(player.holder.cur()).to_upper(), col, label)
 		_reset()
 		return
 	var w = player.holder.cur()
-	if w == null or w.upgraded:
+	if w == null or w.get("tier", 0) >= 2:
 		Audio.play("deny")
 		return
-	if not GameManager.spend(COST):
+	if not GameManager.spend(_cost(w)):
 		return
 	stored = player.holder.take_current()
 	state = State.WORKING
 	_t = WORK_TIME
-	_show_gun(false)
+	_show_gun(int(stored.get("tier", 0)))
 	Audio.play_at("power_on", global_position + Vector3.UP, 0.0, 1.5)
 
 
-func _show_gun(upgraded: bool) -> void:
+func _cost(w: Dictionary) -> int:
+	return WeaponDB.TIER_COST[w.get("tier", 0)]
+
+
+func _show_gun(upgraded: int) -> void:
 	if _gun:
 		_gun.queue_free()
 	var d := WeaponDB.data(stored.id)

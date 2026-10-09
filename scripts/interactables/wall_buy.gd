@@ -40,7 +40,7 @@ func ammo_price(player: Node) -> int:
 		return 10
 	var idx: int = player.holder.find_weapon(weapon_id)
 	if idx >= 0 and player.holder.weapons[idx].upgraded:
-		return 4500
+		return 4500 if player.holder.weapons[idx].get("tier", 1) < 2 else 6000
 	return int(price / 2.0)
 
 

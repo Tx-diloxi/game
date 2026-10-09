@@ -54,7 +54,7 @@ amélioration d'armes, pièges, chiens, boss, quête secrète, variété de zomb
 | 2.1 | **Coop 2–4 joueurs en ligne** | ❌ | XL | `MultiplayerAPI` + ENet. Serveur autoritaire pour zombies/points. Réplication via `MultiplayerSynchronizer`. Points et atouts par joueur. |
 | 2.2 | **Coop locale (écran partagé)** | ❌ | L | 2 `SubViewport` + 2 joueurs ; manettes requises (voir 7.3). |
 | 2.3 | **Réanimation des coéquipiers** (maintenir F, 3 s ; jauge de saignement 30 s) | 🟡 | M | Aujourd'hui seul Second Souffle (auto) et la vie supplémentaire existent. Ajouter état « à terre » avec timer, ramper, pistolet seul. |
-| 2.4 | **Mode à terre en solo** : perdre tous les atouts, tirer au pistolet pendant 3 s avant de mourir | 🟡 | S | `player._go_down()` existe, manque le combat à terre. |
+| 2.4 | **Mode à terre en solo** : perdre tous les atouts, tirer au pistolet pendant 3 s avant de mourir | ✅ | S | À terre 5 s : ramper et tirer au pistolet (Second Souffle : 3 s puis réanimation). Reste : réanimation par un coéquipier (coop). |
 | 2.5 | **Vraies manches « spéciales »** : chiens, mais aussi manches de zombies qui sprintent, d'infectés explosifs, de boss | 🟡 chiens (manches 5-7), boss (tous les 10), tanks (tous les 5) ; pas de manches thématiques | M | `round_manager.gd` : table de manches spéciales au lieu d'un seul tirage. |
 | 2.6 | **Plafond de zombies par joueur et par manche** réaliste (ex. 24 simultanés, 6+0,15·manche²…) | 🟡 | S | Ajuster `zombie_count()` et pondérer par nombre de joueurs. |
 | 2.7 | **Vitesse des zombies par manche** (marcheurs → coureurs → sprinteurs à partir de la manche ~8) avec transition progressive | ✅ | S | Modèle d'animation « course » dédié (voir 4.5). |
@@ -63,7 +63,7 @@ amélioration d'armes, pièges, chiens, boss, quête secrète, variété de zomb
 | 2.10 | **Glisser / plonger** (slide, dive-to-prone) | ❌ | M | Pré-requis des atouts de plongeon (3.3). |
 | 2.11 | **Arme de poing secondaire dédiée + couteau amélioré** (bowie, machette) | 🟡 | S | Le couteau est unique. Ajouter variantes achetables. |
 | 2.12 | **Chargement de la partie, sauvegarde du meilleur score par carte** | 🟡 records globaux faits (pas encore par carte) | S | `ConfigFile` dans `user://`. |
-| 2.13 | **Mode de difficulté** (Facile / Normal / Réaliste) : vitesse, dégâts reçus, régénération | ❌ | S | Multiplicateurs dans `GameManager`. |
+| 2.13 | **Mode de difficulté** (Facile / Normal / Réaliste) : vitesse, dégâts reçus, régénération | ✅ | S | `GameManager.DIFFICULTIES`, réglage dans Options > Jeu. À équilibrer à la main. |
 
 ---
 
@@ -75,7 +75,7 @@ amélioration d'armes, pièges, chiens, boss, quête secrète, variété de zomb
 | 3.1.1 | **Plus d'armes** (20+ : pistolets, SMG, fusils d'assaut, fusils à pompe, snipers, mitrailleuses, lance-roquettes) | 🟡 13 armes (5 de plus : revolver, Double Canon, Frelon, Spectre, Éclaireur) | M par lot de 5 |
 | 3.1.2 | **Vrais modèles d'armes réalistes** + animations de rechargement/tir (au lieu des modèles « jouet » Kenney) | 🟡 modèles Quaternius (low-poly réalistes) sur 12 armes ; pas de nouvelles animations de rechargement par arme | L |
 | 3.1.3 | **Accessoires** (viseurs, silencieux, poignées) | ❌ | M |
-| 3.1.4 | **Deuxième niveau d'amélioration** (Pack-a-Punch II / III avec nouvelle couleur et stats) | ❌ | M |
+| 3.1.4 | **Deuxième niveau d'amélioration** (niveau II doré, 8000 points, dégâts x4) | ✅ | M |
 | 3.1.5 | **Pénétration de balles** (traverser plusieurs zombies) | ❌ | S |
 | 3.1.6 | **Munitions limitées par type** et ramassage au sol | ❌ | S |
 | 3.1.7 | **Mode de tir** (auto/semi/rafale) commutable | ❌ | S |
@@ -83,7 +83,7 @@ amélioration d'armes, pièges, chiens, boss, quête secrète, variété de zomb
 | 3.1.9 | **Wonder Weapons uniques**, à construire à partir de pièces cachées | ❌ | L |
 
 ### 3.2 Atouts
-✅ Fait (10) : Cuirasse, Main Leste, Tonique Éclair, Second Souffle, Triple Étui, Œil de Lynx, Pied Léger, Mains d'Or, Bouclier, Ravitailleur. Restent à ajouter : **double gain de points**, **gilet pare-balles** (réduit les dégâts), **sprint illimité**, **visée automatique tête**,
+✅ Fait (12) : Cuirasse, Main Leste, Tonique Éclair, Second Souffle, Triple Étui, Œil de Lynx, Pied Léger, Mains d'Or (points +50 %), Bouclier, Ravitailleur, Gilet Lourd, Course Folle. Restent à ajouter : **sprint illimité**, **visée automatique tête**,
 **explosions amies sans dégâts + explosion à l'atterrissage**, **rechargement rapide**, **recharge de grenades**,
 **vision des zombies à travers les murs**, **Mule Kick** (3ᵉ arme — équivalent de Triple Étui, déjà présent).
 Effort : S par atout. Ajouter l'**icône HUD réaliste** et un **jingle propre à chaque atout**.

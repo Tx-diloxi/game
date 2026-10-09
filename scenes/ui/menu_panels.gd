@@ -95,6 +95,11 @@ static func options(parent: Node) -> Control:
 	_check(box, "Plein écran", GameManager.fullscreen, GameManager.set_fullscreen)
 	UI.label(box, "CONTRÔLES", 26, UI.RED, UI.title_font())
 	UI.slider(box, "Sensibilité souris", 0.03, 0.4, 0.01, GameManager.mouse_sensitivity, GameManager.set_sensitivity)
+	UI.label(box, "JEU", 26, UI.RED, UI.title_font())
+	var diff_names := []
+	for dd in GameManager.DIFFICULTIES:
+		diff_names.append(dd.name)
+	_option_row(box, "Difficulté", diff_names, GameManager.difficulty, GameManager.set_difficulty)
 	UI.label(box, "TEST", 26, UI.RED, UI.title_font())
 	_check(box, "Mode test (F1 arme suivante, F2 améliorer, F3 munitions et points, F4 atouts, F5 manche suivante)", GameManager.debug_mode, GameManager.set_debug)
 	return col.get_parent()

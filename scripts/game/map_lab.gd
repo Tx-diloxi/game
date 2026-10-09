@@ -130,6 +130,8 @@ func build() -> void:
 	g._perk(Vector3(34.65, 0, -22), Vector3.RIGHT, "ravitailleur")
 	g._perk(Vector3(34.65, 0, -18), Vector3.RIGHT, "bouclier")
 	g._perk(Vector3(51.35, 0, 11), Vector3.LEFT, "tonique_eclair")
+	g._perk(Vector3(-9.35, 0, -1), Vector3.RIGHT, "gilet")
+	g._perk(Vector3(0, 0, -7.35), Vector3.BACK, "sprinteur")
 
 	# Courant, amélioration, piège
 	g._place(g.PowerScript.new(), g.nav, Vector3(50, 0, -13.79), Vector3.BACK)

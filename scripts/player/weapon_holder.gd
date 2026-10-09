@@ -95,7 +95,7 @@ func find_weapon(id: String) -> int:
 	return -1
 
 
-func give_weapon(id: String, upgraded := false) -> void:
+func give_weapon(id: String, upgraded = 0) -> void:
 	var w := WeaponDB.make(id, upgraded)
 	var idx := find_weapon(id)
 	if idx >= 0:
@@ -143,7 +143,34 @@ func take_current() -> Variant:
 	return w
 
 
+var _stash: Dictionary = {}
+
+
+## Mise à terre : seul un pistolet (chargeur plein) reste en main ; les autres armes sont mises de côté.
+func enter_downed() -> void:
+	if not _stash.is_empty():
+		return
+	_stash = {"weapons": weapons, "current": current}
+	weapons = [WeaponDB.make("p9")]
+	current = 0
+	reload_timer = 0.0
+	_on_switched()
+
+
+func exit_downed() -> void:
+	if _stash.is_empty():
+		return
+	weapons = _stash.weapons
+	current = _stash.current
+	_stash = {}
+	reload_timer = 0.0
+	_on_switched()
+	ammo_changed.emit()
+
+
 func set_max_slots(n: int) -> void:
+	if not _stash.is_empty():
+		return
 	max_slots = n
 	while weapons.size() > max_slots:
 		var drop := weapons.size() - 1
@@ -197,6 +224,15 @@ func _physics_process(delta: float) -> void:
 		if reload_timer <= 0.0:
 			_finish_reload()
 
+	if player.downed and not player.dead:
+		# À terre : pistolet seul, tir au coup par coup
+		aiming = false
+		if Input.is_action_just_pressed("reload"):
+			start_reload()
+		var dw = cur()
+		if dw != null and Input.is_action_just_pressed("fire"):
+			_try_fire(dw, true)
+		return
 	if not player.can_act():
 		aiming = false
 		return
@@ -234,7 +270,7 @@ func _physics_process(delta: float) -> void:
 func _process(delta: float) -> void:
 	if view == null:
 		return
-	var busy: bool = not player.can_act() or player.is_sprinting() or throw_t >= 0.0
+	var busy: bool = (not player.can_act() and not player.downed) or player.is_sprinting() or throw_t >= 0.0
 	aim_blend = move_toward(aim_blend, 1.0 if aiming else 0.0, delta * 6.0)
 	lower_blend = move_toward(lower_blend, 1.0 if busy else 0.0, delta * 5.0)
 	kick = move_toward(kick, 0.0, delta * 6.0)
@@ -653,7 +689,7 @@ func _rebuild_view() -> void:
 		return
 	var d := WeaponDB.data(w.id)
 	_grip = FpsArms.grip_for(d) if arms else {}
-	view = MeshUtil.build_gun(self, w.id, w.upgraded, d.color, d.kind)
+	view = MeshUtil.build_gun(self, w.id, w.get("tier", 0), d.color, d.kind)
 	view.position = HIP_POS + Vector3(0, -0.3, 0)
 	var muzzle: Vector3 = view.get_meta("muzzle")
 	flash_mesh = MeshUtil.sphere_mesh(view, 0.05, muzzle, MeshUtil.mat(Color(1.0, 0.8, 0.4), 6.0))

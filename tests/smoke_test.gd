@@ -3,6 +3,7 @@ extends Node
 ## Lancer : Godot_console.exe --headless --path . res://tests/smoke_test.tscn
 
 const DoorScript := preload("res://scripts/interactables/door.gd")
+const WeaponDB := preload("res://scripts/weapons/weapon_db.gd")
 const PerkScript := preload("res://scripts/interactables/perk_machine.gd")
 const WallBuyScript := preload("res://scripts/interactables/wall_buy.gd")
 const PowerScript := preload("res://scripts/interactables/power_switch.gd")
@@ -130,6 +131,17 @@ func _ready() -> void:
 	check(await wait_until(func(): return up.state == up.State.READY, 8.0), "l'amélioration se termine")
 	up.interact(player)
 	check(player.holder.has_weapon(id) and player.holder.cur().upgraded, "arme améliorée récupérée")
+	check(player.holder.cur().tier == 1, "niveau 1 après la première amélioration")
+	var dmg1: float = WeaponDB.damage(player.holder.cur())
+	GameManager.add_points(20000)
+	var pts_tier2 := GameManager.points
+	up.interact(player)
+	check(GameManager.points == pts_tier2 - WeaponDB.TIER_COST[1], "le niveau II coûte %d" % WeaponDB.TIER_COST[1])
+	check(await wait_until(func(): return up.state == up.State.READY, 8.0), "le niveau II se termine")
+	up.interact(player)
+	check(player.holder.cur().tier == 2 and WeaponDB.damage(player.holder.cur()) > dmg1, "niveau II : arme plus puissante")
+	check(WeaponDB.display_name(player.holder.cur()).ends_with(" II"), "le nom porte le suffixe II")
+	check(up.get_prompt(player) == "Arme déjà au niveau maximum", "pas de niveau III")
 
 	# Tir et grenade
 	await wait(0.6)
@@ -391,6 +403,57 @@ func _ready() -> void:
 	player.health = 5.0
 	player.take_damage(999.0)
 	check(not player.dead and not player.downed and GameManager.extra_lives == lives0 and player.health == player.max_health, "la vie supplémentaire annule le coup fatal")
+	# Difficulté
+	GameManager.set_difficulty(0)
+	player.invuln = 0.0
+	player.health = player.max_health
+	player.take_damage(10.0)
+	check(is_equal_approx(player.max_health - player.health, 6.0), "difficulté Facile : dégâts reçus x0,6")
+	GameManager.set_difficulty(2)
+	player.health = player.max_health
+	player.take_damage(10.0)
+	check(is_equal_approx(player.max_health - player.health, 16.0), "difficulté Réaliste : dégâts reçus x1,6")
+	var hp_real: float = game.rounds._pick_enemy().hp
+	GameManager.set_difficulty(0)
+	var hp_easy: float = game.rounds._pick_enemy().hp
+	check(hp_easy < hp_real * 0.9, "la difficulté change la santé des ennemis")
+	GameManager.set_difficulty(1)
+	player.health = player.max_health
+
+	# À terre : pistolet seul, puis mort ou réanimation
+	var perks_saved: Array = GameManager.perks.duplicate()
+	GameManager.perks.clear()
+	GameManager.add_perk("gilet")
+	player.holder.give_weapon("k74")
+	player.invuln = 0.0
+	player.health = 5.0
+	player.take_damage(999.0)
+	check(player.downed and not player.dead, "à terre au lieu de mourir")
+	check(player.holder.cur().id == "p9" and player.holder.weapons.size() == 1, "à terre : pistolet seul")
+	player.holder.switch_timer = 0.0
+	player.holder.fire_timer = 0.0
+	var pm: int = player.holder.cur().mag
+	player.holder._try_fire(player.holder.cur(), true)
+	check(player.holder.cur().mag == pm - 1, "à terre : on peut tirer")
+	await wait(0.5)
+	check(player.downed and player.down_left > 3.0, "à terre : le compte à rebours tourne")
+	GameManager.add_perk("second_souffle")
+	player._revive_on_end = true
+	player.down_left = 0.05
+	await wait(0.4)
+	check(not player.downed and not player.dead and player.holder.has_weapon("k74"), "réanimation : les armes sont rendues")
+	check(not GameManager.has_perk("gilet"), "réanimation : les atouts sont perdus")
+	GameManager.perks.clear()
+	for pk in perks_saved:
+		GameManager.perks.append(pk)
+	GameManager.perks_changed.emit()
+	GameManager.add_perk("gilet")
+	player.invuln = 0.0
+	player.health = player.max_health
+	player.take_damage(10.0)
+	check(is_equal_approx(player.max_health - player.health, 6.5), "Gilet Lourd : dégâts reçus -35 %")
+	GameManager.perks.erase("gilet")
+	player.health = player.max_health
 	player.invuln = 1e9
 
 	# Résolution et anticrénelage
@@ -567,7 +630,7 @@ func _ready() -> void:
 	player.invuln = 1e9
 	game.rounds.set_physics_process(false)
 	check(game.map_id == "lab" and game.barricades.size() == 11, "le laboratoire est construit (11 fenêtres)")
-	check(find_interactables(TrapScript).size() == 1 and find_interactables(PerkScript).size() == 10, "atouts et piège du laboratoire")
+	check(find_interactables(TrapScript).size() == 1 and find_interactables(PerkScript).size() == GameManager.PERKS.size(), "atouts et piège du laboratoire")
 	check(player.global_position.distance_to(Vector3(0, 0.1, 0)) < 1.0, "départ dans l'accueil du laboratoire")
 	var pads: Array = find_interactables(load("res://scripts/interactables/teleporter.gd"))
 	check(pads.size() == 2, "deux plateformes de téléportation")

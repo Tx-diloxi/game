@@ -31,6 +31,7 @@ var _hit_alpha := 0.0
 var _hit_kill := false
 var _crosshair: Control
 var _downed: Control
+var _down_label: Label
 var _perks: HBoxContainer
 var _powerups: HBoxContainer
 var _powerup_labels := {}
@@ -136,6 +137,7 @@ func _ready() -> void:
 	_root.add_child(_downed)
 	var dl := Label.new()
 	dl.text = "À TERRE"
+	_down_label = dl
 	dl.add_theme_font_override("font", UI.title_font())
 	dl.add_theme_font_size_override("font_size", 80)
 	dl.add_theme_color_override("font_color", Color(0.9, 0.2, 0.15))
@@ -207,6 +209,8 @@ func _process(delta: float) -> void:
 		e.age += delta
 	_dmg_hits = _dmg_hits.filter(func(e): return e.age < 2.6)
 	_dmg_canvas.queue_redraw()
+	if _downed.visible and player:
+		_down_label.text = "À TERRE  %.1f" % maxf(player.down_left, 0.0)
 	_life_label.text = "VIE SUPPLÉMENTAIRE  ×%d" % GameManager.extra_lives if GameManager.extra_lives > 0 else ""
 	var show_score := Input.is_action_pressed("scoreboard")
 	if show_score != _score_panel.visible:
@@ -377,7 +381,7 @@ func _on_ammo() -> void:
 		_reserve.text = ""
 	else:
 		_weapon.text = WeaponDB.display_name(w).to_upper()
-		_weapon.add_theme_color_override("font_color", Color(0.85, 0.55, 1.0) if w.upgraded else Color(0.85, 0.82, 0.76))
+		_weapon.add_theme_color_override("font_color", (Color(1.0, 0.8, 0.3) if w.get("tier", 1) >= 2 else Color(0.85, 0.55, 1.0)) if w.upgraded else Color(0.85, 0.82, 0.76))
 		_mag.text = str(w.mag)
 		_reserve.text = "/ %d" % w.reserve
 		var low: bool = w.mag <= int(WeaponDB.max_mag(w) * 0.25)

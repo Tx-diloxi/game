@@ -85,6 +85,13 @@ func _spawn_interval() -> float:
 
 
 func _pick_enemy() -> Dictionary:
+	var e := _pick_enemy_base()
+	e.hp *= GameManager.diff("hp")
+	e.speed *= GameManager.diff("speed")
+	return e
+
+
+func _pick_enemy_base() -> Dictionary:
 	var r := round_num
 	if dog_round:
 		return {"kind": "dog", "hp": minf(1600.0, 150.0 + 60.0 * r), "speed": 6.2}

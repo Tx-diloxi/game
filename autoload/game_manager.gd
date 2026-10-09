@@ -55,6 +55,10 @@ const PERKS := {
 		"desc": "Immunité aux explosions, soin rapide"},
 	"ravitailleur": {"name": "Ravitailleur", "price": 2000, "color": Color(0.5, 0.75, 0.3), "letter": "R", "power": true,
 		"desc": "Réserves de munitions +50 %"},
+	"gilet": {"name": "Gilet Lourd", "price": 2500, "color": Color(0.45, 0.5, 0.25), "letter": "G", "power": true,
+		"desc": "Dégâts reçus -35 %"},
+	"sprinteur": {"name": "Course Folle", "price": 2000, "color": Color(0.95, 0.4, 0.65), "letter": "F", "power": true,
+		"desc": "Sprint +30 %"},
 }
 
 const POWERUPS := {
@@ -70,6 +74,14 @@ const POWERUPS := {
 	"carpenter": {"name": "CHARPENTIER", "color": Color(0.9, 0.55, 0.2), "letter": "C"},
 }
 const POWERUP_DURATION := 30.0
+
+## Niveaux de difficulté : dégâts reçus, santé et vitesse des ennemis, délai avant la régénération.
+const DIFFICULTIES := [
+	{"name": "Facile", "damage": 0.6, "hp": 0.8, "speed": 0.9, "regen": 0.6},
+	{"name": "Normal", "damage": 1.0, "hp": 1.0, "speed": 1.0, "regen": 1.0},
+	{"name": "Réaliste", "damage": 1.6, "hp": 1.3, "speed": 1.1, "regen": 1.8},
+]
+var difficulty := 1
 
 var points := 500
 var round_num := 0
@@ -335,6 +347,15 @@ func set_shadow_quality(q: int) -> void:
 	save_settings()
 
 
+func set_difficulty(i: int) -> void:
+	difficulty = clampi(i, 0, DIFFICULTIES.size() - 1)
+	save_settings()
+
+
+func diff(key: String) -> float:
+	return DIFFICULTIES[difficulty][key]
+
+
 func set_debug(on: bool) -> void:
 	debug_mode = on
 	save_settings()
@@ -405,6 +426,7 @@ func save_settings() -> void:
 	cfg.set_value("video", "max_fps", max_fps_index)
 	cfg.set_value("video", "shadows", shadow_quality)
 	cfg.set_value("debug", "enabled", debug_mode)
+	cfg.set_value("game", "difficulty", difficulty)
 	cfg.set_value("video", "msaa", msaa_index)
 	cfg.set_value("video", "resolution", res_index)
 	cfg.set_value("video", "render_scale", render_scale)
@@ -426,6 +448,7 @@ func _load_settings() -> void:
 		max_fps_index = cfg.get_value("video", "max_fps", max_fps_index)
 		shadow_quality = cfg.get_value("video", "shadows", shadow_quality)
 		debug_mode = cfg.get_value("debug", "enabled", debug_mode)
+		difficulty = clampi(int(cfg.get_value("game", "difficulty", 1)), 0, DIFFICULTIES.size() - 1)
 		msaa_index = cfg.get_value("video", "msaa", msaa_index)
 		res_index = cfg.get_value("video", "resolution", res_index)
 		render_scale = cfg.get_value("video", "render_scale", render_scale)

@@ -19,6 +19,9 @@ const STAND_HEIGHT := 1.6
 const CROUCH_HEIGHT := 1.0
 const REGEN_DELAY := 3.0
 const REGEN_RATE := 60.0
+## Secondes pendant lesquelles on peut tirer au pistolet à terre avant de mourir (sans Second Souffle).
+const DOWN_TIME := 5.0
+const DOWN_SPEED := 1.2
 
 var head: Node3D
 var camera: Camera3D
@@ -32,6 +35,8 @@ var _infect_pulse := 0.0
 var max_health := 100.0
 var since_hit := 10.0
 var downed := false
+var down_left := 0.0
+var _revive_on_end := false
 var dead := false
 var busy_timer := 0.0
 var invuln := 0.0
@@ -92,6 +97,10 @@ func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
 
+	if downed and not dead:
+		down_left -= delta
+		if down_left <= 0.0:
+			_end_down()
 	if dead:
 		velocity.x = 0.0
 		velocity.z = 0.0
@@ -106,9 +115,9 @@ func _physics_process(delta: float) -> void:
 
 	var speed := WALK_SPEED
 	if downed:
-		speed = 0.0
+		speed = DOWN_SPEED
 	elif sprinting:
-		speed = SPRINT_SPEED
+		speed = SPRINT_SPEED * (1.3 if GameManager.has_perk("sprinteur") else 1.0)
 	elif crouching:
 		speed = CROUCH_SPEED
 	elif holder.aiming:
@@ -150,7 +159,7 @@ func _physics_process(delta: float) -> void:
 			if hud:
 				hud.flash(Color(0.45, 0.8, 0.1, 0.5), 0.3)
 	var fast_heal := GameManager.has_perk("bouclier")
-	if since_hit > (REGEN_DELAY * 0.5 if fast_heal else REGEN_DELAY) and health < max_health and not downed:
+	if since_hit > (REGEN_DELAY * (0.5 if fast_heal else 1.0) * GameManager.diff("regen")) and health < max_health and not downed:
 		health = minf(max_health, health + REGEN_RATE * (2.0 if fast_heal else 1.0) * delta)
 		health_changed.emit(health, max_health)
 
@@ -234,6 +243,9 @@ func infect(seconds: float) -> void:
 func take_damage(amount: float, from := Vector3.INF) -> void:
 	if dead or downed or invuln > 0.0:
 		return
+	amount *= GameManager.diff("damage")
+	if GameManager.has_perk("gilet"):
+		amount *= 0.65
 	health -= amount
 	since_hit = 0.0
 	Audio.play("player_hurt", -2.0, randf_range(0.9, 1.1))
@@ -274,13 +286,19 @@ func _go_down() -> void:
 		Audio.play("powerup", 2.0)
 		return
 	Audio.play("down")
-	if GameManager.has_perk("second_souffle"):
-		downed = true
-		downed_changed.emit(true)
-		await get_tree().create_timer(3.0, false).timeout
-		if not is_inside_tree():
-			return
+	downed = true
+	holder.enter_downed()
+	downed_changed.emit(true)
+	_revive_on_end = GameManager.has_perk("second_souffle")
+	down_left = 3.0 if _revive_on_end else DOWN_TIME
+	GameManager.show_message("À TERRE", Color(0.9, 0.3, 0.2), "Tirez au pistolet pour survivre" if not _revive_on_end else "Réanimation en cours…")
+
+
+## Fin du temps à terre : réanimation (Second Souffle) ou mort.
+func _end_down() -> void:
+	if _revive_on_end:
 		downed = false
+		holder.exit_downed()
 		invuln = 3.0
 		GameManager.clear_perks()
 		health = max_health
@@ -289,7 +307,6 @@ func _go_down() -> void:
 		GameManager.show_message("RÉANIMÉ", Color(0.3, 0.6, 1.0))
 	else:
 		dead = true
-		downed_changed.emit(true)
 		var tw := create_tween()
 		tw.tween_property(head, "position:y", 0.25, 0.8)
 		tw.parallel().tween_property(head, "rotation:z", 1.2, 0.8)

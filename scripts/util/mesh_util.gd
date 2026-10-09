@@ -108,13 +108,29 @@ static func label3d(parent: Node, text: String, pos: Vector3, size := 48, color 
 
 
 const WEAPON_MODEL_DIR := "res://assets/models/weapons/"
-static var _upgrade_overlay: StandardMaterial3D
+static var _overlays := {}
+
+
+## Camouflage lumineux d'une arme améliorée : violet (niveau 1), doré (niveau 2).
+static func overlay_for(tier: int) -> StandardMaterial3D:
+	if not _overlays.has(tier):
+		var m := StandardMaterial3D.new()
+		var base := Color(0.3, 0.04, 0.5) if tier < 2 else Color(0.6, 0.4, 0.02)
+		var glow := Color(0.45, 0.1, 0.8) if tier < 2 else Color(1.0, 0.7, 0.1)
+		m.albedo_color = Color(base.r, base.g, base.b, 0.3)
+		m.emission_enabled = true
+		m.emission = glow
+		m.emission_energy_multiplier = 0.35 if tier < 2 else 0.5
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+		_overlays[tier] = m
+	return _overlays[tier]
 static var _gun_mats := {}
 
 
 ## Modèle d'arme orienté vers -Z (canon), centré, avec la méta "muzzle".
 ## Utilise le modèle .glb s'il existe, sinon une arme en primitives.
-static func build_gun(parent: Node3D, weapon_id: String, upgraded: bool, base_color: Color, kind: String) -> Node3D:
+static func build_gun(parent: Node3D, weapon_id: String, upgraded, base_color: Color, kind: String) -> Node3D:
 	var d: Dictionary = preload("res://scripts/weapons/weapon_db.gd").data(weapon_id)
 	if d.get("fbx", false):
 		var fbx := "res://assets/models/guns/" + str(d.model) + ".fbx"
@@ -127,7 +143,7 @@ static func build_gun(parent: Node3D, weapon_id: String, upgraded: bool, base_co
 
 
 ## Armes réalistes (Quaternius, canon vers +X dans le fichier) : couleurs d'origine, canon tourné vers -Z.
-static func _build_fbx_gun(parent: Node3D, path: String, length: float, upgraded: bool) -> Node3D:
+static func _build_fbx_gun(parent: Node3D, path: String, length: float, upgraded) -> Node3D:
 	var root := Node3D.new()
 	parent.add_child(root)
 	var model: Node3D = load(path).instantiate()
@@ -149,16 +165,9 @@ static func _build_fbx_gun(parent: Node3D, path: String, length: float, upgraded
 					_gun_mats[src] = dm
 				m3.set_surface_override_material(i, _gun_mats[src])
 	if upgraded:
-		if _upgrade_overlay == null:
-			_upgrade_overlay = StandardMaterial3D.new()
-			_upgrade_overlay.albedo_color = Color(0.3, 0.04, 0.5, 0.3)
-			_upgrade_overlay.emission_enabled = true
-			_upgrade_overlay.emission = Color(0.45, 0.1, 0.8)
-			_upgrade_overlay.emission_energy_multiplier = 0.35
-			_upgrade_overlay.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			_upgrade_overlay.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+		var ov := overlay_for(int(upgraded))
 		for mi in model.find_children("*", "MeshInstance3D", true, false):
-			(mi as MeshInstance3D).material_overlay = _upgrade_overlay
+			(mi as MeshInstance3D).material_overlay = ov
 	var half_h := box.size.y * s * 0.5
 	root.set_meta("muzzle", Vector3(0, half_h * 0.3, -length * 0.5))
 	# ligne de mire : sommet de l'arme (pour caler la visée sur le centre de l'écran)
@@ -166,7 +175,7 @@ static func _build_fbx_gun(parent: Node3D, path: String, length: float, upgraded
 	return root
 
 
-static func _build_model_gun(parent: Node3D, path: String, length: float, upgraded: bool) -> Node3D:
+static func _build_model_gun(parent: Node3D, path: String, length: float, upgraded) -> Node3D:
 	var root := Node3D.new()
 	parent.add_child(root)
 	var model: Node3D = load(path).instantiate()
@@ -191,16 +200,9 @@ static func _build_model_gun(parent: Node3D, path: String, length: float, upgrad
 					_gun_mats[src] = dm
 				m3.set_surface_override_material(i, _gun_mats[src])
 	if upgraded:
-		if _upgrade_overlay == null:
-			_upgrade_overlay = StandardMaterial3D.new()
-			_upgrade_overlay.albedo_color = Color(0.3, 0.04, 0.5, 0.3)
-			_upgrade_overlay.emission_enabled = true
-			_upgrade_overlay.emission = Color(0.45, 0.1, 0.8)
-			_upgrade_overlay.emission_energy_multiplier = 0.35
-			_upgrade_overlay.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			_upgrade_overlay.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+		var ov := overlay_for(int(upgraded))
 		for mi in model.find_children("*", "MeshInstance3D", true, false):
-			(mi as MeshInstance3D).material_overlay = _upgrade_overlay
+			(mi as MeshInstance3D).material_overlay = ov
 	root.set_meta("muzzle", Vector3(0, box.size.y * s * 0.15, -length * 0.5))
 	return root
 
@@ -248,13 +250,13 @@ static func scene_aabb(root: Node3D) -> AABB:
 	return out
 
 
-static func _build_primitive_gun(parent: Node3D, upgraded: bool, base_color: Color, kind: String) -> Node3D:
+static func _build_primitive_gun(parent: Node3D, upgraded, base_color: Color, kind: String) -> Node3D:
 	var root := Node3D.new()
 	parent.add_child(root)
 	var col := base_color
 	var m := mat(col, 0.0, 0.6, 0.4)
 	if upgraded:
-		m = mat(Color(0.55, 0.15, 0.85), 1.4, 0.3, 0.8)
+		m = mat(Color(0.55, 0.15, 0.85) if int(upgraded) < 2 else Color(0.9, 0.65, 0.1), 1.4, 0.3, 0.8)
 	var dark := mat(Color(0.08, 0.08, 0.09), 0.0, 0.5, 0.6)
 	var length := 0.45
 	var body_h := 0.09

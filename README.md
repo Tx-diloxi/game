@@ -6,13 +6,16 @@ manches de chiens et tanks. Godot 4.7, GDScript, rendu Compatibility.
 
 ## Mécaniques avancées
 - **Pièges** (courant requis, 1000 points, actifs 25 s, recharge 45 s) : électrique dans le couloir, à feu près de la fenêtre ouest de la grande salle. Ils tuent tous les zombies dans la zone et blessent le joueur.
+- **Deux niveaux d'amélioration** : niveau 1 (5000 points, camouflage violet, dégâts x2,5) puis niveau II (8000 points, camouflage doré, dégâts x4, chargeurs x2). Munitions de niveau II : 6000 à l'arme murale.
+- **À terre** : à zéro vie, on tombe 5 s (3 s avec Second Souffle, qui réanime) ; on rampe et on tire au pistolet seul, les autres armes sont rendues à la réanimation.
+- **Difficulté** (Options > Jeu) : Facile (dégâts x0,6, ennemis -20 % de santé, régénération rapide), Normal, Réaliste (dégâts x1,6, ennemis +30 % de santé et +10 % de vitesse, régénération lente).
 - **Améliorations spéciales** : chaque arme améliorée gagne un effet — P9 et Longue-Vue : balles explosives ; Vipère et Tonnerre : balles incendiaires ; Carabine et K-74 : arc électrique qui rebondit sur 3 zombies ; Brise-Porte : souffle qui repousse.
 - **Démembrement** : les balles concentrées sur un avant-bras ou un mollet arrachent le membre (morceau projeté, sang) ; perdre une jambe ou subir une explosion non mortelle peut transformer le zombie en rampant (plus lent, plus bas).
 
 - **Singe-leurre** (touche T) : obtenu par 3 dans la boîte mystère. Posé au sol, il joue des cymbales 7 s, attire tous les zombies (pas les chiens ni le boss) puis explose.
 - **Le Colosse** (manches 10, 20, 30…) : boss blindé qui apparaît dans un éclair au milieu de la manche. Son casque absorbe 75 % des dégâts à la tête jusqu'à se briser. Il charge à travers la salle et frappe le sol (dégâts de zone + projection). Barre de vie en haut de l'écran, 500 points et munitions max à sa mort. Les pièges le blessent sans le tuer net.
 
-- **10 atouts, 6 cumulables** : Cuirasse, Main Leste, Tonique Éclair, Second Souffle, Triple Étui, et Œil de Lynx (tête +50 %), Pied Léger (vitesse +20 %), Mains d'Or (points +50 %), Bouclier (immunité aux explosions, soin 2× plus rapide), Ravitailleur (réserves +50 %).
+- **12 atouts, 6 cumulables** : Cuirasse, Main Leste, Tonique Éclair, Second Souffle, Triple Étui, Gilet Lourd (dégâts reçus -35 %), Course Folle (sprint +30 %), et Œil de Lynx (tête +50 %), Pied Léger (vitesse +20 %), Mains d'Or (points +50 %), Bouclier (immunité aux explosions, soin 2× plus rapide), Ravitailleur (réserves +50 %).
 - **Tableau des scores** (Tab / bouton Retour) : manche, éliminations, tirs à la tête, précision, points, atouts achetés, temps de jeu.
 - **Manette** (Xbox) : sticks, gâchettes, boutons, vibrations ; les indications `[F]` deviennent `[Y]` quand la manette est utilisée. Navigation dans les menus à la manette.
 - **Annonceur** : désactivé (la voix de synthèse déplaisait). Le code `Audio.say` reste en place : il reprendra dès que des fichiers `assets/sounds/voice_*.wav` seront présents.
@@ -33,7 +36,7 @@ manches de chiens et tanks. Godot 4.7, GDScript, rendu Compatibility.
 - **Zombies** : 5 tenues (textures dérivées sans logo), silhouettes aléatoires, animation de course (sprinteurs penchés, bras qui pompent) avec foulée amplifiée, genoux levés et torsion du buste, et de reptation (bras tendus qui tirent, buste qui se tord, jambes qui traînent).
 
 - **Arsenal** (13 armes, `weapon_db.gd`) : P9, Justicier (revolver), Carabine M2, Vipère et Frelon (pistolets-mitrailleurs), Brise-Porte et Double Canon (fusils à pompe), K-74, Spectre (bullpup), Tonnerre (mitrailleuse), Éclaireur (fusil de précision semi-auto) et Longue-Vue (sniper), plus le Désintégrateur (arme futuriste, boîte mystère). Modèles 3D réalistes Quaternius, tir enregistré propre à chaque arme. Les armes longues sont poussées vers le joueur et le centre de l'écran pour que les deux mains les atteignent ; en visée, l'arme est calée sur sa ligne de mire.
-- **Cartes** : choix au clic sur *Jouer*. **Bunker abandonné** (3 zones) et **Laboratoire Sigma** (4 zones : accueil, couloir, salle des cuves, réacteur), 11 fenêtres, 10 atouts, 6 armes murales, un piège, la boîte mystère et la machine d'amélioration.
+- **Cartes** : choix au clic sur *Jouer*. **Bunker abandonné** (3 zones) et **Laboratoire Sigma** (4 zones : accueil, couloir, salle des cuves, réacteur), 11 fenêtres, 12 atouts, 6 armes murales, un piège, la boîte mystère et la machine d'amélioration.
 - **Téléporteur** (laboratoire) : deux plateformes (accueil ↔ réacteur), courant requis, 750 points, recharge 25 s. La première utilisation ouvre la zone du réacteur sans payer sa porte.
 - **Quête secrète** (laboratoire) : les archives de l'accueil donnent trois indices ; il faut retrouver 3 fioles de sérum cachées (accueil, couloir, cuves), les rapporter à la console du réacteur (courant requis) et tenir 40 s pendant la synthèse. Récompense : une vie supplémentaire, munitions max et 3000 points.
 - **Brute** (dès la manche 7) : grosse silhouette, 3 fois plus de vie, bouclier métallique qui absorbe 65 % des tirs au corps venant de face (jusqu'à se briser ; la tête et les explosions l'ignorent), charge à 7,5 m/s qui projette le joueur.

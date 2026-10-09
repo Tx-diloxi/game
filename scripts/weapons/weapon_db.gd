@@ -1,6 +1,6 @@
 extends RefCounted
 ## Caractéristiques de toutes les armes. Une arme possédée est un Dictionary :
-## {"id": String, "mag": int, "reserve": int, "upgraded": bool}
+## {"id": String, "mag": int, "reserve": int, "upgraded": bool, "tier": int}
 
 const WEAPONS := {
 	"p9": {
@@ -129,14 +129,20 @@ const BOX_POOL := ["revolver", "carabine", "vipere", "frelon", "brise_porte", "d
 
 const UPGRADE_DAMAGE := 2.5
 const UPGRADE_AMMO := 1.5
+## Niveaux d'amélioration : 0 = normal, 1 = Infernal, 2 = niveau II (camouflage doré).
+const TIER_DAMAGE := [1.0, 2.5, 4.0]
+const TIER_AMMO := [1.0, 1.5, 2.0]
+const TIER_COST := [5000, 8000]
 
 
 static func data(id: String) -> Dictionary:
 	return WEAPONS[id]
 
 
-static func make(id: String, upgraded := false) -> Dictionary:
-	var w := {"id": id, "upgraded": upgraded, "mag": 0, "reserve": 0}
+## `upgraded` accepte un booléen (niveau 1) ou un entier de niveau (0 à 2).
+static func make(id: String, upgraded = 0) -> Dictionary:
+	var tier := clampi(int(upgraded), 0, 2)
+	var w := {"id": id, "upgraded": tier > 0, "tier": tier, "mag": 0, "reserve": 0}
 	w.mag = max_mag(w)
 	w.reserve = max_reserve(w)
 	return w
@@ -144,23 +150,25 @@ static func make(id: String, upgraded := false) -> Dictionary:
 
 static func display_name(w: Dictionary) -> String:
 	var d := data(w.id)
-	return d.upgraded_name if w.upgraded else d.name
+	if w.upgraded:
+		return d.upgraded_name + (" II" if w.get("tier", 1) >= 2 else "")
+	return d.name
 
 
 static func damage(w: Dictionary) -> float:
 	var d := data(w.id)
-	return d.damage * (UPGRADE_DAMAGE if w.upgraded else 1.0)
+	return d.damage * TIER_DAMAGE[w.get("tier", 0)]
 
 
 static func max_mag(w: Dictionary) -> int:
 	var d := data(w.id)
-	return int(ceil(d.mag * (UPGRADE_AMMO if w.upgraded else 1.0)))
+	return int(ceil(d.mag * TIER_AMMO[w.get("tier", 0)]))
 
 
 static func max_reserve(w: Dictionary) -> int:
 	var d := data(w.id)
 	var m := 1.5 if GameManager.has_perk("ravitailleur") else 1.0
-	return int(ceil(d.reserve * (UPGRADE_AMMO if w.upgraded else 1.0) * m))
+	return int(ceil(d.reserve * TIER_AMMO[w.get("tier", 0)] * m))
 
 
 static func is_full(w: Dictionary) -> bool:
