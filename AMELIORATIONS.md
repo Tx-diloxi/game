@@ -60,7 +60,7 @@ amélioration d'armes, pièges, chiens, boss, quête secrète, variété de zomb
 | 2.7 | **Vitesse des zombies par manche** (marcheurs → coureurs → sprinteurs à partir de la manche ~8) avec transition progressive | ✅ | S | Modèle d'animation « course » dédié (voir 4.5). |
 | 2.8 | **Système de « kiting » / exploitation de l'IA** : zombies qui se bloquent, trains de zombies | ❌ | M | Navigation avec `NavigationAgent3D` avoidance activée + file d'attente aux fenêtres. |
 | 2.9 | **Sauter par-dessus les fenêtres** pour le joueur (quand elle est dégagée, touche Saut) | ✅ | M | Zone interactive à la fenêtre, animation de saut, collision temporaire. |
-| 2.10 | **Glisser / plonger** (slide, dive-to-prone) | 🟡 glissade faite, plongeon à faire | M | Pré-requis des atouts de plongeon (3.3). |
+| 2.10 | **Glisser / plonger** (slide, dive-to-prone) | ✅ glissade (accroupi en sprint) et plongeon (accroupi en l'air en sprint, atterrissage à plat ventre) | M | Pré-requis des atouts de plongeon (3.3). |
 | 2.11 | **Arme de poing secondaire dédiée + couteau amélioré** (bowie, machette) | 🟡 | S | Le couteau est unique. Ajouter variantes achetables. |
 | 2.12 | **Chargement de la partie, sauvegarde du meilleur score par carte** | 🟡 records globaux faits (pas encore par carte) | S | `ConfigFile` dans `user://`. |
 | 2.13 | **Mode de difficulté** (Facile / Normal / Réaliste) : vitesse, dégâts reçus, régénération | ✅ | S | `GameManager.DIFFICULTIES`, réglage dans Options > Jeu. À équilibrer à la main. |
@@ -131,9 +131,9 @@ Effort : S par atout. Ajouter l'**icône HUD réaliste** et un **jingle propre �
 | 5.4 | **Téléporteur** relié au courant, avec cooldown | ✅ laboratoire : accueil ↔ réacteur, 750 points, recharge 25 s | M |
 | 5.5 | **Easter egg principal** (quête à étapes avec indices, récompense, fin de partie) | 🟡 laboratoire : 3 fioles cachées + indices + synthèse ; récompense (vie, munitions, points), pas de fin de partie | L |
 | 5.6 | **Musique secrète** (3 objets à activer) | ❌ | S |
-| 5.7 | **Objets interactifs d'ambiance** (radios, téléphones, ordinateurs qui racontent l'histoire) | ❌ | M |
+| 5.7 | **Objets interactifs d'ambiance** (radios, téléphones, ordinateurs qui racontent l'histoire) | ✅ 4 radios/ordinateurs dans le bunker, 1 dans le labo (histoire de l'Abri 7) | M |
 | 5.8 | **Éléments dynamiques** : portes à vérin, ascenseurs, ponts, trappes | ❌ | M |
-| 5.9 | **Météo** : pluie, orage avec éclairs, brouillard variable | ❌ | M |
+| 5.9 | **Météo** : pluie, orage avec éclairs, brouillard variable | 🟡 pluie à ciel ouvert, éclairs et tonnerre (option) ; pas de brouillard variable | M |
 | 5.10 | **Cycle jour/nuit** ou changement d'ambiance par manche | ❌ | S |
 | 5.11 | **Baking de lumière / occlusion** pour une meilleure performance | ❌ | M |
 | 5.12 | **Level design à la main avec modules** (kit de murs/pièces) au lieu d'un code procédural | ❌ | L |
@@ -162,7 +162,7 @@ Effort : S par atout. Ajouter l'**icône HUD réaliste** et un **jingle propre �
 | # | Fonctionnalité | État | Effort |
 |---|---|---|---|
 | 7.1 | **Musique de fond** réelle (ambiance, manche, mort) | ✅ | S |
-| 7.2 | **Annonceur** qui parle (« Munitions max », « Mort instantanée »…) | 🟡 désactivé (voix de synthèse refusée) ; à remplacer par de vrais enregistrements | S |
+| 7.2 | **Annonceur** qui parle (« Munitions max », « Mort instantanée »…) | 🟡 vraies voix anglaises Kenney (CC0) : manches 5/10 composées, power-ups, boss, chiens… ; pas de phrases françaises ni de réplique par arme | S |
 | 7.3 | **Voix des personnages** (réactions, réanimation) | ❌ | M |
 | 7.4 | **Son 3D spatialisé** avec réverbération par pièce (bus audio + `AudioEffectReverb`) | 🟡 | M |
 | 7.5 | **Sons d'armes uniques** par arme (aujourd'hui partagés entre plusieurs) | ✅ tirs enregistrés dédiés (le Tonnerre réutilise celui du K-74 en plus grave) ; rechargements encore partagés | S |

@@ -85,6 +85,7 @@ const DIFFICULTIES := [
 	{"name": "Réaliste", "damage": 1.6, "hp": 1.3, "speed": 1.1, "regen": 1.8},
 ]
 var difficulty := 1
+var weather := true
 
 var points := 500
 var round_num := 0
@@ -356,6 +357,11 @@ func craft_count() -> int:
 	return craft_parts.count(true)
 
 
+func set_weather(on: bool) -> void:
+	weather = on
+	save_settings()
+
+
 func set_difficulty(i: int) -> void:
 	difficulty = clampi(i, 0, DIFFICULTIES.size() - 1)
 	save_settings()
@@ -436,6 +442,7 @@ func save_settings() -> void:
 	cfg.set_value("video", "shadows", shadow_quality)
 	cfg.set_value("debug", "enabled", debug_mode)
 	cfg.set_value("game", "difficulty", difficulty)
+	cfg.set_value("game", "weather", weather)
 	cfg.set_value("video", "msaa", msaa_index)
 	cfg.set_value("video", "resolution", res_index)
 	cfg.set_value("video", "render_scale", render_scale)
@@ -457,6 +464,7 @@ func _load_settings() -> void:
 		max_fps_index = cfg.get_value("video", "max_fps", max_fps_index)
 		shadow_quality = cfg.get_value("video", "shadows", shadow_quality)
 		debug_mode = cfg.get_value("debug", "enabled", debug_mode)
+		weather = cfg.get_value("game", "weather", true)
 		difficulty = clampi(int(cfg.get_value("game", "difficulty", 1)), 0, DIFFICULTIES.size() - 1)
 		msaa_index = cfg.get_value("video", "msaa", msaa_index)
 		res_index = cfg.get_value("video", "resolution", res_index)

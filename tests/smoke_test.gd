@@ -277,7 +277,7 @@ func _ready() -> void:
 	GameManager.gamepad = false
 
 	# Sons : annonceur et musique
-	check(Audio._streams.keys().filter(func(k): return k.begins_with("voice_")).is_empty(), "annonceur désactivé (aucune voix chargée)")
+	check(Audio._streams.keys().filter(func(k): return k.begins_with("voice_")).size() >= 20, "l'annonceur a ses voix")
 	var loop_ok := true
 	for m in ["menu_music", "ambience"]:
 		for st in Audio._streams[m]:
@@ -285,7 +285,9 @@ func _ready() -> void:
 				loop_ok = false
 	check(loop_ok, "les musiques bouclent")
 	Audio.say("max_ammo")
-	check(not Audio._voice.playing, "l'annonceur reste muet")
+	check(Audio._voice.playing, "l'annonceur parle")
+	Audio._voice.stop()
+	Audio._voice_queue.clear()
 	check(InputMap.action_get_events("ui_accept").any(func(e): return e is InputEventJoypadButton), "A valide dans les menus")
 
 	# Options, records, remappage
@@ -446,6 +448,43 @@ func _ready() -> void:
 	check(player.crouching and player.velocity.x > 3.0, "la glissade propulse le joueur accroupi")
 	await wait(0.8)
 	check(player.slide_t <= 0.0 and player.slide_cd >= 0.0, "la glissade se termine")
+
+	# Plongeon : atterrissage à plat ventre
+	player.global_position = Vector3(0, 0.6, 0)
+	player.velocity = Vector3(0, -2, 0)
+	player.diving = true
+	await wait(0.6)
+	check(player.prone and not player.diving, "le plongeon se termine à plat ventre")
+	await wait(0.6)
+	check(player.head.position.y < 0.6, "à plat ventre, la caméra est au ras du sol")
+	player.prone = false
+
+	# Ambiance : radios, ordinateur, orage
+	var radios: Array = find_interactables(load("res://scripts/interactables/radio.gd"))
+	check(radios.size() == 4 and radios.any(func(r): return r.computer), "radios et ordinateur d'histoire dans le bunker")
+	radios[0].interact(player)
+	var wth = game.get_children().filter(func(n): return n.get_script() != null and str(n.get_script().resource_path).ends_with("weather.gd"))
+	check(wth.size() == 1, "le module météo est présent")
+	wth[0].lightning()
+	await wait(0.15)
+	player.global_position = Vector3(0, 0.1, 0)
+	check(not wth[0]._is_outside(), "pas de pluie dans la salle de départ")
+	player.global_position = Vector3(-13, 0.1, 0)
+	check(wth[0]._is_outside(), "pluie à l'extérieur du bunker")
+	player.global_position = Vector3(0, 0.1, -20)
+	check(not wth[0]._is_outside(), "pas de pluie dans le couloir")
+	player.global_position = Vector3(0, 0.1, 0)
+	check(wth[0]._flash.light_energy > 0.1, "l'éclair éclaire la scène")
+	check(Audio._streams.has("thunder") and Audio._streams.has("rain"), "sons de pluie et de tonnerre chargés")
+
+	# Annonceur : vraies voix chargées, annonces composées
+	check(Audio._streams.has("voice_nuke") and Audio._streams.has("voice_game_over") and Audio._streams.has("voice_round_word"), "les voix de l'annonceur sont chargées")
+	Audio._voice.stop()
+	Audio._voice_queue.clear()
+	Audio.say("round_5")
+	check(Audio._voice.playing and Audio._voice_queue == ["num_5"], "« Round » puis le numéro sont enchaînés")
+	Audio._voice.stop()
+	Audio._voice_queue.clear()
 
 	# Difficulté
 	GameManager.set_difficulty(0)

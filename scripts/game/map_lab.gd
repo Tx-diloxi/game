@@ -157,6 +157,7 @@ func build() -> void:
 	pad_b.partner = pad_a
 	g._place(TerminalScript.new(), g, Vector3(-9.6, 0, -2.5), Vector3.RIGHT)
 	g._place(ReactorScript.new(), g, Vector3(45.79, 0, -25), Vector3.LEFT)
+	g._radio(Vector3(-9.6, 0, -5.0), Vector3.RIGHT, 4)
 	_vial(Vector3(-6.3, 0.1, 6.2))
 	_vial(Vector3(22.4, 0.1, 2.5))
 	_vial(Vector3(50.6, 0.1, 12.7))

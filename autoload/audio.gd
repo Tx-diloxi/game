@@ -14,7 +14,9 @@ var _music_name := ""
 var _voice: AudioStreamPlayer
 var _voice_queue: Array[String] = []
 const VOICES := ["infinite_ammo", "last_stand", "fire_sale", "bonus_points", "zombie_blood", "max_ammo", "insta_kill", "nuke", "double_points", "carpenter", "boss", "boss_down", "helmet", "dogs",
-	"power_on", "box_moved", "trap_on", "game_over", "round_5", "round_10", "round_15", "round_20", "round_25", "round_30"]
+	"power_on", "box_moved", "trap_on", "game_over", "round_15", "round_20", "round_25", "round_30", "round_word", "num_5", "num_10"]
+## Annonces composées de plusieurs enregistrements.
+const VOICE_SEQUENCES := {"round_5": ["round_word", "num_5"], "round_10": ["round_word", "num_10"]}
 
 
 func _ready() -> void:
@@ -80,6 +82,12 @@ func play_at(sound: String, pos: Vector3, volume_db := 0.0, pitch := 1.0) -> voi
 
 ## Annonceur : une seule voix à la fois, les suivantes attendent leur tour.
 func say(id: String) -> void:
+	if VOICE_SEQUENCES.has(id):
+		var seq: Array = VOICE_SEQUENCES[id]
+		say(seq[0])
+		for rest in seq.slice(1):
+			_voice_queue.append(rest)
+		return
 	if not _streams.has("voice_" + id):
 		return
 	if _voice.playing:
@@ -203,11 +211,14 @@ func _build_library() -> void:
 	defs["ambience"] = [10.0, func(t, st): return (
 		_noise(st, 0.03) * 0.3 * (0.55 + 0.45 * sin(TAU * t / 5.0))
 		+ sin(TAU * 41.0 * t) * 0.08 * (0.5 + 0.5 * sin(TAU * t / 10.0)))]
+	defs["rain"] = [6.0, func(t, st): return _noise(st, 0.55) * 0.22 * (0.8 + 0.2 * sin(TAU * t / 3.0))]
+	defs["thunder"] = [3.2, func(t, st): return _noise(st, 0.025) * 1.6 * exp(-t * 0.9) * (0.6 + 0.4 * sin(TAU * 7.0 * t)) * minf(t * 12.0, 1.0)]
+	defs["radio_static"] = [0.9, func(t, st): return (_noise(st, 0.8) * 0.5 * (0.5 + 0.5 * sin(TAU * 11.0 * t)) + sin(TAU * 700.0 * t) * 0.05) * minf(minf(t * 30.0, 1.0), (0.9 - t) * 10.0)]
 	for sound in defs:
 		var loaded := _load_files(sound)
 		if loaded.is_empty():
 			var w := _synth(defs[sound][0], defs[sound][1])
-			if sound in ["menu_music", "ambience"]:
+			if sound in ["menu_music", "ambience", "rain"]:
 				w.loop_mode = AudioStreamWAV.LOOP_FORWARD
 				w.loop_begin = 0
 				w.loop_end = w.data.size() / 2
@@ -219,7 +230,7 @@ func _build_library() -> void:
 		if not vl.is_empty():
 			_streams["voice_" + v] = vl
 	# Les vraies musiques en .ogg doivent boucler
-	for m in ["menu_music", "ambience"]:
+	for m in ["menu_music", "ambience", "rain"]:
 		for s in _streams[m]:
 			if s is AudioStreamOggVorbis:
 				s.loop = true

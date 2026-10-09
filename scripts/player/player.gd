@@ -27,6 +27,9 @@ const SLIDE_TIME := 0.7
 const SLIDE_SPEED := 9.0
 const SLIDE_COOLDOWN := 0.6
 const VAULT_TIME := 0.65
+const DIVE_SPEED := 8.0
+const PRONE_SPEED := 1.6
+const PRONE_HEIGHT := 0.45
 
 var head: Node3D
 var camera: Camera3D
@@ -50,6 +53,8 @@ var slide_t := 0.0
 var slide_cd := 0.0
 var _slide_dir := Vector3.ZERO
 var vaulting := false
+var diving := false
+var prone := false
 var crouching := false
 var interact_target: Node = null
 var _step_t := 0.0
@@ -126,13 +131,31 @@ func _physics_process(delta: float) -> void:
 		slide_t = SLIDE_TIME
 		_slide_dir = dir if dir != Vector3.ZERO else -transform.basis.z
 		Audio.play("footstep", -4.0, 0.7)
-	crouching = (Input.is_action_pressed("crouch") or slide_t > 0.0) and not downed
-	sprinting = Input.is_action_pressed("sprint") and input.y < -0.3 and not crouching \
+	# Plongeon : s'accroupir en l'air pendant un saut en sprint ; on atterrit à plat ventre
+	if Input.is_action_just_pressed("crouch") and not is_on_floor() and sprinting and not diving and not downed:
+		diving = true
+		var dd := -transform.basis.z
+		velocity.x = dd.x * DIVE_SPEED
+		velocity.z = dd.z * DIVE_SPEED
+		velocity.y = minf(velocity.y, 1.5)
+		Audio.play("footstep", -3.0, 0.6)
+	if diving and is_on_floor():
+		diving = false
+		prone = true
+		Audio.play("footstep", -1.0, 0.55)
+	if prone and (Input.is_action_just_pressed("jump") or Input.is_action_just_pressed("sprint") or downed):
+		prone = false
+	crouching = (Input.is_action_pressed("crouch") or slide_t > 0.0) and not downed and not prone
+	sprinting = Input.is_action_pressed("sprint") and input.y < -0.3 and not crouching and not prone \
 		and can_act() and not holder.aiming and not holder.is_reloading()
 
 	var speed := WALK_SPEED
 	if downed:
 		speed = DOWN_SPEED
+	elif diving:
+		speed = DIVE_SPEED
+	elif prone:
+		speed = PRONE_SPEED
 	elif slide_t > 0.0:
 		speed = 0.0
 	elif sprinting:
@@ -161,7 +184,7 @@ func _physics_process(delta: float) -> void:
 			slide_cd = SLIDE_COOLDOWN
 	if Input.is_action_just_pressed("jump") and not downed and _try_vault():
 		return
-	if is_on_floor() and Input.is_action_just_pressed("jump") and not downed and not crouching:
+	if is_on_floor() and Input.is_action_just_pressed("jump") and not downed and not crouching and not prone:
 		velocity.y = JUMP_VELOCITY
 		slide_t = 0.0
 
@@ -174,7 +197,7 @@ func _physics_process(delta: float) -> void:
 			_step_t = 2.2
 			Audio.play("footstep", -14.0 if crouching else -8.0, randf_range(0.9, 1.1))
 
-	var target_h := 0.4 if downed else (CROUCH_HEIGHT if crouching else STAND_HEIGHT)
+	var target_h := 0.4 if downed else (PRONE_HEIGHT if prone else (CROUCH_HEIGHT if crouching else STAND_HEIGHT))
 	head.position.y = move_toward(head.position.y, target_h, delta * 4.0)
 
 	since_hit += delta

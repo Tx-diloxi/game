@@ -100,6 +100,7 @@ static func options(parent: Node) -> Control:
 	for dd in GameManager.DIFFICULTIES:
 		diff_names.append(dd.name)
 	_option_row(box, "Difficulté", diff_names, GameManager.difficulty, GameManager.set_difficulty)
+	_check(box, "Orage et pluie", GameManager.weather, GameManager.set_weather)
 	UI.label(box, "TEST", 26, UI.RED, UI.title_font())
 	_check(box, "Mode test (F1 arme suivante, F2 améliorer, F3 munitions et points, F4 atouts, F5 manche suivante)", GameManager.debug_mode, GameManager.set_debug)
 	return col.get_parent()
@@ -148,7 +149,7 @@ static func credits(parent: Node) -> Control:
 			"Tirs : Vincent Sevedge — CC-BY 3.0 ; cris de zombies, rechargements : OpenGameArt — CC0",
 			"Textures : ambientCG.com — CC0",
 			"Musique : Ambient Horror Track 01 (CC0) ; Dark Ambience Loop, Iwan Gabovitch (CC-BY 3.0) ; stings d'horreur et jingle de mort (CC0)",
-			"Annonceur : voix de synthèse ; autres sons synthétisés en jeu"]:
+			"Annonceur : Voiceover Pack #1, Kenney (kenney.nl) — CC0 ; autres sons synthétisés en jeu"]:
 		var l := UI.label(col, line, 20, UI.GREY)
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD
 	return col.get_parent()

@@ -19,6 +19,8 @@ const DoorScript := preload("res://scripts/interactables/door.gd")
 const WallBuyScript := preload("res://scripts/interactables/wall_buy.gd")
 const WorkbenchScript := preload("res://scripts/interactables/workbench.gd")
 const CraftPartScript := preload("res://scripts/interactables/craft_part.gd")
+const WeatherScript := preload("res://scripts/game/weather.gd")
+const RadioScript := preload("res://scripts/interactables/radio.gd")
 const PerkScript := preload("res://scripts/interactables/perk_machine.gd")
 const BoxScript := preload("res://scripts/interactables/mystery_box.gd")
 const UpgradeScript := preload("res://scripts/interactables/upgrade_machine.gd")
@@ -45,6 +47,8 @@ var player: CharacterBody3D
 var hud: CanvasLayer
 var rounds: Node
 var barricades: Array = []
+## Emprises (x, z) des zones couvertes d'un plafond : pas de pluie à l'intérieur.
+var roofs: Array[Rect2] = []
 var map_id := "bunker"
 var rooms: Array = ROOMS
 var active_zones := {0: true}
@@ -109,6 +113,11 @@ func _ready() -> void:
 	hud.bind(player)
 	player.hud = hud
 	add_child(PauseScript.new())
+
+	var weather := WeatherScript.new()
+	weather.game = self
+	weather.player = player
+	add_child(weather)
 
 	rounds = RoundManagerScript.new()
 	rounds.game = self
@@ -368,6 +377,12 @@ func _build_map() -> void:
 	_perk(Vector3(9.35, 0, 0.5), Vector3.LEFT, "gilet")
 	_perk(Vector3(0, 0, 9.35), Vector3.FORWARD, "sprinteur")
 
+	# Radios et ordinateur d'histoire
+	_radio(Vector3(-3.0, 0, -9.6), Vector3.BACK, 0)
+	_radio(Vector3(-2.6, 0, -12.5), Vector3.RIGHT, 1)
+	_radio(Vector3(14.6, 0, -42), Vector3.LEFT, 2)
+	_radio(Vector3(-14.6, 0, -31.8), Vector3.RIGHT, 3, true)
+
 	# Arme unique : établi et trois pièces cachées
 	_place(WorkbenchScript.new(), nav, Vector3(9.0, 0, -6.8), Vector3.LEFT)
 	_craft_part(0, Vector3(8.6, 0.1, 8.7))
@@ -394,6 +409,8 @@ func _build_map() -> void:
 ## Sol (collision d'un seul bloc) affiché en dalles de ~5 m : chaque dalle ne reçoit que
 ## les lumières proches (limite de lumières par objet du rendu Compatibility).
 func _floor(c: Vector2, size: Vector2, material: Material, ceiling: bool) -> void:
+	if ceiling:
+		roofs.append(Rect2(c - size * 0.5, size))
 	MeshUtil.static_box(nav, Vector3(size.x, 0.5, size.y), Vector3(c.x, -0.25, c.y), null)
 	var nx := maxi(1, roundi(size.x / 5.0))
 	var nz := maxi(1, roundi(size.y / 5.0))
@@ -502,6 +519,13 @@ func _trap(pos: Vector3, facing: Vector3, kind: String, cost: int, center: Vecto
 	t.zone_center = center
 	t.zone_size = size
 	_place(t, self, pos, facing)
+
+
+func _radio(pos: Vector3, facing: Vector3, entry: int, computer := false) -> void:
+	var r := RadioScript.new()
+	r.entry = entry
+	r.computer = computer
+	_place(r, nav, pos, facing)
 
 
 func _craft_part(index: int, pos: Vector3) -> void:
